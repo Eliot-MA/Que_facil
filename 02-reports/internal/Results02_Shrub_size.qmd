@@ -1,0 +1,28 @@
+---
+title: "Effect of shrub size on survival"
+author: "Mompeán, E."
+date: "today"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-summary: "Code"
+    theme: cosmo
+    code-line-numbers: true
+editor: visual
+execute:
+  warning: false
+  message: false
+bibliography: ../../09-bib/bibliography.bib
+biblio-style: ../../09-bib/ecology.csl
+lightbox: true
+---
+
+# Introduction
+
+El tamaño de los arbustos en el experimento es un factor que puede determinar el tamaño del efecto sobre la supervivencia. Esperamos que arbustos más grandes tengan un efecto, facilitador o competitivo, más importante que los arbustos pequeños. También es posible que el efecto del tamaño
+
+

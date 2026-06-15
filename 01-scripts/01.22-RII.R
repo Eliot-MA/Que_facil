@@ -1,0 +1,143 @@
+source("01-scripts/01.21-survival.R")
+
+# 1. Prepare data ----
+
+# Select variables of interest
+df.surv <- df.surv |> 
+  select(Individual, Environment, microsite, quercus_sp, survival, surv_date) |> 
+  mutate(survival = if_else(survival == 2, 1, survival))
+
+# Create subdatasets per quercus species
+df.surv.qf <- df.surv |> 
+  filter(quercus_sp == "QF")
+
+df.surv.qi <- df.surv |> 
+  filter(quercus_sp == "QI")
+
+# 2. Describe comparisons ----
+# Each row: focal group (A) vs reference group (B). 
+
+comparisons <- tibble(
+  env_A  = c("pine canopy", "pine canopy",    "pine canopy",
+              "gap",   "gap",       "gap",
+              "pine canopy"),
+  ms_A    = c("Cistus ladanifer",  "Rosa canina",    "Genista scorpius",
+              "Cistus ladanifer",  "Rosa canina",    "Genista scorpius",
+              "open"),
+  env_B  = c("pine canopy", "pine canopy",    "pine canopy",
+              "gap",   "gap",       "gap",
+              "gap"),
+  ms_B    = c("open",         "open",            "open",
+              "open",         "open",            "open",
+              "open"), 
+  type_RII = c("Indirect", "Indirect", "Indirect",
+                 "Direct",   "Direct",   "Direct",
+               "Direct"), 
+  Interacting_species = c("Cistus ladanifer", "Rosa canina", "Genista scorpius", 
+                          "Cistus ladanifer", "Rosa canina", "Genista scorpius", 
+                          "Pinus pinaster")
+)
+
+# 3. Compute RII ----
+## Create function ----
+calc_rii <- function(df, env_A, ms_A, env_B, ms_B, type_RII, Interacting_species) {
+  
+  # Create focal group
+  focal <- df |>
+    filter(Environment == env_A, microsite == ms_A) |>
+    select(
+      ind_A = Individual,
+      env_A = Environment,
+      ms_A = microsite,
+      surv_A = survival,
+      surv_date
+    )
+  
+  # Create reference group
+  ref <- df |>
+    filter(Environment == env_B, microsite == ms_B) |>
+    select(
+      ind_B = Individual,
+      env_B = Environment,
+      ms_B = microsite,
+      surv_B = survival,
+      surv_date
+    )
+  
+  # Inner join allow to make comparison only within the same date
+  inner_join(focal, ref, by = "surv_date") |>
+    mutate(
+      type_RII = type_RII,
+      Interacting_species = Interacting_species,
+      RII = if_else(
+        surv_A + surv_B == 0,
+        0,
+        (surv_A - surv_B) / (surv_A + surv_B)
+      )
+    )
+}
+
+## Apply function to every comparison and combine ----
+
+df.rii.qi <- pmap(comparisons, calc_rii, df = df.surv.qi) |>
+  bind_rows()
+
+df.rii.qf <- pmap(comparisons, calc_rii, df = df.surv.qf) |>
+  bind_rows()
+
+## Compute aggregated RII per individual
+
+aggID.df.rii.qi <- df.rii.qi |> 
+  group_by(ind_A, env_A, ms_A, surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    mean = mean(RII, na.rm = TRUE), 
+    sd   = sd(RII, na.rm = TRUE)
+  )
+
+aggID.df.rii.qf <- df.rii.qf |> 
+  group_by(ind_A, env_A, ms_A, surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    mean = mean(RII, na.rm = TRUE), 
+    sd   = sd(RII, na.rm = TRUE)
+  )
+p1 <- 
+  aggID.df.rii.qi |> 
+  group_by(surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    n = sum(!is.na(mean)),
+    media = mean(mean, na.rm = TRUE),
+    se = sd(mean, na.rm = TRUE) / sqrt(n),
+    .groups = "drop"
+  ) |> 
+  ggplot(aes(x = media, y = Interacting_species)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin = media - se, xmax = media + se), width = .5) +
+  geom_vline(aes(xintercept = 0), linetype = "dashed", colour = "red") +
+  facet_grid(surv_date~type_RII) +
+  ylab("") +
+  xlab("RII") +
+  labs(title = "Q. ilex") +
+  coord_cartesian(xlim = c(-.6, .6))
+
+p2 <- 
+  aggID.df.rii.qf |> 
+  group_by(surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    n = sum(!is.na(mean)),
+    media = mean(mean, na.rm = TRUE),
+    se = sd(mean, na.rm = TRUE) / sqrt(n),
+    .groups = "drop"
+  ) |> 
+  ggplot(aes(x = media, y = Interacting_species)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin = media - se, xmax = media + se), width = .5) +
+  geom_vline(aes(xintercept = 0), linetype = "dashed", colour = "red") +
+  facet_grid(surv_date~type_RII) +
+  ylab("") +
+  xlab("RII") +
+  labs(title = "Q. faginea") +
+  coord_cartesian(xlim = c(-.6, .6))
+
+library(patchwork)
+
+p1 + p2
