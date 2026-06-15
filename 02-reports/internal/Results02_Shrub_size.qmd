@@ -24,5 +24,3 @@ lightbox: true
 # Introduction
 
 El tamaño de los arbustos en el experimento es un factor que puede determinar el tamaño del efecto sobre la supervivencia. Esperamos que arbustos más grandes tengan un efecto, facilitador o competitivo, más importante que los arbustos pequeños. También es posible que el efecto del tamaño
-
-

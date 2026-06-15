@@ -1,0 +1,146 @@
+---
+title: "Relative interaction Index on survival data"
+subtitle: "First approaches"
+author: "Mompeán, E."
+date: "today"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-summary: "Code"
+    theme: cosmo
+    code-line-numbers: true
+editor: visual
+execute:
+  warning: false
+  message: false
+bibliography: ../../09-bib/bibliography.bib
+biblio-style: ../../09-bib/ecology.csl
+lightbox: true
+---
+
+# Introducción 
+
+Las interacciones entre plantas son motores cruciales de la composición y diversidad de las comunidades. Estas pueden ser directas (entre dos especies) o indirectas (cuando una tercera especie modifica la interacción entre las dos primeras) [@Michalet2014]. 
+
+* **Tipos de efectos indirectos:**
+  * **Facilitación indirecta:** Ocurre cuando una especie reduce la competencia que sufren otras dos [@Michalet2014 & @Michalet2017].
+  * **Competencia indirecta:** Se produce cuando un facilitador aumenta tanto la biomasa de una especie competidora que esta acaba perjudicando a una tercera especie (beneficiaria original) [@Michalet2014 & @Michalet2017].
+
+* **Mecanismos de Interacción:**
+  * **Competencia por recursos (Explotación):** Interacción indirecta a través de un recurso limitado común (agua, nutrientes) [@Michalet2017].
+  * **Interferencia:** Forma directa de competencia donde un organismo interfiere activamente con la capacidad de otro para obtener recursos, por ejemplo, mediante la acumulación de hojarasca que actúa como barrera física o modifica la humedad del suelo [@Michalet2017].
+  * **Efectos de Copa vs. Raíces:** Las plantas pueden tener efectos positivos (protección térmica) o negativos (competencia por luz) a través de su copa, y efectos variables a través de sus raíces (competencia por nutrientes o facilitación mediante micorrizas) [@Wang2017].
+
+* **Interacciones "Ocultas":** A nivel de comunidad, el efecto neto puede parecer nulo si existen interacciones positivas y negativas que se compensan entre sí (balance), aunque estas interacciones individuales sigan determinando la composición de especies [@Michalet2014 & @Wang2017]. 
+
+El empleo del índice **RII** responde a la necesidad de utilizar una métrica comparativa estandarizada que permita cuantificar con precisión tanto la **fuerza** como la **dirección** de las interacciones bióticas entre especies. A diferencia de otros índices, el RII destaca por ser **simétrico alrededor de cero**, lo que facilita una interpretación estadística equilibrada donde los valores positivos indican facilitación y los negativos competencia, acotando los resultados en un rango estricto entre +1 y -1. Esta propiedad resulta fundamental en estudios de comunidades complejas, ya que permite desglosar y comparar matemáticamente diferentes componentes de la interacción —como los efectos de la copa frente a los de las raíces, o los efectos directos frente a los indirectos—, revelando **"interacciones ocultas"** que a menudo se compensan entre sí y que no serían detectables mediante un análisis de efecto neto a nivel de comunidad [@Michalet2014; @Michalet2017 & @Wang2017].
+
+# Objetivos
+
+1) Establecer la metodología para la aplicación del cálculo del RII a nuestro caso de estudio. 
+
+2) Explorar los resultados del cálculo del RII. 
+
+3) Establecer la metodología para la aplicación de los análisis estadísticos necesarios para obtener conclusiones sobre qué efectos encontrados a través del RII son significativos. 
+
+# Metodología
+
+## Diseño experimental {#sec-design}
+
+El estudio combinó tres factores principales para analizar la facilitación
+
+* **Ambiente (2 niveles):** Se seleccionaron dos áreas colindantes en el Monte Público Jócar (Guadalajara): un pinar de *Pinus pinaster* (cubierta arbórea) y una zona abierta dominada por matorral tras un incendio en 2014.
+
+* **Micrositio (4 niveles):** Se definieron según la especie de arbusto nodriza: jara (*Cistus ladanifer*), aliaga (*Genista scorpius*), rosa (*Rosa canina*) y un control sin vegetación denominado claro.
+
+* **Especie facilitada (2 niveles):** Se plantaron dos quercíneas con estrategias ecológicas contrastadas: *Quercus ilex* (perennifolia y tolerante al estrés) y *Quercus faginea* (caducifolia y más sensible a la sequía).
+
+Se seleccionaron aleatoriamente 60 réplicas por cada micrositio, distribuidas equitativamente entre los dos ambientes (30 en pinar y 30 en el abierto), lo que suma un total de 240 micrositios. En cada uno de estos micrositios se plantaron dos individuos: uno de cada especie de *Quercus*. 
+
+## Cálculo del RII
+
+El $RII$ es un índice estandarizado utilizado para cuantificar la fuerza y dirección de las interacciones bióticas. Su fórmula general es:
+
+$$
+RII = 
+\frac{X_{\text{con vecinos}} - X_{\text{sin vecinos}}}{X_{\text{con vecinos}} + X_{\text{sin vecinos}}}
+$$
+
+Donde $X$ representa una medida de desempeño de la planta (comúnmente biomasa, riqueza de especies o abundancia).
+
+Propiedades del RII:
+
+* Es simétrico alrededor de cero.
+* Varía entre -1 (competencia máxima) y +1 (facilitación máxima).
+
+El $RII$ se cálcula normalmente sobre valores continuos (biomasa) o discretos positivos. Sin embargo, su cálculo sobre valores de supervivencia (distribución binomial, 0/1) es menos común. Aún así, puede aplicarse con algunas adaptaciones. 
+
+### RII en datos binomiales (0/1)
+
+El cálculo del RII en datos binomiales puede aplicarse casi de la misma manera. Por ejemplo, para el cálculo del RII entre las observaciones $i$ y $j$ ($RII_{ij}$), se toma el valor de supervivencia de la observación $i$ en presencia del arbusto ($S_{a_i}$) y se toma el valor de supervivencia del observación $j$ en ausencia del arbusto ($S_{b_j}$). Al tratarse de valores binomiales, el resultado solo puede dar +1, 0 o -1. En el caso en que tanto $S_{a_i}$ como $S_{b_j}$ sean 0, $RII_{ij}$ se define como 0 por convención.
+
+$$
+RII_{ij} = \frac{S_{a_i}-S_{b_j}}{S_{a_i}+S_{b_j}} 
+$$ {#eq-RII}
+
+except when:
+
+$$
+S_a+S_B=0\text{ ; }RII=0
+$$
+
+| ($S_{a_i}$) | ($S_{b_j}$) | ($RII_{ij}$)                  |
+| --------- | --------- | --------------------------- |
+| 1         | 0         | 1                           |
+| 0         | 1         | -1                          |
+| 1         | 1         | 0                           |
+| 0         | 0         | 0 (defined by convention)   |
+
+### RII en nuestro diseño experimental
+
+**Comparación con todos los controles**
+
+Como vimos en la @sec-design, nuestro diseño no presenta controles pareados. Esto implica que cada observación de supervivencia debajo de un arbusto no tiene una medida de supervivencia asociada en una posición sin arbusto. Por lo tanto, dada una réplica de supervivencia debajo de un arbusto, no hay ninguna réplica de los controles elegida para el cálculo del RII. La ausencia de controles pareados es una consecuencia lógica de que la aproxmiación original a la pregunta de investigación no tenía en cuenta el RII. 
+
+Dado que ningún control es el predilecto para el cálculo del RII, se optó por la fuerza bruta y comparar la supervivencia debajo de cada individuo de arbusto con la supervivencia de todos los controles. Dado que existen 30 controles, cada especie de quercínea debajo de cada individuo de arbusto tendrá 30 valores de RII (@eq-RII). 
+
+Por ejemplo, si queremos calcular el $RII$ de la interacción directa del *Cistus ladanifer* 1 ($RII_{Cistus_1}$) tendrán que calcularse 30 $RII$, uno para cada combinación con los controles ($RII_{Cistus_1 - Control_1}$, $RII_{Cistus_1 - Control_2}$, $RII_{Cistus_1 - Control_3}$, ..., $RII_{Cistus_1 - Control_{30}}$). 
+
+Para obtener un valor único de $RII_{Cistus_1}$ se calcula el promedio de todos los valores.[^1] La misma lógica puede aplicarse para todos individuos:
+
+$$
+\overline{RII}_{Cistus_1}
+=
+\frac{1}{m}
+\sum_{j=1}^{m}
+RII_{Cistus_1j}
+$$
+
+[^1]: Esta aproximación da lugar a muchos valores de $RII$ por individuo. La estructura de medidas repetidas permite modelos mixtos para dar cuenta de la estructura anidada de las observaciones. Sin embargo, no se abordará en este reporte de resultados. 
+
+**Establecer comparaciones de interés**
+
+El método para el cálculo de un $RII$ por individuo implica la selección de qué comparaciones tienen significado biológico o interés para las preguntas experimentales que queremos abordar. 
+
+Establecemos las siguientes restricciones sobre las comparaciones que tienen interés para el estudio. 
+
+1) Todos los $RII$ se calcularán para la supervivencia dentro de una misma especie de quercínea. Por ejemplo, no tiene sentido calcular un $RII$ donde se comparan la supervivencia de *Q. ilex* debajo de *Cistus ladanifer* con la supervivencia de *Q. faginea* debajo de *Cistus ladanifer*. El trabajo asume que las quercíneas plantadas son lo suficientemente jóvenes (un año de edad) y están lo suficientemente separadas debajo del arbusto como para no establecer relaciones de competencia entre ellas. Si el trabajo tuviera esta interacción como pregunta experimental, sí tendría sentido calcular este tipo de $RII$. 
+
+2) **Efectos directos de los arbustos** ($RII_{direct}^{shrubs}$). El efecto directo de los arbustos sobre la quercínea, es decir sin que esté implicado el pinar, se calculará como la supervivencia debajo del arbusto sin pinar, comparada con la supervivencia en los claros (regiones sin arbusto) sin pinar. 
+
+3) **Efectos indirectos de los arbustos** ($RII_{indirect}^{shrubs}$). El efecto indirecto de los arbustos sobre la quercínea, es decir con el pinar implicado, se calculará como la supervivencia debajo del arbusto en en el pinar, comparada con la supervivencia en los claros (regiones sin arbusto) en el pinar. 
+
+4) **Efectos directos del pinar** ($RII_{direct}^{pine}$). El efecto directo del pinar sobre la quercínea, es decir sin arbustos implicados, se calculará como la supervivencia en el pinar en los claros (regiones sin arbusto), comparada con la supervivencia en los claros sin pinar. 
+
+5) **Efecto indirecto del pinar** ($RII_{indirect}^{pine}$). Existe un cuarto $RII$ que puede calcularse, que es el efecto indirecto del pinar sobre las quercíneas. Podría calcularse comparando la supervivencia de la quercínea debajo del arbusto en el pinar con la supervivencia debajo del arbusto sin pinar. Este $RII$ sería interesante si quisiéramos explorar como el efecto del pinar sobre las quercíneas cambia si tiene arbustos debajo. Sin embargo, una de las asunciones teóricas de nuestro experimento es que el pinar no se ve afectado por los arbustos creciendo debajo de él. El pinar actúa como un simple elemento que cambia las condiciones climáticas generales, y nuestra pregunta se centra en el efecto del pinar sobre los arbustos y las quercíneas. 
+
+| Efecto | Tipo | Comparación (tratamiento vs control) | Condición del pinar | Condición de arbustos | Interpretación |
+|--------|------|--------------------------------------|----------------------|------------------------|----------------|
+| $RII_{direct}^{shrubs}$ | Arbustos (directo) | Bajo arbusto vs claro | Sin pinar | Variable arbusto vs claro | Efecto directo de los arbustos sobre la supervivencia de la quercínea sin influencia del pinar |
+| $RII_{indirect}^{shrubs}$ | Arbustos (indirecto) | Bajo arbusto vs claro | Con pinar | Variable arbusto vs claro | Efecto de los arbustos sobre la quercínea cuando el pinar está presente |
+| $RII_{direct}^{pine}$ | Pinar (directo) | Pinar vs sin pinar | En claros (sin arbusto) | Sin arbusto | Efecto directo del pinar sobre la supervivencia en ausencia de arbustos |
+| $RII_{indirect}^{pine}$ | Pinar (indirecto) | Pinar vs sin pinar | Bajo arbusto | Bajo arbusto | Efecto del pinar sobre la quercínea cuando los arbustos están presentes (interacción contextual) |
