@@ -104,7 +104,7 @@ $$
 
 **Comparación con todos los controles**
 
-Como vimos en la @sec-design, nuestro diseño no presenta controles pareados. Esto implica que cada observación de supervivencia debajo de un arbusto no tiene una medida de supervivencia asociada en una posición sin arbusto. Por lo tanto, dada una réplica de supervivencia debajo de un arbusto, no hay ninguna réplica de los controles elegida para el cálculo del RII. La ausencia de controles pareados es una consecuencia lógica de que la aproxmiación original a la pregunta de investigación no tenía en cuenta el RII. 
+Como vimos en la @sec-design, nuestro diseño no presenta controles pareados. Esto implica que cada observación de supervivencia debajo de un arbusto no tiene una medida de supervivencia asociada en una posición sin arbusto cerncana. Por lo tanto, dada una réplica de supervivencia debajo de un arbusto, no hay ninguna réplica de los controles elegida para el cálculo del RII. La ausencia de controles pareados es una consecuencia lógica de que la aproxmiación original a la pregunta de investigación no tenía en cuenta el RII. 
 
 Dado que ningún control es el predilecto para el cálculo del RII, se optó por la fuerza bruta y comparar la supervivencia debajo de cada individuo de arbusto con la supervivencia de todos los controles. Dado que existen 30 controles, cada especie de quercínea debajo de cada individuo de arbusto tendrá 30 valores de RII (@eq-RII). 
 
@@ -144,3 +144,183 @@ Establecemos las siguientes restricciones sobre las comparaciones que tienen int
 | $RII_{indirect}^{shrubs}$ | Arbustos (indirecto) | Bajo arbusto vs claro | Con pinar | Variable arbusto vs claro | Efecto de los arbustos sobre la quercínea cuando el pinar está presente |
 | $RII_{direct}^{pine}$ | Pinar (directo) | Pinar vs sin pinar | En claros (sin arbusto) | Sin arbusto | Efecto directo del pinar sobre la supervivencia en ausencia de arbustos |
 | $RII_{indirect}^{pine}$ | Pinar (indirecto) | Pinar vs sin pinar | Bajo arbusto | Bajo arbusto | Efecto del pinar sobre la quercínea cuando los arbustos están presentes (interacción contextual) |
+
+## Análisis estadístico
+
+Para determinar si los efectos detectados son estadísticamente significativos y cómo influyen en la comunidad, emplearemos dos métodos:
+
+- Prueba t de una muestra (one-sample t-test): Se utiliza para determinar si el valor medio del RII es significativamente diferente de cero. Si lo es, existe un efecto significativo (facilitador si es >0, competitivo si es <0).
+
+- ANOVA: Se usa para comparar si diferentes tipos de RII (ej. RII directo vs. indirecto) son significativamente distintos entre sí, lo que indica un efecto indirecto significativo. 
+
+# Resultados
+
+## Descripción de resultados
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+source("01-scripts/01.21-survival.R")
+
+# 1. Prepare data ----
+
+# Select variables of interest
+df.surv <- df.surv |> 
+  select(Individual, Environment, microsite, quercus_sp, survival, surv_date) |> 
+  mutate(survival = if_else(survival == 2, 1, survival))
+
+# Create subdatasets per quercus species
+df.surv.qf <- df.surv |> 
+  filter(quercus_sp == "QF")
+
+df.surv.qi <- df.surv |> 
+  filter(quercus_sp == "QI")
+
+# 2. Describe comparisons ----
+# Each row: focal group (A) vs reference group (B). 
+
+comparisons <- tibble(
+  env_A  = c("pine canopy", "pine canopy",    "pine canopy",
+              "gap",   "gap",       "gap",
+              "pine canopy"),
+  ms_A    = c("Cistus ladanifer",  "Rosa canina",    "Genista scorpius",
+              "Cistus ladanifer",  "Rosa canina",    "Genista scorpius",
+              "open"),
+  env_B  = c("pine canopy", "pine canopy",    "pine canopy",
+              "gap",   "gap",       "gap",
+              "gap"),
+  ms_B    = c("open",         "open",            "open",
+              "open",         "open",            "open",
+              "open"), 
+  type_RII = c("Indirect", "Indirect", "Indirect",
+                 "Direct",   "Direct",   "Direct",
+               "Direct"), 
+  Interacting_species = c("Cistus ladanifer", "Rosa canina", "Genista scorpius", 
+                          "Cistus ladanifer", "Rosa canina", "Genista scorpius", 
+                          "Pinus pinaster")
+)
+
+# 3. Compute RII ----
+## Create function ----
+calc_rii <- function(df, env_A, ms_A, env_B, ms_B, type_RII, Interacting_species) {
+  
+  # Create focal group
+  focal <- df |>
+    filter(Environment == env_A, microsite == ms_A) |>
+    select(
+      ind_A = Individual,
+      env_A = Environment,
+      ms_A = microsite,
+      surv_A = survival,
+      surv_date
+    )
+  
+  # Create reference group
+  ref <- df |>
+    filter(Environment == env_B, microsite == ms_B) |>
+    select(
+      ind_B = Individual,
+      env_B = Environment,
+      ms_B = microsite,
+      surv_B = survival,
+      surv_date
+    )
+  
+  # Inner join allow to make comparison only within the same date
+  inner_join(focal, ref, by = "surv_date") |>
+    mutate(
+      type_RII = type_RII,
+      Interacting_species = Interacting_species,
+      RII = if_else(
+        surv_A + surv_B == 0,
+        0,
+        (surv_A - surv_B) / (surv_A + surv_B)
+      )
+    )
+}
+
+## Apply function to every comparison and combine ----
+
+df.rii.qi <- pmap(comparisons, calc_rii, df = df.surv.qi) |>
+  bind_rows()
+
+df.rii.qf <- pmap(comparisons, calc_rii, df = df.surv.qf) |>
+  bind_rows()
+
+## Compute aggregated RII per individual
+
+aggID.df.rii.qi <- df.rii.qi |> 
+  group_by(ind_A, env_A, ms_A, surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    mean = mean(RII, na.rm = TRUE), 
+    sd   = sd(RII, na.rm = TRUE)
+  )
+
+aggID.df.rii.qf <- df.rii.qf |> 
+  group_by(ind_A, env_A, ms_A, surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    mean = mean(RII, na.rm = TRUE), 
+    sd   = sd(RII, na.rm = TRUE)
+  )
+```
+
+
+**Encina**.
+
+En efectos directos de los arbustos, los valores son positivos para las tres especies nodrizas en ambas fechas. Eso indica que, en ausencia de pinar, la supervivencia de *Q. ilex* fue en general mejor bajo arbusto que en claro. El efecto más fuerte aparece en el efecto directo de  *Pinus pinaster*. Entre fechas, el efecto facilitador de *Cistus ladanifer* se vuelve más fuerte en mayor del 2026, mientras que el efecto de *Genista scorpius* se acerca más a 0 (@fig-rii). 
+
+En efectos indirectos de los arbustos, la lectura cambia un poco. *Cistus ladanifer* pasa a valores negativos en ambas fechas (−0.0805 y −0.145), lo que sugiere que bajo pinar su efecto sobre la supervivencia de *Q. ilex* es ligeramente desfavorable respecto al claro del mismo ambiente. No es un efecto muy fuerte, pero sí apunta a una posible inversión contextual. Las otras dos especies mantienen su efecto positivo, pero el efecto de *Rosa canina* se vuelve menos claro en la segunda fecha (@fig-rii). 
+
+**Quejigo**
+
+En *Q. faginea* se observa un patrón más contrastado que en *Q. ilex*. En los **efectos directos** sobre claros, el pinar muestra los valores más altos de RII en ambas fechas (0.567 y 0.530), lo que puede indicar una facilitación clara y consistente de la supervivencia bajo el dosel respecto al claro. Entre los arbustos, *Cistus ladanifer* presenta valores positivos pero más moderados (0.233 y 0.133), mientras que *Genista scorpius* y *Rosa canina* muestran efectos directos débiles, cercanos a cero en la segunda fecha. Esto sugiere que, para *Q. faginea*, el microambiente favorable de los arbustos solo se expresa de forma modesta, mientras que el pinar ejerce una influencia más marcada (@fig-rii).
+
+En los **efectos indirectos** aparece el rasgo más llamativo: *Cistus ladanifer* muestra valores claramente negativos en ambas fechas (−0.287 y −0.330), bastante más intensos que en *Q. ilex*. Esto indica que, bajo pinar, la presencia de *Cistus* se asocia con una reducción relativa de la supervivencia de *Q. faginea* frente al claro del mismo ambiente. En cambio, *Genista scorpius* y *Rosa canina* apenas se apartan de cero (0.0333–0.0370 y 0.0667–0.00370), lo que apunta a efectos indirectos muy débiles o casi neutros. En conjunto, *Q. faginea* parece responder con mayor sensibilidad al contexto impuesto por el pinar y por ciertos arbustos, especialmente *Cistus*, lo que encaja con su mayor sensibilidad al estrés ambiental (@fig-rii).
+
+Comparada con *Q. ilex*, *Q. faginea* no muestra una facilitación universalmente más intensa en todos los casos, pero sí presenta una **mayor polarización de respuestas**. Ambas especies se benefician del pinar, aunque el efecto es algo más fuerte y más consistente en *Q. faginea* en la primera fecha. Sin embargo, donde la diferencia es más clara es en la respuesta a *Cistus ladanifer* bajo pinar: en *Q. ilex* el RII indirecto de *Cistus* es negativo, pero moderado, mientras que en *Q. faginea* es claramente más negativo, lo que sugiere que la especie más sensible al estrés no solo puede beneficiarse más de ciertas condiciones protectoras, sino también sufrir con mayor intensidad los microambientes desfavorables. En síntesis, los datos apuntan a que *Q. faginea* es más reactiva al contexto ambiental, con una respuesta más sensible tanto a la facilitación del pinar como a los posibles efectos perjudiciales de algunos arbustos (@fig-rii).
+
+```{r}
+#| label: fig-rii
+#| caption: "Mean (± SE) Relative Interaction Index (RII) of seedling survival for Quercus ilex and Quercus faginea. Positive values indicate facilitation and negative values indicate competition. Panels show survey date and interaction type (direct or indirect)."
+agg.rii.qi <- 
+aggID.df.rii.qi |> 
+  filter_out(surv_date == "12/06/2025") |> 
+  group_by(surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    n = sum(!is.na(mean)),
+    media = mean(mean, na.rm = TRUE),
+    se = sd(mean, na.rm = TRUE) / sqrt(n),
+    .groups = "drop"
+  ) |> 
+  mutate(quercus_sp = "Q. ilex")
+
+agg.rii.qf <- 
+  aggID.df.rii.qf |> 
+  filter_out(surv_date == "12/06/2025") |> 
+  group_by(surv_date, type_RII, Interacting_species) |> 
+  summarise(
+    n = sum(!is.na(mean)),
+    media = mean(mean, na.rm = TRUE),
+    se = sd(mean, na.rm = TRUE) / sqrt(n),
+    .groups = "drop"
+  ) |> 
+  mutate(quercus_sp = "Q. faginea")
+
+agg.rii <- rbind(agg.rii.qi, agg.rii.qf)
+
+ggplot(agg.rii, aes(x = media, y = Interacting_species, colour = quercus_sp)) + 
+  geom_point(position = position_dodge(width = .5), size = 1.5) +
+  geom_errorbarh(aes(xmin = media - se, xmax = media + se), width = .5, position = position_dodge(width = .5)) +
+  geom_vline(aes(xintercept = 0), linetype = "dashed", colour = "red") +
+  facet_grid(surv_date~type_RII) +
+  ylab("") +
+  xlab("RII") +
+  labs(title = "Direct and indirect RII") +
+  coord_cartesian(xlim = c(-.6, .6)) +
+  theme_light() +
+  theme(legend.position = "bottom")
+```
+
+## 

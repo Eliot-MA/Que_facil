@@ -1,4 +1,4 @@
-source("01-scripts/01.21-survival.R")
+# source("01-scripts/01.21-survival.R")
 
 # 1. Prepare data ----
 
@@ -100,8 +100,10 @@ aggID.df.rii.qf <- df.rii.qf |>
     mean = mean(RII, na.rm = TRUE), 
     sd   = sd(RII, na.rm = TRUE)
   )
-p1 <- 
-  aggID.df.rii.qi |> 
+
+agg.rii.qi <- 
+aggID.df.rii.qi |> 
+  filter_out(surv_date == "12/06/2025") |> 
   group_by(surv_date, type_RII, Interacting_species) |> 
   summarise(
     n = sum(!is.na(mean)),
@@ -109,18 +111,11 @@ p1 <-
     se = sd(mean, na.rm = TRUE) / sqrt(n),
     .groups = "drop"
   ) |> 
-  ggplot(aes(x = media, y = Interacting_species)) + 
-  geom_point() +
-  geom_errorbarh(aes(xmin = media - se, xmax = media + se), width = .5) +
-  geom_vline(aes(xintercept = 0), linetype = "dashed", colour = "red") +
-  facet_grid(surv_date~type_RII) +
-  ylab("") +
-  xlab("RII") +
-  labs(title = "Q. ilex") +
-  coord_cartesian(xlim = c(-.6, .6))
+  mutate(quercus_sp = "Q. ilex")
 
-p2 <- 
+agg.rii.qf <- 
   aggID.df.rii.qf |> 
+  filter_out(surv_date == "12/06/2025") |> 
   group_by(surv_date, type_RII, Interacting_species) |> 
   summarise(
     n = sum(!is.na(mean)),
@@ -128,16 +123,23 @@ p2 <-
     se = sd(mean, na.rm = TRUE) / sqrt(n),
     .groups = "drop"
   ) |> 
-  ggplot(aes(x = media, y = Interacting_species)) + 
-  geom_point() +
-  geom_errorbarh(aes(xmin = media - se, xmax = media + se), width = .5) +
+  mutate(quercus_sp = "Q. faginea")
+
+agg.rii <- rbind(agg.rii.qi, agg.rii.qf)
+
+
+# Asegúrate de ejecutar tu código del gráfico primero:
+ggplot(agg.rii, aes(x = media, y = Interacting_species, colour = quercus_sp)) + 
+  geom_point(position = position_dodge(width = .5), size = 1.5) +
+  geom_errorbarh(aes(xmin = media - se, xmax = media + se), width = .5, position = position_dodge(width = .5)) +
   geom_vline(aes(xintercept = 0), linetype = "dashed", colour = "red") +
   facet_grid(surv_date~type_RII) +
   ylab("") +
   xlab("RII") +
-  labs(title = "Q. faginea") +
-  coord_cartesian(xlim = c(-.6, .6))
+  labs(title = "Direct and indirect RII") +
+  coord_cartesian(xlim = c(-.6, .6)) +
+  theme_light() +
+  theme(legend.position = "bottom")
 
-library(patchwork)
-
-p1 + p2
+# Luego, guarda el gráfico:
+ggsave("08-img/eda_meanse_rii.png", width = 10, height = 8, dpi = 300)
