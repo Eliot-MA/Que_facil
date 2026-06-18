@@ -22,95 +22,97 @@ biblio-style: ../../09-bib/ecology.csl
 lightbox: true
 ---
 
-# Introducción 
+# Introduction
 
-Las interacciones entre plantas son motores cruciales de la composición y diversidad de las comunidades. Estas pueden ser directas (entre dos especies) o indirectas (cuando una tercera especie modifica la interacción entre las dos primeras) [@Michalet2014]. 
+Plant–plant interactions are key drivers of community composition and diversity. These interactions can be direct (between two species) or indirect (when a third species modifies the interaction between the first two) [@Michalet2014].
 
-* **Tipos de efectos indirectos:**
-  * **Facilitación indirecta:** Ocurre cuando una especie reduce la competencia que sufren otras dos [@Michalet2014 & @Michalet2017].
-  * **Competencia indirecta:** Se produce cuando un facilitador aumenta tanto la biomasa de una especie competidora que esta acaba perjudicando a una tercera especie (beneficiaria original) [@Michalet2014 & @Michalet2017].
+* **Types of indirect effects:**
 
-* **Mecanismos de Interacción:**
-  * **Competencia por recursos (Explotación):** Interacción indirecta a través de un recurso limitado común (agua, nutrientes) [@Michalet2017].
-  * **Interferencia:** Forma directa de competencia donde un organismo interfiere activamente con la capacidad de otro para obtener recursos, por ejemplo, mediante la acumulación de hojarasca que actúa como barrera física o modifica la humedad del suelo [@Michalet2017].
-  * **Efectos de Copa vs. Raíces:** Las plantas pueden tener efectos positivos (protección térmica) o negativos (competencia por luz) a través de su copa, y efectos variables a través de sus raíces (competencia por nutrientes o facilitación mediante micorrizas) [@Wang2017].
+  * **Indirect facilitation:** Occurs when one species reduces the competition experienced by two other species [@Michalet2014 & @Michalet2017].
+  * **Indirect competition:** Occurs when a facilitator increases the biomass of a competing species to such an extent that it ultimately harms a third species (the original beneficiary) [@Michalet2014 & @Michalet2017].
 
-* **Interacciones "Ocultas":** A nivel de comunidad, el efecto neto puede parecer nulo si existen interacciones positivas y negativas que se compensan entre sí (balance), aunque estas interacciones individuales sigan determinando la composición de especies [@Michalet2014 & @Wang2017]. 
+* **Interaction mechanisms:**
 
-El empleo del índice **RII** responde a la necesidad de utilizar una métrica comparativa estandarizada que permita cuantificar con precisión tanto la **fuerza** como la **dirección** de las interacciones bióticas entre especies. A diferencia de otros índices, el RII destaca por ser **simétrico alrededor de cero**, lo que facilita una interpretación estadística equilibrada donde los valores positivos indican facilitación y los negativos competencia, acotando los resultados en un rango estricto entre +1 y -1. Esta propiedad resulta fundamental en estudios de comunidades complejas, ya que permite desglosar y comparar matemáticamente diferentes componentes de la interacción —como los efectos de la copa frente a los de las raíces, o los efectos directos frente a los indirectos—, revelando **"interacciones ocultas"** que a menudo se compensan entre sí y que no serían detectables mediante un análisis de efecto neto a nivel de comunidad [@Michalet2014; @Michalet2017 & @Wang2017].
+  * **Resource competition (exploitation):** Indirect interaction through a shared limiting resource (water, nutrients) [@Michalet2017].
+  * **Interference:** A direct form of competition in which one organism actively interferes with another’s ability to acquire resources, for example through litter accumulation that acts as a physical barrier or alters soil moisture [@Michalet2017].
+  * **Canopy vs. root effects:** Plants may exert positive (thermal buffering) or negative (light competition) effects through their canopy, and variable effects through their roots (nutrient competition or facilitation via mycorrhizal associations) [@Wang2017].
 
-# Objetivos
+* **“Hidden” interactions:** At the community level, net effects may appear neutral when positive and negative interactions compensate each other, although these interactions still structure species composition [@Michalet2014 & @Wang2017].
 
-1) Establecer la metodología para la aplicación del cálculo del RII a nuestro caso de estudio. 
+The use of the **RII (Relative Interaction Index)** responds to the need for a standardized comparative metric that quantifies both the **strength** and **direction** of biotic interactions between species. Unlike other indices, RII is **symmetric around zero**, enabling a balanced statistical interpretation where positive values indicate facilitation and negative values indicate competition, constrained between +1 and −1. This property is essential in complex community studies, as it allows the decomposition and mathematical comparison of different interaction components—such as canopy vs. root effects, or direct vs. indirect effects—revealing **“hidden interactions”** that may cancel out at the net community level [@Michalet2014; @Michalet2017 & @Wang2017].
 
-2) Explorar los resultados del cálculo del RII. 
+# Objectives
 
-3) Establecer la metodología para la aplicación de los análisis estadísticos necesarios para obtener conclusiones sobre qué efectos encontrados a través del RII son significativos. 
+1. To establish the methodology for applying RII calculations to our case study.
+2. To explore the results of RII calculations.
+3. To define the statistical methodology required to determine which RII-derived effects are significant.
 
-# Metodología
+# Methodology
 
-## Diseño experimental {#sec-design}
+## Experimental design {#sec-design}
 
-El estudio combinó tres factores principales para analizar la facilitación
+The study combined three main factors to analyze facilitation:
 
-* **Ambiente (2 niveles):** Se seleccionaron dos áreas colindantes en el Monte Público Jócar (Guadalajara): un pinar de *Pinus pinaster* (cubierta arbórea) y una zona abierta dominada por matorral tras un incendio en 2014.
+* **Environment (2 levels):** Two adjacent areas in Monte Público Jócar (Guadalajara, Spain) were selected: a *Pinus pinaster* forest (tree cover) and gap dominated by shrubland following a wildfire in 2014.
 
-* **Micrositio (4 niveles):** Se definieron según la especie de arbusto nodriza: jara (*Cistus ladanifer*), aliaga (*Genista scorpius*), rosa (*Rosa canina*) y un control sin vegetación denominado claro.
+* **Microsite (4 levels):** Defined according to nurse shrub species: *Cistus ladanifer*, *Genista scorpius*, *Rosa canina*, and a vegetation-free control (“open area”).
 
-* **Especie facilitada (2 niveles):** Se plantaron dos quercíneas con estrategias ecológicas contrastadas: *Quercus ilex* (perennifolia y tolerante al estrés) y *Quercus faginea* (caducifolia y más sensible a la sequía).
+* **Facilitated species (2 levels):** Two oak species with contrasting ecological strategies were planted: *Quercus ilex* (evergreen and stress-tolerant) and *Quercus faginea* (deciduous and more drought-sensitive).
 
-Se seleccionaron aleatoriamente 60 réplicas por cada micrositio, distribuidas equitativamente entre los dos ambientes (30 en pinar y 30 en el abierto), lo que suma un total de 240 micrositios. En cada uno de estos micrositios se plantaron dos individuos: uno de cada especie de *Quercus*. 
+Sixty replicates per microsite were randomly selected, evenly distributed between the two environments (30 in pine forest and 30 in gap habitat), totaling 240 microsites. In each microsite, two individuals were planted: one from each *Quercus* species.
 
-## Cálculo del RII
+## RII calculation
 
-El $RII$ es un índice estandarizado utilizado para cuantificar la fuerza y dirección de las interacciones bióticas. Su fórmula general es:
-
-$$
-RII = 
-\frac{X_{\text{con vecinos}} - X_{\text{sin vecinos}}}{X_{\text{con vecinos}} + X_{\text{sin vecinos}}}
-$$
-
-Donde $X$ representa una medida de desempeño de la planta (comúnmente biomasa, riqueza de especies o abundancia).
-
-Propiedades del RII:
-
-* Es simétrico alrededor de cero.
-* Varía entre -1 (competencia máxima) y +1 (facilitación máxima).
-
-El $RII$ se cálcula normalmente sobre valores continuos (biomasa) o discretos positivos. Sin embargo, su cálculo sobre valores de supervivencia (distribución binomial, 0/1) es menos común. Aún así, puede aplicarse con algunas adaptaciones. 
-
-### RII en datos binomiales (0/1)
-
-El cálculo del RII en datos binomiales puede aplicarse casi de la misma manera. Por ejemplo, para el cálculo del RII entre las observaciones $i$ y $j$ ($RII_{ij}$), se toma el valor de supervivencia de la observación $i$ en presencia del arbusto ($S_{a_i}$) y se toma el valor de supervivencia del observación $j$ en ausencia del arbusto ($S_{b_j}$). Al tratarse de valores binomiales, el resultado solo puede dar +1, 0 o -1. En el caso en que tanto $S_{a_i}$ como $S_{b_j}$ sean 0, $RII_{ij}$ se define como 0 por convención.
+The $RII$ is a standardized index used to quantify the strength and direction of biotic interactions. Its general formula is:
 
 $$
-RII_{ij} = \frac{S_{a_i}-S_{b_j}}{S_{a_i}+S_{b_j}} 
+RII =
+\frac{X_{\text{with neighbors}} - X_{\text{without neighbors}}}{X_{\text{with neighbors}} + X_{\text{without neighbors}}}
+$$
+
+Where $X$ represents a measure of plant performance (commonly biomass, species richness, or abundance).
+
+Properties of RII:
+
+* Symmetric around zero
+* Ranges from −1 (maximum competition) to +1 (maximum facilitation)
+
+RII is typically calculated on continuous (biomass) or positive discrete data. However, its application to binary survival data (0/1) is less common, though still possible with adaptations.
+
+### RII in binary data (0/1)
+
+RII can be computed in a similar way for binary data. For a pair of observations $i$ and $j$ ($RII_{ij}$), survival under shrub presence ($S_{a_i}$) is compared with survival in open conditions ($S_{b_j}$). Since values are binary, the result can only be +1, 0, or −1. When both $S_{a_i}$ and $S_{b_j}$ are 0, $RII_{ij}$ is defined as 0 by convention.
+
+$$
+RII_{ij} = \frac{S_{a_i}-S_{b_j}}{S_{a_i}+S_{b_j}}
 $$ {#eq-RII}
 
 except when:
 
 $$
-S_a+S_B=0\text{ ; }RII=0
+S_a + S_B = 0 ;; \Rightarrow ;; RII = 0
 $$
 
-| ($S_{a_i}$) | ($S_{b_j}$) | ($RII_{ij}$)                  |
-| --------- | --------- | --------------------------- |
-| 1         | 0         | 1                           |
-| 0         | 1         | -1                          |
-| 1         | 1         | 0                           |
-| 0         | 0         | 0 (defined by convention)   |
+| ($S_{a_i}$) | ($S_{b_j}$) | ($RII_{ij}$)      |
+| ----------- | ----------- | ----------------- |
+| 1           | 0           | 1                 |
+| 0           | 1           | -1                |
+| 1           | 1           | 0                 |
+| 0           | 0           | 0 (by convention) |
 
-### RII en nuestro diseño experimental
+: Possible RII outcomes for binary (0/1) data {#tbl-posible.RII}
 
-**Comparación con todos los controles**
+### RII in our experimental design
 
-Como vimos en la @sec-design, nuestro diseño no presenta controles pareados. Esto implica que cada observación de supervivencia debajo de un arbusto no tiene una medida de supervivencia asociada en una posición sin arbusto cerncana. Por lo tanto, dada una réplica de supervivencia debajo de un arbusto, no hay ninguna réplica de los controles elegida para el cálculo del RII. La ausencia de controles pareados es una consecuencia lógica de que la aproxmiación original a la pregunta de investigación no tenía en cuenta el RII. 
+**Comparison against all controls**
 
-Dado que ningún control es el predilecto para el cálculo del RII, se optó por la fuerza bruta y comparar la supervivencia debajo de cada individuo de arbusto con la supervivencia de todos los controles. Dado que existen 30 controles, cada especie de quercínea debajo de cada individuo de arbusto tendrá 30 valores de RII (@eq-RII). 
+As shown in @sec-design, the design does not include paired controls. This means that each survival observation under a shrub does not have a directly associated survival observation in a nearby shrub-free location. Therefore, for any given shrub-associated observation, there is no single predefined control replicate to use for RII calculation. This lack of pairing is a consequence of the original experimental design, which was not initially developed with RII computation in mind.
 
-Por ejemplo, si queremos calcular el $RII$ de la interacción directa del *Cistus ladanifer* 1 ($RII_{Cistus_1}$) tendrán que calcularse 30 $RII$, uno para cada combinación con los controles ($RII_{Cistus_1 - Control_1}$, $RII_{Cistus_1 - Control_2}$, $RII_{Cistus_1 - Control_3}$, ..., $RII_{Cistus_1 - Control_{30}}$). 
+Since no control is uniquely matched to each observation, a brute-force approach was used: survival under each shrub individual is compared against survival from all control plots. Given that there are 30 control replicates, each oak seedling under each shrub yields 30 RII values (@eq-RII).
 
-Para obtener un valor único de $RII_{Cistus_1}$ se calcula el promedio de todos los valores.[^1] La misma lógica puede aplicarse para todos individuos:
+For example, to compute the $RII$ for the direct interaction under *Cistus ladanifer* individual 1 ($RII_{Cistus_1}$), 30 RII values are computed, one for each control replicate ($RII_{Cistus_1-Control_1}, \dots, RII_{Cistus_1-Control_{30}}$).
+
+A single value of $RII_{Cistus_1}$ is then obtained by averaging all pairwise values:
 
 $$
 \overline{RII}_{Cistus_1}
@@ -120,42 +122,42 @@ $$
 RII_{Cistus_1j}
 $$
 
-[^1]: Esta aproximación da lugar a muchos valores de $RII$ por individuo. La estructura de medidas repetidas permite modelos mixtos para dar cuenta de la estructura anidada de las observaciones. Sin embargo, no se abordará en este reporte de resultados. 
+[^1]: This approach produces many RII values per individual. The repeated-measures structure allows the use of mixed models to account for nested observations. However, this is not addressed in this report.
 
-**Establecer comparaciones de interés**
+**Defining meaningful comparisons**
 
-El método para el cálculo de un $RII$ por individuo implica la selección de qué comparaciones tienen significado biológico o interés para las preguntas experimentales que queremos abordar. 
+The computation of a single RII per individual requires defining which comparisons are biologically meaningful for the research questions.
 
-Establecemos las siguientes restricciones sobre las comparaciones que tienen interés para el estudio. 
+We impose the following constraints:
 
-1) Todos los $RII$ se calcularán para la supervivencia dentro de una misma especie de quercínea. Por ejemplo, no tiene sentido calcular un $RII$ donde se comparan la supervivencia de *Q. ilex* debajo de *Cistus ladanifer* con la supervivencia de *Q. faginea* debajo de *Cistus ladanifer*. El trabajo asume que las quercíneas plantadas son lo suficientemente jóvenes (un año de edad) y están lo suficientemente separadas debajo del arbusto como para no establecer relaciones de competencia entre ellas. Si el trabajo tuviera esta interacción como pregunta experimental, sí tendría sentido calcular este tipo de $RII$. 
+1. All RII values are computed within the same oak species. For example, it is not meaningful to compare *Quercus ilex* under *Cistus ladanifer* with *Quercus faginea* under the same shrub. The experimental design assumes that the planted oaks are young enough (one year old) and sufficiently spaced to avoid direct competition.
 
-2) **Efectos directos de los arbustos** ($RII_{direct}^{shrubs}$). El efecto directo de los arbustos sobre la quercínea, es decir sin que esté implicado el pinar, se calculará como la supervivencia debajo del arbusto sin pinar, comparada con la supervivencia en los claros (regiones sin arbusto) sin pinar. 
+2. **Direct effects of shrubs** ($RII_{direct}^{shrubs}$): Effect of shrubs on oak survival without pine influence, comparing shrub microsites vs. open area in the gap environment.
 
-3) **Efectos indirectos de los arbustos** ($RII_{indirect}^{shrubs}$). El efecto indirecto de los arbustos sobre la quercínea, es decir con el pinar implicado, se calculará como la supervivencia debajo del arbusto en en el pinar, comparada con la supervivencia en los claros (regiones sin arbusto) en el pinar. 
+3. **Indirect effects of shrubs** ($RII_{indirect}^{shrubs}$): Effect of shrubs on oak survival under pine cover, comparing shrub microsites vs. without-shrubs within the pine forest.
 
-4) **Efectos directos del pinar** ($RII_{direct}^{pine}$). El efecto directo del pinar sobre la quercínea, es decir sin arbustos implicados, se calculará como la supervivencia en el pinar en los claros (regiones sin arbusto), comparada con la supervivencia en los claros sin pinar. 
+4. **Direct effects of pine** ($RII_{direct}^{pine}$): Effect of pine forest on oak survival in open area (no shrubs), comparing pine vs. gap conditions.
 
-5) **Efecto indirecto del pinar** ($RII_{indirect}^{pine}$). Existe un cuarto $RII$ que puede calcularse, que es el efecto indirecto del pinar sobre las quercíneas. Podría calcularse comparando la supervivencia de la quercínea debajo del arbusto en el pinar con la supervivencia debajo del arbusto sin pinar. Este $RII$ sería interesante si quisiéramos explorar como el efecto del pinar sobre las quercíneas cambia si tiene arbustos debajo. Sin embargo, una de las asunciones teóricas de nuestro experimento es que el pinar no se ve afectado por los arbustos creciendo debajo de él. El pinar actúa como un simple elemento que cambia las condiciones climáticas generales, y nuestra pregunta se centra en el efecto del pinar sobre los arbustos y las quercíneas. 
+5. **Indirect effects of pine** ($RII_{indirect}^{pine}$): Effect of pine on oak survival under shrubs, comparing pine vs. open conditions within shrub microsites. This would capture contextual effects of pine mediated by shrub presence. However, this is not central to the study’s theoretical assumptions, which treat pine as a background environmental modifier rather than a target of shrub feedbacks.
 
-| Efecto | Tipo | Comparación (tratamiento vs control) | Condición del pinar | Condición de arbustos | Interpretación |
-|--------|------|--------------------------------------|----------------------|------------------------|----------------|
-| $RII_{direct}^{shrubs}$ | Arbustos (directo) | Bajo arbusto vs claro | Sin pinar | Variable arbusto vs claro | Efecto directo de los arbustos sobre la supervivencia de la quercínea sin influencia del pinar |
-| $RII_{indirect}^{shrubs}$ | Arbustos (indirecto) | Bajo arbusto vs claro | Con pinar | Variable arbusto vs claro | Efecto de los arbustos sobre la quercínea cuando el pinar está presente |
-| $RII_{direct}^{pine}$ | Pinar (directo) | Pinar vs sin pinar | En claros (sin arbusto) | Sin arbusto | Efecto directo del pinar sobre la supervivencia en ausencia de arbustos |
-| $RII_{indirect}^{pine}$ | Pinar (indirecto) | Pinar vs sin pinar | Bajo arbusto | Bajo arbusto | Efecto del pinar sobre la quercínea cuando los arbustos están presentes (interacción contextual) |
+| Effect                    | Type              | Comparison (treatment vs control) | Pine condition     | Shrub condition | Interpretation                                                                      |
+| ------------------------- | ----------------- | --------------------------------- | ------------------ | --------------- | ----------------------------------------------------------------------------------- |
+| $RII_{direct}^{shrubs}$   | Shrubs (direct)   | Under shrub vs open                | Without pine       | Shrub vs open    | Direct shrub effect on oak survival without pine influence                          |
+| $RII_{indirect}^{shrubs}$ | Shrubs (indirect) | Under shrub vs open                | With pine          | Shrub vs open    | Shrub effect on oak survival in presence of pine                                    |
+| $RII_{direct}^{pine}$     | Pine (direct)     | Pine vs no pine (gap)                   | In open (no shrub) | No shrub        | Direct pine effect on survival without shrubs                                       |
 
-## Análisis estadístico
+## Statistical analysis
 
-Para determinar si los efectos detectados son estadísticamente significativos y cómo influyen en la comunidad, emplearemos dos métodos:
+To determine whether the detected effects are statistically significant and how they influence the community, two methods will be used:
 
-- Prueba t de una muestra (one-sample t-test): Se utiliza para determinar si el valor medio del RII es significativamente diferente de cero. Si lo es, existe un efecto significativo (facilitador si es >0, competitivo si es <0).
+* **One-sample t-test:** This test is used to assess whether the mean RII value is significantly different from zero. If it is, a significant effect is present (facilitative if > 0, competitive if < 0).
 
-- ANOVA: Se usa para comparar si diferentes tipos de RII (ej. RII directo vs. indirecto) son significativamente distintos entre sí, lo que indica un efecto indirecto significativo. 
+* **ANOVA:** This is used to compare whether different types of RII (e.g., direct vs. indirect RII) differ significantly from each other, indicating a significant indirect effect.
 
-# Resultados
 
-## Descripción de resultados
+# Results
+
+## Description
 
 ```{r}
 library(tidyverse)
@@ -267,19 +269,18 @@ aggID.df.rii.qf <- df.rii.qf |>
 ```
 
 
-**Encina**.
+**Holm oak (Quercus ilex)**
 
-En efectos directos de los arbustos, los valores son positivos para las tres especies nodrizas en ambas fechas. Eso indica que, en ausencia de pinar, la supervivencia de *Q. ilex* fue en general mejor bajo arbusto que en claro. El efecto más fuerte aparece en el efecto directo de  *Pinus pinaster*. Entre fechas, el efecto facilitador de *Cistus ladanifer* se vuelve más fuerte en mayor del 2026, mientras que el efecto de *Genista scorpius* se acerca más a 0 (@fig-rii). 
+In the direct shrub effects, values are positive for all three nurse species at both sampling dates. This indicates that, in the absence of pine forest, *Q. ilex* survival was generally higher under shrubs than in gaps. The strongest effect appears in the direct effect of *Pinus pinaster*. Across dates, the facilitative effect of *Cistus ladanifer* becomes stronger in May 2026, while the effect of *Genista scorpius* moves closer to zero (@fig-rii).
 
-En efectos indirectos de los arbustos, la lectura cambia un poco. *Cistus ladanifer* pasa a valores negativos en ambas fechas (−0.0805 y −0.145), lo que sugiere que bajo pinar su efecto sobre la supervivencia de *Q. ilex* es ligeramente desfavorable respecto al claro del mismo ambiente. No es un efecto muy fuerte, pero sí apunta a una posible inversión contextual. Las otras dos especies mantienen su efecto positivo, pero el efecto de *Rosa canina* se vuelve menos claro en la segunda fecha (@fig-rii). 
+In the indirect shrub effects, the pattern shifts slightly. *Cistus ladanifer* shows negative values at both dates (−0.0805 and −0.145), suggesting that under pine cover its effect on *Q. ilex* survival is slightly less favorable than in gaps within the same environment. This is not a strong effect, but it does suggest a potential contextual inversion. The other two shrub species maintain positive effects, although the effect of *Rosa canina* becomes less clear in the second date (@fig-rii).
 
-**Quejigo**
+**Portuguese oak (Quercus faginea)**
 
-En *Q. faginea* se observa un patrón más contrastado que en *Q. ilex*. En los **efectos directos** sobre claros, el pinar muestra los valores más altos de RII en ambas fechas (0.567 y 0.530), lo que puede indicar una facilitación clara y consistente de la supervivencia bajo el dosel respecto al claro. Entre los arbustos, *Cistus ladanifer* presenta valores positivos pero más moderados (0.233 y 0.133), mientras que *Genista scorpius* y *Rosa canina* muestran efectos directos débiles, cercanos a cero en la segunda fecha. Esto sugiere que, para *Q. faginea*, el microambiente favorable de los arbustos solo se expresa de forma modesta, mientras que el pinar ejerce una influencia más marcada (@fig-rii).
+In *Q. faginea*, a more contrasted pattern emerges than in *Q. ilex*. In the direct effects, pine shows the highest RII values in both dates (0.567 and 0.530), indicating a clear and consistent facilitative effect of the pine canopy on survival relative to gap conditions. Among shrubs, *Cistus ladanifer* shows positive but more moderate values (0.233 and 0.133), while *Genista scorpius* and *Rosa canina* show weak direct effects, close to zero in the second date. This suggests that, for **Q. faginea*, the favourable microsite effect of shrubs is modest, whereas pine exerts a stronger influence (@fig-rii).
 
-En los **efectos indirectos** aparece el rasgo más llamativo: *Cistus ladanifer* muestra valores claramente negativos en ambas fechas (−0.287 y −0.330), bastante más intensos que en *Q. ilex*. Esto indica que, bajo pinar, la presencia de *Cistus* se asocia con una reducción relativa de la supervivencia de *Q. faginea* frente al claro del mismo ambiente. En cambio, *Genista scorpius* y *Rosa canina* apenas se apartan de cero (0.0333–0.0370 y 0.0667–0.00370), lo que apunta a efectos indirectos muy débiles o casi neutros. En conjunto, *Q. faginea* parece responder con mayor sensibilidad al contexto impuesto por el pinar y por ciertos arbustos, especialmente *Cistus*, lo que encaja con su mayor sensibilidad al estrés ambiental (@fig-rii).
+In the indirect effects, the most striking pattern appears: *Cistus ladanifer* shows clearly negative values at both dates (−0.287 and −0.330), substantially more negative than in *Q. ilex*. This indicates that, under pine cover, the presence of *Cistus* is associated with a reduction in *Q. faginea* survival relative to open (without shrubs) within the same environment. In contrast, *Genista scorpius* and *Rosa canina* remain close to zero (0.0333–0.0370 and 0.0667–0.00370), suggesting very weak or nearly neutral indirect effects. Overall, *Q. faginea* appears more sensitive to the contextual conditions imposed by pine and by certain shrubs, especially *Cistus*, consistent with its higher sensitivity to environmental stress (@fig-rii).
 
-Comparada con *Q. ilex*, *Q. faginea* no muestra una facilitación universalmente más intensa en todos los casos, pero sí presenta una **mayor polarización de respuestas**. Ambas especies se benefician del pinar, aunque el efecto es algo más fuerte y más consistente en *Q. faginea* en la primera fecha. Sin embargo, donde la diferencia es más clara es en la respuesta a *Cistus ladanifer* bajo pinar: en *Q. ilex* el RII indirecto de *Cistus* es negativo, pero moderado, mientras que en *Q. faginea* es claramente más negativo, lo que sugiere que la especie más sensible al estrés no solo puede beneficiarse más de ciertas condiciones protectoras, sino también sufrir con mayor intensidad los microambientes desfavorables. En síntesis, los datos apuntan a que *Q. faginea* es más reactiva al contexto ambiental, con una respuesta más sensible tanto a la facilitación del pinar como a los posibles efectos perjudiciales de algunos arbustos (@fig-rii).
 
 ```{r}
 #| label: fig-rii
@@ -323,4 +324,252 @@ ggplot(agg.rii, aes(x = media, y = Interacting_species, colour = quercus_sp)) +
   theme(legend.position = "bottom")
 ```
 
-## 
+## T-test and data normality
+
+The analysis of the results using t-tests yields conclusions that are very similar to those obtained from the descriptive exploration of the data.
+
+```{r}
+# Añadir nombre de especie
+rii.qi <- aggID.df.rii.qi |>
+  mutate(quercus_sp = "Q. ilex")
+
+rii.qf <- aggID.df.rii.qf |>
+  mutate(quercus_sp = "Q. faginea")
+
+rii.all <- bind_rows(rii.qi, rii.qf) |>
+  filter(surv_date != "12/06/2025")
+
+# One-sample t-tests against RII = 0
+
+ttest.rii <- rii.all |>
+  group_by(
+    quercus_sp,
+    surv_date,
+    type_RII,
+    Interacting_species
+  ) |>
+  summarise(
+    test = list(t.test(mean, mu = 0)),
+    .groups = "drop"
+  ) |>
+  mutate(tidy = map(test, broom::tidy)) |>
+  unnest(tidy) |>
+  select(
+    quercus_sp,
+    surv_date,
+    type_RII,
+    Interacting_species,
+    estimate,
+    statistic,
+    parameter,
+    conf.low,
+    conf.high,
+    p.value
+  ) |>
+  arrange(quercus_sp,
+          surv_date,
+          type_RII,
+          Interacting_species)
+
+ttest.rii <- ttest.rii |>
+  mutate(
+    interpretation = case_when(
+      p.value < 0.05 & estimate > 0 ~ "Facilitation",
+      p.value < 0.05 & estimate < 0 ~ "Competition",
+      TRUE ~ "Neutral"
+    )
+  )
+```
+
+```{r}
+ggplot(
+  ttest.rii,
+  aes(
+    x = estimate,
+    y = Interacting_species,
+    colour = interpretation
+  )
+) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_point(aes(shape = quercus_sp), size = 3, 
+             position = position_dodge(width = 1)) +
+  geom_errorbarh(
+    aes(
+      xmin = conf.low,
+      xmax = conf.high, 
+      shape = quercus_sp
+    ),
+    height = .2, 
+    position = position_dodge(width = 1)
+  ) +
+  facet_grid(
+    surv_date ~  type_RII
+  ) +
+  theme_light() +
+  labs(
+    x = "Mean RII",
+    y = "",
+    colour = "Effect"
+  )
+```
+
+
+However, the analysis of the data distribution reveals clear departures from normality. As shown in the following count histogram, for the May 2026 survival data, RII values collapse into only two numerical possibilities for each species and each RII type (direct/indirect).
+
+```{r}
+ggplot(aggID.df.rii.qi |> filter(surv_date == "27/05/2026"), 
+       aes(x = mean)) +
+  geom_histogram(bins = 30) +
+  #geom_density() +
+  coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Interacting_species~type_RII)
+```
+
+The corresponding table provides the exact numerical values and the number of individuals associated with each.
+
+```{r}
+aggID.df.rii.qi |>
+  filter(surv_date == "27/05/2026") |> 
+  group_by(Interacting_species, type_RII, mean) |> 
+  count(mean)
+```
+
+A normal distribution of RII values was expected, given that the index is standardized between −1 and 1, and potentially skewed toward positive or negative values depending on species and interaction type.
+
+An examination of the RII calculation formula may help explain this pattern (@eq-RII). For binary variables, the expression simplifies exactly to:
+
+$$
+RII_{ij} = S_{A_i} - S_{B_j}
+$${#eq-RII_summ}
+
+because the four possible cases reproduce the same outcomes shown in table @tbl-posible.RII:
+
+$$
+\begin{array}{c c c}
+S_{A_i} & S_{B_j} & RII_{ij} \\
+\hline
+1 & 0 & 1 \\
+0 & 1 & -1 \\
+1 & 1 & 0 \\
+0 & 0 & 0 \\
+\end{array}
+$$
+
+Since $S_{A_i}$ is constant for each focal individual:
+
+$$
+\overline{RII_i} = S_{A_i} - \bar{B}
+$${#eq-RII_summ2}
+
+This has a direct consequence: 
+
+- if the focal individual survives, then $\overline{RII_i} = 1 - \bar{B}$, 
+- if the focal individual does not survive, then $\overline{RII_i} = 0 - \bar{B} = -\bar{B}$. 
+
+In other words, for each specific combination, the aggregated RII per individual can only take **two possible values**. In the following code example, it can be observed that the original calculation (@eq-RII), the simplified formulation (@eq-RII_summ), and the formulation where RII is expressed as the simple difference between survival in $A$ and the mean of $B$ (@eq-RII_summ2) all yield identical results.
+
+```{r}
+idA <- 1:5 
+A <- c(0,0,1,1,0)
+B <- c(0,0,1,0,0)
+
+ejemplo <- expand.grid(A = A, B = B) |> 
+  mutate(idA = rep(idA, 5),
+    RII_orig = if_else(A + B == 0, 0, (A - B) / (A + B)),
+         RII_summ = A - B)
+
+media_B <- mean(ejemplo$B)
+ejemplo |> 
+  mutate(media_B = media_B, 
+         A_media_B = A - media_B) |> 
+  group_by(idA) |> 
+  summarise(
+    media_RII_orig = mean(RII_orig), 
+    media_RII_summ = mean(RII_summ), 
+    media_RII_summ2 = mean(A_media_B)
+  )
+```
+
+This would explain why: 
+
+- the distributions are non-normal, 
+- histograms show only a few discrete peaks, 
+- quantiles repeat across observations, 
+- the Shapiro–Wilk test rejects normality in all cases. 
+
+In practical terms, the mean RII per individual is equivalent to a **difference in survival probabilities**:
+
+$$
+\overline{RII} = p_A - p_B
+$$
+
+where:
+
+- $p_A$ is the probability of survival under the focal condition, 
+- $p_B$ is the probability of survival under the reference condition.
+
+## Working on it...
+
+### *Q. ilex*
+
+```{r}
+df_filtrado <- 
+  df.rii.qi |> 
+  filter(surv_date == "27/05/2026") |> 
+  mutate(RII = factor(
+    RII,
+    levels = c(-1,0,1),
+    ordered = TRUE
+  ))
+
+library(ordinal)
+
+m0 <- clm(RII ~ Interacting_species * type_RII, data = df_filtrado)
+m1 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A), data = df_filtrado)
+# m2 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A) + (1|ind_B), data = df_filtrado)
+# do not converge
+
+AIC(m0, m1)
+
+summary(m1)
+
+library(emmeans)
+
+emm <- emmeans(m1, specs = ~ type_RII | Interacting_species, type = "response")
+
+library(multcomp)
+
+cld(emm)
+```
+
+### *Q. faginea*
+
+```{r}
+df_filtrado <- 
+  df.rii.qf |> 
+  filter(surv_date == "27/05/2026") |> 
+  mutate(RII = factor(
+    RII,
+    levels = c(-1,0,1),
+    ordered = TRUE
+  ))
+
+library(ordinal)
+
+m0 <- clm(RII ~ Interacting_species * type_RII, data = df_filtrado)
+m1 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A), data = df_filtrado)
+# m2 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A) + (1|ind_B), data = df_filtrado)
+# do not converge
+
+AIC(m0, m1)
+
+summary(m1)
+
+library(emmeans)
+
+emm <- emmeans(m1, specs = ~ type_RII | Interacting_species, type = "response")
+
+library(multcomp)
+
+cld(emm)
+```

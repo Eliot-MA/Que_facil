@@ -88,14 +88,14 @@ df.rii.qf <- pmap(comparisons, calc_rii, df = df.surv.qf) |>
 ## Compute aggregated RII per individual
 
 aggID.df.rii.qi <- df.rii.qi |> 
-  group_by(ind_A, env_A, ms_A, surv_date, type_RII, Interacting_species) |> 
+  group_by(ind_A, surv_date, type_RII, Interacting_species) |> 
   summarise(
     mean = mean(RII, na.rm = TRUE), 
     sd   = sd(RII, na.rm = TRUE)
   )
 
 aggID.df.rii.qf <- df.rii.qf |> 
-  group_by(ind_A, env_A, ms_A, surv_date, type_RII, Interacting_species) |> 
+  group_by(ind_A, surv_date, type_RII, Interacting_species) |> 
   summarise(
     mean = mean(RII, na.rm = TRUE), 
     sd   = sd(RII, na.rm = TRUE)
