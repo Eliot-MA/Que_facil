@@ -22,6 +22,10 @@ biblio-style: ../../09-bib/ecology.csl
 lightbox: true
 ---
 
+# Results summary
+
+Although the initial methodology used to calculate the RII generated a binomial distribution that is incompatible with standard parametric tests (ANOVA and t-tests), the results provide significant insights—specifically, the higher stress sensitivity of *Q. faginea* compared to *Q. ilex*. Consequently, alternative analytical approaches are currently being examined.
+
 # Introduction
 
 Plant–plant interactions are key drivers of community composition and diversity. These interactions can be direct (between two species) or indirect (when a third species modifies the interaction between the first two) [@Michalet2014].
@@ -508,68 +512,3 @@ where:
 - $p_A$ is the probability of survival under the focal condition, 
 - $p_B$ is the probability of survival under the reference condition.
 
-## Working on it...
-
-### *Q. ilex*
-
-```{r}
-df_filtrado <- 
-  df.rii.qi |> 
-  filter(surv_date == "27/05/2026") |> 
-  mutate(RII = factor(
-    RII,
-    levels = c(-1,0,1),
-    ordered = TRUE
-  ))
-
-library(ordinal)
-
-m0 <- clm(RII ~ Interacting_species * type_RII, data = df_filtrado)
-m1 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A), data = df_filtrado)
-# m2 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A) + (1|ind_B), data = df_filtrado)
-# do not converge
-
-AIC(m0, m1)
-
-summary(m1)
-
-library(emmeans)
-
-emm <- emmeans(m1, specs = ~ type_RII | Interacting_species, type = "response")
-
-library(multcomp)
-
-cld(emm)
-```
-
-### *Q. faginea*
-
-```{r}
-df_filtrado <- 
-  df.rii.qf |> 
-  filter(surv_date == "27/05/2026") |> 
-  mutate(RII = factor(
-    RII,
-    levels = c(-1,0,1),
-    ordered = TRUE
-  ))
-
-library(ordinal)
-
-m0 <- clm(RII ~ Interacting_species * type_RII, data = df_filtrado)
-m1 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A), data = df_filtrado)
-# m2 <- clmm(RII ~ Interacting_species * type_RII + (1|ind_A) + (1|ind_B), data = df_filtrado)
-# do not converge
-
-AIC(m0, m1)
-
-summary(m1)
-
-library(emmeans)
-
-emm <- emmeans(m1, specs = ~ type_RII | Interacting_species, type = "response")
-
-library(multcomp)
-
-cld(emm)
-```
