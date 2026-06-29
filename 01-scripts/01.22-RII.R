@@ -143,3 +143,104 @@ ggplot(agg.rii, aes(x = media, y = Interacting_species, colour = quercus_sp)) +
 
 # Luego, guarda el gráfico:
 ggsave("08-img/eda_meanse_rii.png", width = 10, height = 8, dpi = 300)
+
+##
+# Bootstrapping approach ----
+##
+
+library(tidyverse)
+
+## 1. Bootstrap por separado: controles y tratamientos ----
+
+bootstrap_survival_v2 <- function(df) {
+  
+  # Separar controles (open) y tratamientos
+  df_controls    <- df |> filter(microsite == "open")
+  df_treatments  <- df |> filter(microsite != "open")
+  
+  # --- Controles: un único bootstrap compartido ---
+  boot_controls <- df_controls |>
+    group_by(Environment, microsite, surv_date) |>
+    group_modify(~ {
+      boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
+      boot$Individual <- paste0(boot$Individual, "_", boot$quercus_sp, "_", seq_len(nrow(boot)))
+      boot
+    }) |>
+    ungroup()
+  
+  # --- Tratamientos: bootstrap dentro de cada quercus_sp ---
+  boot_treatments <- df_treatments |>
+    group_by(Environment, microsite, surv_date, quercus_sp) |>  # añadimos quercus_sp
+    group_modify(~ {
+      boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
+      boot$Individual <- paste0(boot$Individual, "_", boot$quercus_sp, "_", seq_len(nrow(boot)))
+      boot
+    }) |>
+    ungroup()
+  
+  # Devolver lista para usar los controles compartidos
+  list(
+    controls   = boot_controls,
+    treatments = boot_treatments
+  )
+  
+}
+
+## 2. Calcular RII por quercus_sp, con controles compartidos ----
+
+calc_rii_by_sp <- function(boot_list, comparisons) {
+  
+  map_dfr(unique(boot_list$treatments$quercus_sp), function(sp) {
+    
+    # Subset de tratamientos para esta especie
+    trt_sp <- boot_list$treatments |> filter(quercus_sp == sp)
+    
+    # Controles: filtramos también por especie para mantener coherencia
+    # (si los controles tienen las dos especies mezcladas, filtramos aquí)
+    ctrl_sp <- boot_list$controls |> filter(quercus_sp == sp)
+    
+    # Reconstruir df para esta especie: tratamientos + sus controles compartidos
+    df_sp <- bind_rows(trt_sp, ctrl_sp)
+    
+    # Calcular RII con las comparisons habituales
+    pmap(comparisons, calc_rii, df = df_sp) |>
+      bind_rows() |>
+      mutate(quercus_sp = sp)
+    
+  })
+  
+}
+
+## 3. Una iteración completa ----
+
+bootstrap_once_v2 <- function(df) {
+  
+  boot_list <- bootstrap_survival_v2(df)
+  
+  rii_boot  <- calc_rii_by_sp(boot_list, comparisons)
+  
+  # Resumen ahora incluye quercus_sp
+  rii_boot |>
+    group_by(surv_date, type_RII, Interacting_species, quercus_sp) |>
+    summarise(RII = mean(RII, na.rm = TRUE), .groups = "drop")
+  
+}
+
+## 4. Bootstrap final: 5000 iteraciones ----
+
+set.seed(123)
+
+boot.results <- map_dfr(
+  seq_len(5000),
+  function(i) {
+    bootstrap_once_v2(df.surv) |>
+      mutate(iteration = i)
+  }
+)
+
+# Change it depending on the quercus species used
+write.csv2(boot.results, file = "00-data/boot_RII.csv")
+
+
+
+

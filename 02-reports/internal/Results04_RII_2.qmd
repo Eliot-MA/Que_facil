@@ -1,0 +1,47 @@
+---
+title: "Relative interaction Index on survival data"
+subtitle: "Bootstrapping"
+author: "Mompeán, E."
+date: "today"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-summary: "Code"
+    theme: cosmo
+    code-line-numbers: true
+editor: visual
+execute:
+  warning: false
+  message: false
+bibliography: ../../09-bib/bibliography.bib
+biblio-style: ../../09-bib/ecology.csl
+lightbox: true
+---
+
+# Introduction
+
+During the initial calculation of the Relative Interaction Index (RII) from binomial data, we observed that the resulting variable does not follow a typical Gaussian distribution. Instead, the calculated RII exhibits a binomial-like distribution. The rationale behind this observation is detailed in the second results report.
+
+We aim to model RII based on survival data. Descriptive exploration yields compelling conclusions supporting the hypothesis that *Q. faginea* is more susceptible to stress. It appears that the RII allows us to capture information that the original binomial models failed to detect.
+
+One of the approaches considered was to model the RII as a binomial variable, reflecting the structure of the data. While mathematically feasible, I believe the ecological significance of the index is lost in this process. To apply this, we would need to encode every possible RII value (given only two possible outcomes per combination of species, RII type, and date) as 0 or 1. For instance, by encoding the lower RII value as 0 and the higher as 1, the model would answer the question: "What is the probability of obtaining a high RII value?" However, our research question concerns the **expected value of RII** for each species and interaction type. As the scientific inquiry shifts significantly, this approach has been discarded.
+
+Upon further investigation, the core difficulty appears to be that calculating the mean per individual collapses data variability. Although each pair compared per individual may take one of three possible values ($RII \in \{-1, 0, 1\}$), the calculation of the mean per individual eliminates this variance. In this regard, I propose three potential courses of action:
+
+1. **Bootstrapping:** Perform multiple RII calculations per individual by resampling the pairs to obtain a Gaussian RII distribution.
+2. **RII Calculation Based on Estimated Probabilities:** First, fit a binomial Generalized Linear Mixed Model (GLMM) and calculate the RII using the group-level probabilities estimated by the model:
+
+$$RII = \frac{p_A - p_B}{p_A + p_B}$$
+
+
+
+Since the GLMM already estimates the uncertainty of $p_A$ and $p_B$, methods for propagating this uncertainty into the RII calculation could be explored.
+
+3. **Mixed Multinomial Models:** Fit models for response variables with three categories ($RII \in \{-1, 0, 1\}$) and incorporate the non-independence structure into the random effects.
+
+Of the three proposed approaches, we will test the **bootstrapping method** in this report. The second approach is particularly noteworthy, as it integrates the two methodologies we are evaluating to explain differences in seedling performance across treatments into a two-step process (GLMM $\rightarrow$ RII calculation). The third approach, while perhaps the most suitable for precisely reflecting our data structure (multinomial with random effects), is highly complex. Given my current lack of experience with multinomial models, this option is deferred for future consideration.
+
