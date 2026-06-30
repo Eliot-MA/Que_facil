@@ -137,156 +137,339 @@ ggsave("08-img/RII_binomial_distribution.png", plot = p, width = 10, height = 8,
 # Bootstrap ----
 ## 
 
-boot.results <- read.csv2(file = "00-data/boot_RII.csv")
+boot.results <- read.csv2("00-data/boot_RII.csv")
 
-glimpse(boot.results)
-summary(boot.results)
+boot.results <- boot.results |> 
+  rename(Environment = type_RII) |> 
+  mutate(Environment = case_when(
+    Environment == "Direct" ~ "simple effect", 
+    Environment == "Indirect" ~ "conditioned effect"
+  ))
+# Florian noted that terms Direct and Indirect are the result of inference
+# it's more appropiate to name this variable as the environment 
+# where the interaction occure
+
+library(dplyr)
+library(tidyr)
 
 
-# Distribution
-boot.results |> 
-  filter(surv_date == "27/05/2026") |> 
-  ggplot(aes(x = RII)) +
-  geom_histogram(aes(fill = quercus_sp), alpha = .5) +
-  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
-  facet_grid(Interacting_species ~ type_RII)
+## Bootstrap summary functions ----
 
 
-# Diferences from zero
-# Actual competition or facilitation
-library(ggplot2)
+interpret_boot <- function(mean, IC2.5, IC97.5,
+                           positive_label,
+                           negative_label,
+                           neutral_label){
+  
+  contains_zero <- dplyr::between(0, IC2.5, IC97.5)
+  
+  interpretation <-
+    dplyr::case_when(
+      contains_zero ~ neutral_label,
+      mean > 0      ~ positive_label,
+      TRUE          ~ negative_label
+    )
+  
+  p_boot <- 2 * min(mean <= 0, mean >= 0)
+  
+  tibble(
+    contains_zero = contains_zero,
+    p_boot = p_boot,
+    interpretation = interpretation
+  )
+}
 
-boot.summary <-
+
+summarise_boot <- function(df,
+                           value,
+                           positive_label,
+                           negative_label,
+                           neutral_label){
+  
+  value <- rlang::ensym(value)
+  
+  out <-
+    df |>
+    summarise(
+      bootstrap_mean = mean(!!value),
+      bootstrap_median = median(!!value),
+      bootstrap_sd = sd(!!value),
+      IC2.5 = quantile(!!value, .025),
+      IC97.5 = quantile(!!value, .975),
+      .groups = "drop"
+    )
+  
+  bind_cols(
+    out,
+    interpret_boot(
+      out$bootstrap_mean,
+      out$IC2.5,
+      out$IC97.5,
+      positive_label,
+      negative_label,
+      neutral_label
+    )
+  )
+}
+
+## 1. Is RII different from zero? ----
+  boot.zero <-
+  
   boot.results |>
+  
   group_by(
     surv_date,
-    type_RII,
-    Interacting_species, 
+    Environment,
+    Interacting_species,
     quercus_sp
   ) |>
-  summarise(
-    mean = mean(RII),
-    sd = sd(RII),
-    se = sd/sqrt(n()),
-    IC2.5 = quantile(RII,.025),
-    IC97.5 = quantile(RII,.975),
-    .groups="drop"
-  ) |> 
-  mutate(
-    contains_zero = if_else(condition = IC2.5 < 0 & IC97.5 < 0 | IC2.5 > 0 & IC97.5 > 0,
-                            "no", 
-                            "yes"), 
-    type_interaction = case_when(
-      mean > 0 & contains_zero == "no" ~ "Facilitation",
-      mean < 0 & contains_zero == "no" ~ "Competition",
-      TRUE ~ "Neutral"
-    )
-  )
-
-ggplot(data = as.data.frame(boot.summary), 
-       aes(x = mean, y = Interacting_species, shape = quercus_sp, colour = type_interaction)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
-  geom_errorbarh(aes(xmin = IC2.5, xmax = IC97.5), height = 0.2, position = position_dodge(width = 0.5)) +
-  geom_point(size = 3, position = position_dodge(width = 0.5)) +
-  facet_grid(type_RII ~ surv_date) +
-  theme_bw() +
-  coord_cartesian(xlim = c(-.8, .8)) +
-  labs(x = "RII", 
-       y = "", 
-       title = "RII per species, date and type of RII", 
-       caption = "RII calculated with bootstrapping (5000 iterations)") 
-
-# Differences between direct and indirect
-
-boot.diff.typeRII <- boot.results |> 
-  filter(Interacting_species != "Pinus pinaster") |> 
-  group_by(surv_date, Interacting_species, quercus_sp, iteration) |> 
-  pivot_wider(
-    id_cols = c(surv_date, Interacting_species, quercus_sp, iteration),
-    names_from = type_RII, 
-    values_from = RII
-  ) |> 
-  mutate(diff = Direct - Indirect) |>
-  ungroup()
-
-
-ggplot(boot.diff.typeRII, aes(x = diff)) +
-  geom_histogram(aes(fill = quercus_sp), alpha = .5) +
-  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
-  facet_grid(Interacting_species ~ surv_date)
-
-boot.indirect.effects <- boot.diff.typeRII |> 
-  group_by(
-    surv_date, Interacting_species, quercus_sp
-  ) |>
-  summarise(
-    mean = mean(diff),
-    sd = sd(diff),
-    se = sd/sqrt(n()),
-    IC2.5 = quantile(diff,.025),
-    IC97.5 = quantile(diff,.975),
-    .groups="drop"
-  ) |> 
-  mutate(
-    contains_zero = if_else(condition = IC2.5 < 0 & IC97.5 < 0 | IC2.5 > 0 & IC97.5 > 0,
-                            "no", 
-                            "yes"), 
-    type_interaction = case_when(
-      mean > 0 & contains_zero == "no" ~ "Indirect Competition",
-      mean < 0 & contains_zero == "no" ~ "Indirect Facilitation",
-      TRUE ~ "No Indirect Effect"
-    )
-  )
   
-ggplot(data = as.data.frame(boot.indirect.effects), 
-       aes(x = mean, y = Interacting_species, shape = quercus_sp, colour = type_interaction)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
-  geom_errorbarh(aes(xmin = IC2.5, xmax = IC97.5), height = 0.2, position = position_dodge(width = 0.5)) +
-  geom_point(size = 3, position = position_dodge(width = 0.5)) +
-  facet_wrap(~ surv_date) +
-  theme_bw() +
-  coord_cartesian(xlim = c(-.8, .8)) +
-  labs(x = "Difference in RII between gap and Pinus canopy environment", 
-       y = "", 
-       title = "RII per species, date and type of RII", 
-       caption = "RII calculated with bootstrapping (5000 iterations)")
-
-# Differences between quercus species
-
-boot.diff.quercus <- boot.results |> 
-  group_by(surv_date, Interacting_species, type_RII, iteration) |> 
-  pivot_wider(
-    id_cols = c(surv_date, Interacting_species, type_RII, iteration),
-    names_from = quercus_sp, 
-    values_from = RII
-  ) |> 
-  mutate(diff = QF - QI) |>
+  group_modify(~{
+    
+    summarise_boot(
+      .x,
+      RII,
+      positive_label = "Facilitation",
+      negative_label = "Competition",
+      neutral_label  = "Neutral"
+    )
+    
+  }) |>
+  
   ungroup()
 
-boot.indirect.effects <- boot.diff.quercus |> 
-  group_by(
-    surv_date, Interacting_species, type_RII
+pd <- .5
+ggplot(boot.zero, aes(x = bootstrap_mean, y = Interacting_species, shape = quercus_sp, colour = interpretation)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Environment ~ surv_date)
+
+## 2. Direct vs Indirect ----
+boot.diff.env <-
+  
+  boot.results |>
+  
+  filter(Interacting_species != "Pinus pinaster") |>
+  
+  pivot_wider(
+    
+    id_cols = c(
+      surv_date,
+      Interacting_species,
+      quercus_sp,
+      iteration
+    ),
+    
+    names_from = Environment,
+    values_from = RII
+    
   ) |>
-  summarise(
-    mean = mean(diff),
-    sd = sd(diff),
-    se = sd/sqrt(n()),
-    IC2.5 = quantile(diff,.025),
-    IC97.5 = quantile(diff,.975),
-    .groups="drop"
-  ) |> 
+  
   mutate(
-    contains_zero = if_else(condition = IC2.5 < 0 & IC97.5 < 0 | IC2.5 > 0 & IC97.5 > 0,
-                            "no", 
-                            "yes"), 
-    type_interaction = case_when(
-      mean > 0 & contains_zero == "no" ~ "More effect on Q. faginea",
-      mean < 0 & contains_zero == "no" ~ "More effect on Q. ilex",
-      TRUE ~ "No differences"
+    diff = `simple effect` - `conditioned effect`
+  )
+
+boot.env.effect <-
+  
+  boot.diff.env |>
+  
+  group_by(
+    surv_date,
+    Interacting_species,
+    quercus_sp
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      .x,
+      diff,
+      positive_label = "Indirect competition",
+      negative_label = "Indirect facilitation",
+      neutral_label  = "No difference"
     )
+    
+  }) |>
+  
+  ungroup()
+
+pd <- .5
+ggplot(boot.env.effect, aes(x = bootstrap_mean, y = Interacting_species, shape = quercus_sp, colour = interpretation)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  #coord_cartesian(xlim = c(-1, 1)) +
+  facet_wrap(~ surv_date) +
+  labs(title = "Mean differences in RII between gap and canopy", 
+       caption = "Positive differences indicate indirect competition \n
+       Negative differences indicate indirect facilitation")
+
+## 3. Q. ilex vs Q. faginea ----
+boot.diff.quercus <-
+  
+  boot.results |>
+  
+  pivot_wider(
+    
+    id_cols = c(
+      surv_date,
+      Environment,
+      Interacting_species,
+      iteration
+    ),
+    
+    names_from = quercus_sp,
+    values_from = RII
+    
+  ) |>
+  
+  mutate(
+    diff = QF - QI
   )
 
 
+boot.quercus.effect <-
+  
+  boot.diff.quercus |>
+  
+  group_by(
+    surv_date,
+    Environment,
+    Interacting_species
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      .x,
+      diff,
+      positive_label = "Stronger effect on Q. faginea",
+      negative_label = "Stronger effect on Q. ilex",
+      neutral_label  = "No difference"
+    )
+    
+  }) |>
+  
+  ungroup()
+
+pd <- .5
+ggplot(boot.quercus.effect, aes(x = bootstrap_mean, y = Interacting_species, colour = interpretation)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  #coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Environment~ surv_date) +
+  labs(title = "Mean differences in RII between quercus species", 
+       caption = "Positive differences indicate stronger facilitation on Q. faginea \n
+       Negative differences indicate stronger competition on Q. faginea")
+
+## 4. Differences between times
+
+boot.diff.time <-
+  
+  boot.results |>
+  
+  pivot_wider(
+    
+    id_cols = c(
+      iteration,
+      quercus_sp,
+      Environment,
+      Interacting_species
+    ),
+    
+    names_from = surv_date,
+    values_from = RII
+    
+  ) |>
+  
+  transmute(
+    
+    iteration,
+    
+    quercus_sp,
+    
+    Environment,
+    
+    Interacting_species,
+    
+    first.winter =
+      `27/05/2026` - `16/09/2025`,
+    
+    first.summer.and.winter =
+      `27/05/2026` - `12/06/2025`,
+    
+    first.summer =
+      `16/09/2025` - `12/06/2025`
+    
+  ) |>
+  
+  pivot_longer(
+    
+    -c(
+      iteration,
+      quercus_sp,
+      Environment,
+      Interacting_species
+    ),
+    
+    names_to = "comparison",
+    
+    values_to = "diff"
+    
+  )
+
+boot.time.effect <-
+  
+  boot.diff.time |>
+  
+  group_by(
+    
+    comparison,
+    
+    quercus_sp,
+    
+    Environment,
+    
+    Interacting_species
+    
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      
+      .x,
+      
+      diff,
+      
+      positive_label = "Increase through time",
+      
+      negative_label = "Decrease through time",
+      
+      neutral_label = "No temporal change"
+      
+    )
+    
+  }) |>
+  
+  ungroup()
+
+boot.time.effect <- boot.time.effect |> 
+  mutate(comparison = factor(comparison, levels = c("first.summer", "first.winter", "first.summer.and.winter")))
+
+pd <- .5
+ggplot(boot.time.effect, aes(x = bootstrap_mean, y = Interacting_species, colour = interpretation, shape = quercus_sp)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  #coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Environment~comparison) +
+  labs(title = "Mean differences in RII between census", 
+       caption = "Positive differences indicate an increasing in facilitation through that time period \n
+       Negative differences indicate an increasing in competition in that time period")
 
 ##
 # Next approach: 

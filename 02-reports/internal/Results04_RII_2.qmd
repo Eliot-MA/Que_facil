@@ -28,7 +28,7 @@ During the initial calculation of the Relative Interaction Index (RII) from bino
 
 We aim to model RII based on survival data. Descriptive exploration yields compelling conclusions supporting the hypothesis that *Q. faginea* is more susceptible to stress. It appears that the RII allows us to capture information that the original binomial models failed to detect.
 
-One of the approaches considered was to model the RII as a binomial variable, reflecting the structure of the data. While mathematically feasible, I believe the ecological significance of the index is lost in this process. To apply this, we would need to encode every possible RII value (given only two possible outcomes per combination of species, RII type, and date) as 0 or 1. For instance, by encoding the lower RII value as 0 and the higher as 1, the model would answer the question: "What is the probability of obtaining a high RII value?" However, our research question concerns the **expected value of RII** for each species and interaction type. As the scientific inquiry shifts significantly, this approach has been discarded.
+One of the approaches considered was to model the RII as a binomial variable, reflecting the structure of the data. While mathematically feasible, I believe the ecological significance of the index is lost in this process. To apply this, we would need to encode every possible RII value (given only two possible outcomes per combination of species, environment, and date) as 0 or 1. For instance, by encoding the lower RII value as 0 and the higher as 1, the model would answer the question: "What is the probability of obtaining a high RII value?" However, our research question concerns the **expected value of RII** for each shrub species, environment and quercus species. As the scientific inquiry shifts significantly, this approach has been discarded.
 
 Upon further investigation, the core difficulty appears to be that calculating the mean per individual collapses data variability. Although each pair compared per individual may take one of three possible values ($RII \in \{-1, 0, 1\}$), the calculation of the mean per individual eliminates this variance. In this regard, I propose three potential courses of action:
 
@@ -44,4 +44,577 @@ Since the GLMM already estimates the uncertainty of $p_A$ and $p_B$, methods for
 3. **Mixed Multinomial Models:** Fit models for response variables with three categories ($RII \in \{-1, 0, 1\}$) and incorporate the non-independence structure into the random effects.
 
 Of the three proposed approaches, we will test the **bootstrapping method** in this report. The second approach is particularly noteworthy, as it integrates the two methodologies we are evaluating to explain differences in seedling performance across treatments into a two-step process (GLMM $\rightarrow$ RII calculation). The third approach, while perhaps the most suitable for precisely reflecting our data structure (multinomial with random effects), is highly complex. Given my current lack of experience with multinomial models, this option is deferred for future consideration.
+
+# Objectives
+
+1. To evaluate the suitability of bootstrap resampling for estimating uncertainty in the Relative Interaction Index (RII) derived from binary survival data.
+
+2. To determine whether each interaction treatment produces a significant facilitative or competitive effect. 
+
+3. To determine whether direct and indirect interactions differ in their magnitude and direction, thereby assessing whether shrub-mediated interactions differ from the environmental effect imposed by the pine canopy.
+
+4. To determine whether the magnitude of direct and indirect interactions differs between the two Quercus species, thereby evaluating whether species differing in drought sensitivity respond differently to the same environmental conditions.
+
+5. To determine whether the effects of interaction type and interacting species vary over time, and whether these temporal changes differ between Quercus species.
+
+
+# Methods
+
+## Bootrstrap resampling
+
+Each bootstrap iteration was performed independently for every census date and *Quercus* species. Rather than resampling focal individuals, we resampled the reference (control) individuals with replacement within each control group. Two control groups were defined according to the experimental design: (i) *Pinus pinaster* canopy with open microsites, used as the reference for all indirect interaction comparisons, and (ii) gap with open microsites, used as the reference for all direct interaction comparisons.
+
+The same bootstrap sample of control individuals was subsequently used for all interaction types sharing that reference group. For example, a single bootstrap sample of open microsites beneath the pine canopy was used simultaneously to calculate the indirect RII for Cistus ladanifer, Rosa canina, and Genista scorpius. Likewise, a single bootstrap sample of open microsites in gaps was used for all direct interaction comparisons, including the comparison between pine canopy and gap open microsites (i.e. the direct effect of Pinus pinaster). This design ensured that all comparisons relying on the same experimental controls were subjected to exactly the same resampling process, thereby preserving the dependence structure among interaction estimates.
+
+Within each bootstrap iteration, the complete RII matrix was recalculated from the resampled controls using the original pairwise comparison procedure. Each focal individual was compared against every resampled control individual, generating a complete set of pairwise RII values for every interaction type. These pairwise values were then averaged to obtain a single RII estimate for each combination of census date, interaction type (direct or indirect), interacting species, and Quercus species.
+
+The entire procedure was repeated 5,000 times, yielding an empirical bootstrap distribution for every RII estimate. These distributions were subsequently used to quantify estimator uncertainty through bootstrap means and percentile confidence intervals, avoiding reliance on asymptotic normality assumptions. Importantly, the bootstrap distributions represent the sampling uncertainty of the estimated RII under repeated sampling of the control individuals, rather than repeated independent biological observations.
+
+```{mermaid}
+flowchart TD
+
+A[Original survival data]
+
+A --> B1[Reference group:<br/>Pine canopy - Open]
+A --> B2[Reference group:<br/>Gap - Open]
+
+B1 --> C1[Bootstrap sample<br/>with replacement]
+B2 --> C2[Bootstrap sample<br/>with replacement]
+
+C1 --> D1[Indirect RII:<br/>Cistus ladanifer]
+C1 --> D2[Indirect RII:<br/>Rosa canina]
+C1 --> D3[Indirect RII:<br/>Genista scorpius]
+
+C2 --> D4[Direct RII:<br/>Cistus ladanifer]
+C2 --> D5[Direct RII:<br/>Rosa canina]
+C2 --> D6[Direct RII:<br/>Genista scorpius]
+C2 --> D7[Direct RII:<br/>Pinus pinaster]
+
+D1 --> E
+D2 --> E
+D3 --> E
+D4 --> E
+D5 --> E
+D6 --> E
+D7 --> E
+
+E[Compute pairwise RII<br/>for every focal individual]
+
+E --> F[Average pairwise RII<br/>within each treatment]
+
+F --> G[One bootstrap replicate]
+
+G --> H{Repeat 5000 times}
+
+H --> I[Bootstrap distribution<br/>of each RII estimate]
+
+I --> J[Mean, 95% percentile CI<br/>and subsequent inference]
+```
+
+Below is the R code used for the bootstrap calculation. However, owing to the substantial computational time required for all iterations, the bootstrap procedure is not executed during the rendering of this document. Instead, it has been run once, and the resulting output has been saved to the project data as a `.csv` file. All subsequent analyses will be performed on this saved dataset.
+
+```{r, eval=FALSE}
+## 1. Bootstrap por separado: controles y tratamientos ----
+
+bootstrap_survival_v2 <- function(df) {
+  
+  # Separar controles (open) y tratamientos
+  df_controls    <- df |> filter(microsite == "open")
+  df_treatments  <- df |> filter(microsite != "open")
+  
+  # --- Controles: un único bootstrap compartido ---
+  boot_controls <- df_controls |>
+    group_by(Environment, microsite, surv_date) |>
+    group_modify(~ {
+      boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
+      boot$Individual <- paste0(boot$Individual, "_", boot$quercus_sp, "_", seq_len(nrow(boot)))
+      boot
+    }) |>
+    ungroup()
+  
+  # --- Tratamientos: bootstrap dentro de cada quercus_sp ---
+  boot_treatments <- df_treatments |>
+    group_by(Environment, microsite, surv_date, quercus_sp) |>  # añadimos quercus_sp
+    group_modify(~ {
+      boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
+      boot$Individual <- paste0(boot$Individual, "_", boot$quercus_sp, "_", seq_len(nrow(boot)))
+      boot
+    }) |>
+    ungroup()
+  
+  # Devolver lista para usar los controles compartidos
+  list(
+    controls   = boot_controls,
+    treatments = boot_treatments
+  )
+  
+}
+
+## 2. Calcular RII por quercus_sp, con controles compartidos ----
+
+calc_rii_by_sp <- function(boot_list, comparisons) {
+  
+  map_dfr(unique(boot_list$treatments$quercus_sp), function(sp) {
+    
+    # Subset de tratamientos para esta especie
+    trt_sp <- boot_list$treatments |> filter(quercus_sp == sp)
+    
+    # Controles: filtramos también por especie para mantener coherencia
+    # (si los controles tienen las dos especies mezcladas, filtramos aquí)
+    ctrl_sp <- boot_list$controls |> filter(quercus_sp == sp)
+    
+    # Reconstruir df para esta especie: tratamientos + sus controles compartidos
+    df_sp <- bind_rows(trt_sp, ctrl_sp)
+    
+    # Calcular RII con las comparisons habituales
+    pmap(comparisons, calc_rii, df = df_sp) |>
+      bind_rows() |>
+      mutate(quercus_sp = sp)
+    
+  })
+  
+}
+
+## 3. Una iteración completa ----
+
+bootstrap_once_v2 <- function(df) {
+  
+  boot_list <- bootstrap_survival_v2(df)
+  
+  rii_boot  <- calc_rii_by_sp(boot_list, comparisons)
+  
+  # Resumen ahora incluye quercus_sp
+  rii_boot |>
+    group_by(surv_date, type_RII, Interacting_species, quercus_sp) |>
+    summarise(RII = mean(RII, na.rm = TRUE), .groups = "drop")
+  
+}
+
+## 4. Bootstrap final: 5000 iteraciones ----
+
+set.seed(123)
+
+boot.results <- map_dfr(
+  seq_len(5000),
+  function(i) {
+    bootstrap_once_v2(df.surv) |>
+      mutate(iteration = i)
+  }
+)
+```
+
+## Statistical inference from bootstrap distributions
+
+Statistical inference was based entirely on the empirical bootstrap distributions generated for each statistic of interest. Rather than relying on parametric assumptions regarding the sampling distribution of the Relative Interaction Index (RII), uncertainty was quantified directly from the bootstrap replicates.
+
+For every quantity of interest, the bootstrap distribution was summarized by its mean and the 95% percentile confidence interval (95% CI), calculated as the 2.5th and 97.5th percentiles of the bootstrap distribution. Statistical evidence for an effect was evaluated by comparing the confidence interval with the null expectation. An effect was considered supported when the 95% CI did not include the null value (zero), whereas intervals overlapping zero were interpreted as providing insufficient evidence for a non-zero effect.
+
+Importantly, this inferential framework was applied not only to individual RII estimates but also to differences between RII values. Consequently, the same statistical criterion was used throughout all analyses: define the statistic of interest, estimate its bootstrap distribution, calculate the corresponding 95% confidence interval, and assess whether the confidence interval excluded the null value.
+
+**Is the RII different from zero?**
+
+For each combination of census date, interaction type (direct or indirect), interacting species, and *Quercus* species, the bootstrap distribution of the mean RII was obtained. The bootstrap mean was used as the point estimate of the interaction strength, while the 95% confidence interval quantified its uncertainty. Treatments whose confidence interval excluded zero were interpreted as exhibiting evidence of either facilitation (positive RII) or competition (negative RII).
+
+**Do direct and indirect interactions differ?**
+
+For each interacting species, census date and *Quercus* species, the bootstrap difference between direct and indirect RII was calculated for every bootstrap iteration:
+
+$$
+\Delta_{DI}=RII_{\mathrm{gap}}-RII_{\mathrm{canopy}}
+$$
+
+The resulting bootstrap distribution of ($\Delta_{gap-canopy}$) was summarized by its mean and 95% confidence interval. Confidence intervals excluding zero were interpreted as evidence that direct and indirect interactions differed.
+
+
+If $RII_{gap} > RII_{canopy}$, indicating greater survival in gaps under shrubs relative to controls (open) than survival under shrubs under the canopy relative to controls (open), then $\Delta_{gap-canopy} < 0$. This would imply an indirect competitive effect. The converse holds for a positive difference.
+
+**Do *Quercus ilex* and *Quercus faginea* differ in their response?**
+
+For each interacting species, interaction type and census date, the bootstrap difference between the two *Quercus* species was calculated as
+
+$$
+\Delta_{Q}=RII_{Q.,ilex}-RII_{Q.,faginea}
+$$
+
+Bootstrap means and 95% confidence intervals were obtained for each comparison. Confidence intervals excluding zero indicated evidence that the two oak species differed in their response to the corresponding interaction treatment.
+
+**Do interaction effects change through time?**
+
+Temporal changes were assessed by comparing bootstrap estimates between census dates. For each combination of interacting species, interaction type and *Quercus* species, the temporal difference was calculated as
+
+$$
+\Delta_{T_{may26-sep25}}=RII_{\mathrm{may26}}-RII_{\mathrm{sep25}} \\
+\Delta_{T_{may26-jun25}}=RII_{\mathrm{may26}}-RII_{\mathrm{jun25}} \\
+\Delta_{T_{sep25-jun25}}=RII_{\mathrm{sep25}}-RII_{\mathrm{jun25}}
+$$
+
+The bootstrap distribution of (\Delta_{T}) was summarized by its mean and 95% confidence interval. Confidence intervals excluding zero were interpreted as evidence that the strength of the interaction changed between sampling dates.
+
+# Results
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+boot.results <- read.csv2("00-data/boot_RII.csv")
+
+boot.results <- boot.results |> 
+  rename(Environment = type_RII) |> 
+  mutate(Environment = case_when(
+    Environment == "Direct" ~ "simple effect", 
+    Environment == "Indirect" ~ "conditioned effect"
+  ))
+# Florian noted that terms Direct and Indirect are the result of inference
+# it's more appropiate to name this variable as the environment 
+# where the interaction occure
+```
+
+```{r}
+## Bootstrap summary functions ----
+
+
+interpret_boot <- function(mean, IC2.5, IC97.5,
+                           positive_label,
+                           negative_label,
+                           neutral_label){
+  
+  contains_zero <- dplyr::between(0, IC2.5, IC97.5)
+  
+  interpretation <-
+    dplyr::case_when(
+      contains_zero ~ neutral_label,
+      mean > 0      ~ positive_label,
+      TRUE          ~ negative_label
+    )
+  
+  p_boot <- 2 * min(mean <= 0, mean >= 0)
+  
+  tibble(
+    contains_zero = contains_zero,
+    p_boot = p_boot,
+    interpretation = interpretation
+  )
+}
+
+
+summarise_boot <- function(df,
+                           value,
+                           positive_label,
+                           negative_label,
+                           neutral_label){
+  
+  value <- rlang::ensym(value)
+  
+  out <-
+    df |>
+    summarise(
+      bootstrap_mean = mean(!!value),
+      bootstrap_median = median(!!value),
+      bootstrap_sd = sd(!!value),
+      IC2.5 = quantile(!!value, .025),
+      IC97.5 = quantile(!!value, .975),
+      .groups = "drop"
+    )
+  
+  bind_cols(
+    out,
+    interpret_boot(
+      out$bootstrap_mean,
+      out$IC2.5,
+      out$IC97.5,
+      positive_label,
+      negative_label,
+      neutral_label
+    )
+  )
+}
+```
+
+
+## Facilitation or competition effect
+
+```{r}
+## 1. Is RII different from zero? ----
+  boot.zero <-
+  
+  boot.results |>
+  
+  group_by(
+    surv_date,
+    Environment,
+    Interacting_species,
+    quercus_sp
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      .x,
+      RII,
+      positive_label = "Facilitation",
+      negative_label = "Competition",
+      neutral_label  = "Neutral"
+    )
+    
+  }) |>
+  
+  ungroup()
+
+pd <- .5
+ggplot(boot.zero, aes(x = bootstrap_mean, y = Interacting_species, shape = quercus_sp, colour = interpretation)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Environment ~ surv_date)
+```
+
+In the first census, no clear effects on the oak species (*Quercus* spp.) were detected; they only began to manifest after the first summer (September 2025). By that time, some of the patterns that would later persist until May 2026 had already emerged. Simple effects were consistently facilitative. Specifically, the facilitative effect of the pine canopy was the largest compared to that of the shrubs. Among the shrub species, *Cistus ladanifer* exhibited a clear facilitative simple effect on both oak species. However, *Genista scorpius* and *Rosa canina* benefited only one oak species each, namely *Q. ilex* and *Q. faginea*, respectively. Regarding the conditional effects of shrubs moderated by the pine canopy, only *Cistus ladanifer* exerted a competitive effect. Moreover, this effect was competitive solely on *Q. faginea*, the more stress-sensitive species. The remaining shrub species showed a neutral effect on the oaks when growing within the pine canopy.
+
+After the subsequent summer and winter, the patterns of simple effects changed more substantially. The pine canopy remained the strongest facilitator. However, the facilitative effects previously observed for *Genista scorpius* and *Rosa canina* were lost. For *Cistus ladanifer*, the facilitative effect on *Q. faginea* disappeared, while it persisted for *Q. ilex*. The conditional effects of the pine canopy showed subtle numerical changes, but these did not alter the overall interpretation. 
+
+## Indirect effect
+
+If the difference between the simple effect of the shrub species and the effect of the shrub species conditional on the pine canopy does not cross zero, we have evidence of indirect facilitation or competition. That is, we have evidence that the observed competitive or facilitative effect arises as a result of interaction with a third species.
+
+```{r}
+## 2. Direct vs Indirect ----
+boot.diff.env <-
+  
+  boot.results |>
+  
+  filter(Interacting_species != "Pinus pinaster") |>
+  
+  pivot_wider(
+    
+    id_cols = c(
+      surv_date,
+      Interacting_species,
+      quercus_sp,
+      iteration
+    ),
+    
+    names_from = Environment,
+    values_from = RII
+    
+  ) |>
+  
+  mutate(
+    diff = `simple effect` - `conditioned effect`
+  )
+
+boot.env.effect <-
+  
+  boot.diff.env |>
+  
+  group_by(
+    surv_date,
+    Interacting_species,
+    quercus_sp
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      .x,
+      diff,
+      positive_label = "Indirect competition",
+      negative_label = "Indirect facilitation",
+      neutral_label  = "No difference"
+    )
+    
+  }) |>
+  
+  ungroup()
+
+pd <- .5
+ggplot(boot.env.effect, aes(x = bootstrap_mean, y = Interacting_species, shape = quercus_sp, colour = interpretation)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  #coord_cartesian(xlim = c(-1, 1)) +
+  facet_wrap(~ surv_date) +
+  labs(title = "Mean differences in RII between gap and canopy", 
+       caption = "Positive differences indicate indirect competition \n
+       Negative differences indicate indirect facilitation")
+```
+
+The analysis of RII differences between gap and canopy allows for the inference of indirect competitive effects of *Cistus ladanifer* under the canopy. These effects were observed only in *Q. faginea* in September 2025, and in both species by May 2026, suggesting that the indirect competitive effect intensifies over time. 
+
+## Differences between *Quercus* species
+
+```{r}
+boot.diff.quercus <-
+  
+  boot.results |>
+  
+  pivot_wider(
+    
+    id_cols = c(
+      surv_date,
+      Environment,
+      Interacting_species,
+      iteration
+    ),
+    
+    names_from = quercus_sp,
+    values_from = RII
+    
+  ) |>
+  
+  mutate(
+    diff = QF - QI
+  )
+
+
+boot.quercus.effect <-
+  
+  boot.diff.quercus |>
+  
+  group_by(
+    surv_date,
+    Environment,
+    Interacting_species
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      .x,
+      diff,
+      positive_label = "Stronger effect on Q. faginea",
+      negative_label = "Stronger effect on Q. ilex",
+      neutral_label  = "No difference"
+    )
+    
+  }) |>
+  
+  ungroup()
+
+pd <- .5
+ggplot(boot.quercus.effect, aes(x = bootstrap_mean, y = Interacting_species, colour = interpretation)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  #coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Environment~ surv_date) +
+  labs(title = "Mean differences in RII between quercus species", 
+       caption = "Positive differences indicate stronger facilitation on Q. faginea \n
+       Negative differences indicate stronger competition on Q. faginea")
+```
+
+
+No differences in RII were found between the oak species for any of the environments, shrub species, or sampling dates.
+
+## Differences across dates
+
+```{r}
+boot.diff.time <-
+  
+  boot.results |>
+  
+  pivot_wider(
+    
+    id_cols = c(
+      iteration,
+      quercus_sp,
+      Environment,
+      Interacting_species
+    ),
+    
+    names_from = surv_date,
+    values_from = RII
+    
+  ) |>
+  
+  transmute(
+    
+    iteration,
+    
+    quercus_sp,
+    
+    Environment,
+    
+    Interacting_species,
+    
+    first.winter =
+      `27/05/2026` - `16/09/2025`,
+    
+    first.summer.and.winter =
+      `27/05/2026` - `12/06/2025`,
+    
+    first.summer =
+      `16/09/2025` - `12/06/2025`
+    
+  ) |>
+  
+  pivot_longer(
+    
+    -c(
+      iteration,
+      quercus_sp,
+      Environment,
+      Interacting_species
+    ),
+    
+    names_to = "comparison",
+    
+    values_to = "diff"
+    
+  )
+
+boot.time.effect <-
+  
+  boot.diff.time |>
+  
+  group_by(
+    
+    comparison,
+    
+    quercus_sp,
+    
+    Environment,
+    
+    Interacting_species
+    
+  ) |>
+  
+  group_modify(~{
+    
+    summarise_boot(
+      
+      .x,
+      
+      diff,
+      
+      positive_label = "Increase through time",
+      
+      negative_label = "Decrease through time",
+      
+      neutral_label = "No temporal change"
+      
+    )
+    
+  }) |>
+  
+  ungroup()
+
+boot.time.effect <- boot.time.effect |> 
+  mutate(comparison = factor(comparison, levels = c("first.summer", "first.winter", "first.summer.and.winter")))
+
+pd <- .5
+ggplot(boot.time.effect, aes(x = bootstrap_mean, y = Interacting_species, colour = interpretation, shape = quercus_sp)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(position = position_dodge(width = pd)) +
+  geom_errorbar(aes(xmin = IC2.5, xmax = IC97.5), width = .5, position = position_dodge(width = pd)) +
+  #coord_cartesian(xlim = c(-1, 1)) +
+  facet_grid(Environment~comparison) +
+  labs(title = "Mean differences in RII between census", 
+       caption = "Positive differences indicate an increasing in facilitation through that time period \n
+       Negative differences indicate an increasing in competition in that time period")
+```
+
+Comparisons between censuses reveal that most differences in RII become established after the first summer (i.e., between June 2025 and September 2025). The cumulative effect of the subsequent summer and winter produced only a slight change. While there was an increase in facilitation by *Cistus ladanifer* toward *Q. faginea* during the first summer, when considering the accumulated effect of both the summer and the following winter, this increase in facilitation ceased to be clear. This pattern may have resulted from resprouting, which was particularly observed during the final census after winter. If some *Q. faginea* individuals resprouted in the control (open) plots, the RII would consequently become smaller. 
 
