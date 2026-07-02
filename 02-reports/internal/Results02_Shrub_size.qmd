@@ -1,17 +1,37 @@
 ---
 title: "Effect of shrub size on survival"
+subtitle: "Volume and biomass"
 author: "Mompeán, E."
 date: "today"
 format:
-  html:
+  # html:
+  #   toc: true
+  #   toc-depth: 2
+  #   number-sections: true
+  #   code-fold: true
+  #   code-tools: true
+  #   code-summary: "Code"
+  #   theme: cosmo
+  #   code-line-numbers: true
+  pdf: 
+    documentclass: scrartcl      # tipografía más cuidada que "article"
+    pdf-engine: xelatex          # mejor manejo de fuentes/acentos
     toc: true
     toc-depth: 2
-    number-sections: true
-    code-fold: true
-    code-tools: true
-    code-summary: "Code"
-    theme: cosmo
-    code-line-numbers: true
+    number-sections: true        # <- lo que pedías: headings numerados
+    number-depth: 2
+    fig-cap-location: bottom
+    fig-align: center
+    fig-width: 6
+    fig-height: 4
+    code-overflow: wrap          # <- evita que el código se salga de la página
+    code-block-bg: true
+    highlight-style: github
+    geometry:
+      - margin=2.5cm
+    linestretch: 1.15
+    colorlinks: true
+    keep-tex: false
 editor: visual
 execute:
   warning: false
@@ -23,4 +43,715 @@ lightbox: true
 
 # Introduction
 
-El tamaño de los arbustos en el experimento es un factor que puede determinar el tamaño del efecto sobre la supervivencia. Esperamos que arbustos más grandes tengan un efecto, facilitador o competitivo, más importante que los arbustos pequeños. También es posible que el efecto del tamaño
+The size of the shrubs in the experiment is a factor that may determine the magnitude of the effect on survival. We anticipate that larger shrubs will exert a more intense effect—whether facilitative or competitive—than smaller ones. Originally, the sampling design considered shrub volume as the most appropriate descriptor of individual size. However, this entails an implicit assumption: that more voluminous shrubs also possess greater biomass.
+
+During our fieldwork and data exploration, we observed that individuals within the pine forest tend to be more voluminous. Nevertheless, this does not appear to be reflected in heavier individuals, as they typically exhibit fewer, thinner branches, and a sparse crown. Therefore, if we were to assume that a more voluminous individual captures more environmental resources due to greater mass, thereby increasing the intensity of competition, or conversely, that a more voluminous individual enriches the soil with more nutrients (in the case of legumes), thereby increasing the intensity of facilitation, we would be overlooking the variability in crown branch density.
+
+To convert volume measurements into biomass, five individuals per environment and shrub species were selected, with volume measurements similar to those of the shrubs chosen for the experiment but without associated seedlings. These individuals were measured, harvested at ground level, measured *in situ*, and subsequently, a sample was oven-dried in the laboratory. This methodology allowed us to establish a relationship between volume, fresh weight, and dry weight.
+
+# Objectives
+
+1. To evaluate the best-fit model for predicting shrub biomass.
+2. To evaluate the effect of biomass on seedling survival, after controlling for other variables such as elevation.
+
+In previous reports, elevation appeared to have a detectable yet subtle effect on survival. In this regard, an additional objective is:
+
+3. To assess whether the observed effect of elevation remains significant after incorporating this new variable.
+
+# Methods
+
+```{r}
+# Libraries
+library(tidyverse)
+library(MuMIn)
+library(performance)
+library(glmmTMB)
+library(car)
+library(ggeffects)
+library(emmeans)
+library(multcomp)
+```
+
+## Predict biomass
+
+### Data Preparation
+
+We utilized a field dataset (`shrub_biomass.csv`) comprising shrub volume (m³) and dry mass (g), alongside species (microsite) and zone type (pine canopy vs. open area) for each individual. Variables were renamed to a standardized English format, and categories for the variables `microsite` (Gs, Cl, Rc → *Genista scorpius*, *Cistus ladanifer*, *Rosa canina*) and `zone` (Open area, Pine canopy) were recoded for interpretability. Both variables were defined as factors.
+
+
+```{r}
+options(na.action = "na.fail")
+# Load data
+df.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
+
+# source("01-scripts/01.2-surv_par_vol.R")
+
+df.biomass <- 
+df.biomass |> 
+  rename(volume = Volumen.arbusto..m3., 
+         mass = Peso.seco.arbusto..g., 
+         log.volume = Log.Volumen, 
+         log.mass = Log.masa, 
+         zone = ambiente, 
+         microsite = Especie) |> 
+  dplyr::mutate(
+    microsite = dplyr::recode(microsite, 
+                  "Gs" = "Genista scorpius",
+                  "Cl" = "Cistus ladanifer", 
+                  "Rc" = "Rosa canina"
+                  ),
+    zone = dplyr::recode(zone, 
+                  "Abierto" = "open area", 
+                  "pinar"   = "pine canopy")
+  ) |> 
+  dplyr::mutate(
+    zone = factor(zone), 
+    microsite = factor(microsite)
+  ) 
+
+head(df.biomass)
+```
+
+
+### Model Selection
+
+A generalized linear mixed model (`glmmTMB`) was fitted to the log-transformed allometric relationship between mass and volume (`log.mass ~ log.volume * microsite * zone`), including all possible interactions between volume, microsite, and zone. From this saturated model, we performed model selection using the `dredge` function from the `MuMIn` package [@pkg-mumin], generating all possible combinations of predictors and selecting the best-fit model (lowest AICc, `subset = 1`). Heteroscedasticity of residuals was detected in the chosen model; therefore, a Gamma distribution was selected to mitigate this issue.[^1]
+
+[^1]: Tengo dudas todavía de si el gamma es el mejor modelo, porque parece aumentar un poco el error.
+
+
+```{r}
+m_full <- glmmTMB(log.mass ~ log.volume * microsite * zone,
+             data = df.biomass)
+
+
+
+dd <- dredge(m_full)
+modelo <- get.models(dd, subset = 1)[[1]]
+
+car::Anova(modelo)
+parameters::parameters(modelo)
+performance::performance(modelo)
+check_model(modelo, check = c("qq", "homogeneity"))
+
+m_gamma <- glmmTMB(log.mass ~ log.volume + microsite + zone,
+             data = df.biomass, family = Gamma(link = "log"))
+
+check_model(m_gamma, check = c("qq", "homogeneity"))
+check_overdispersion(m_gamma)
+```
+
+
+### Treatment-Specific Models
+
+Following the selection of the best model, data were grouped by the `microsite` × `zone` combination. For each group, a generalized linear model (GLM) was fitted with a Gamma distribution and a log-link function (`mass ~ volume`, `family = Gamma(link = "log")`). This approach captures the non-linear allometric relationship between volume and mass specifically for each species-environment combination, while accounting for the continuous and strictly positive nature of the response variable (mass). Fitting specific models enhances individual predictive performance. Coefficients (`broom::tidy`) and goodness-of-fit statistics (`broom::glance`) were extracted for each individual model.
+
+
+```{r}
+results_biomass <- df.biomass |>
+  group_by(microsite, zone) |>
+  nest() |>                                              # crea list-column 'data'
+  mutate(
+    model  = map(data, ~ glm(mass ~ volume, data = .x, family = Gamma(link = "log"))),
+    tidied = map(model, broom::tidy),                   # coeficientes
+    glanced = map(model, broom::glance)                 # R², AIC, etc.
+  )
+```
+
+
+### Biomass Prediction
+
+Survival and shrub volume data were loaded.
+
+```{r}
+# Merge predicted biomass
+# Cargar supervivencia
+df.surv1 <- read.csv2("00-data/vol_par_surv.csv")
+df.surv2 <- read.csv2("00-data/sup_growth_may2026.csv")
+
+
+# Prepare survival for 2025
+df.surv1 <- df.surv1 |> 
+  dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var
+                supervivencia, fecha_supervivencia # survival, response
+  ) |> 
+  dplyr::rename(
+    Individual = micrositio,
+    Environment = ambiente,
+    microsite  = especie_facilitadora, 
+    quercus_sp = especie_facilitada, 
+    survival   = supervivencia, 
+    surv_date  = fecha_supervivencia
+  ) |> 
+  mutate(microsite = dplyr::recode(microsite, 
+                            "claro" = "open", 
+                            "Cistus sp." = "Cistus ladanifer"),
+         Environment      = dplyr::recode(Environment, 
+                                   "abierto" = "gap", 
+                                   "pinar" = "pine canopy")
+  ) |> unique()
+
+# Prepare survival for 2026
+
+df.surv2 <- df.surv2 |> 
+  # Select variables of interest in proper order
+  dplyr::select(Arbusto, Ambiente, Especie.arbusto, Quercinea, 
+                Supervivencia, Fecha) |> 
+  # Rename variables
+  dplyr::rename(
+    Individual = Arbusto,
+    Environment = Ambiente,
+    microsite  = Especie.arbusto, 
+    quercus_sp = Quercinea, 
+    survival   = Supervivencia, 
+    surv_date  = Fecha
+    # Erase "0" in some individual names (A01, A02...)
+  ) |> 
+  mutate(
+    Individual = sub("([ACJR])0+([1-9][0-9]*)$", "\\1\\2", Individual), 
+    microsite = dplyr::recode(microsite, 
+                       "claro" = "open", 
+                       "Cistus sp." = "Cistus ladanifer"),
+    Environment      = dplyr::recode(Environment, 
+                              "abierto" = "gap", 
+                              "pinar" = "pine canopy")
+  ) |> unique()
+
+df.surv <- rbind(df.surv1, df.surv2)
+
+head(df.surv)
+```
+
+```{r}
+df.vol <- read.csv2("00-data/vol_par_surv.csv")
+
+df.vol <- df.vol |> 
+  dplyr::select(micrositio, especie_facilitadora, ambiente,
+                altura, diametro_1, diametro_2) |> 
+  mutate(
+    volume = 4/3 * pi * altura/2 * diametro_1/2 * diametro_2/2, 
+    log.volume = log(volume)
+  ) |> 
+  dplyr::rename(
+    Individual = micrositio,
+    microsite  = especie_facilitadora, 
+    zone       = ambiente,
+    height     = altura, 
+    diam_1     = diametro_1, 
+    diam_2     = diametro_2, 
+  ) |> 
+  mutate(microsite = dplyr::recode(microsite, "claro" = "gap", "Cistus sp." = "Cistus ladanifer"),
+         zone      = dplyr::recode(zone, "abierto" = "open area", "pinar" = "pine canopy")
+  ) |> 
+  unique()
+
+head(df.vol)
+```
+
+
+The group-specific Gamma models were applied to predict shrub biomass within the original experimental dataset. Individual volumes (excluding the "gap" category) were used, matching each individual with the model corresponding to its specific microsite and zone combination.
+
+```{r}
+# Predict biomass values
+df.model <- 
+df.vol |> 
+  dplyr::select(Individual, volume, microsite, zone) |> 
+  dplyr::filter(microsite != "gap") |> 
+  droplevels() |> 
+  drop_na() |> 
+  unique()
+
+predictions <- df.model |>
+  group_by(microsite, zone) |>
+  nest() |>
+  left_join(
+    results_biomass |> 
+      dplyr::select(microsite, zone, model),
+    by = c("microsite", "zone")
+  ) |>
+  mutate(
+    pred.mass = map2(model, data, ~ predict(.x, newdata = .y, type = "response"))
+  ) |>
+  unnest(c(data, pred.mass))       # devuelve un dataframe plano
+```
+
+
+### Predictive Model Validation
+
+Predictive performance was evaluated by applying the group-specific models to the calibration dataset itself (measured biomass), comparing predicted versus observed values. Two diagnostic plots were generated: (i) measured mass vs. estimated mass to assess general predictive capacity, and (ii) residuals vs. estimated mass to assess homoscedasticity. Model performance was quantified using:
+
+* **RMSE** (Root Mean Square Error)
+* **Predictive R²**, calculated as 1 − (Residual SS / Total SS)
+
+```{r}
+# Prediction validation
+predictions.validation <- df.biomass |>
+  group_by(microsite, zone) |>
+  nest() |>
+  left_join(
+    results_biomass |> dplyr::select(microsite, zone, model),
+    by = c("microsite", "zone")
+  ) |>
+  mutate(
+    pred.mass = map2(model, data, ~ predict(.x, newdata = .y, type = "response"))
+  ) |>
+  unnest(c(data, pred.mass))       # devuelve un dataframe plano
+
+
+predictions.validation <- predictions.validation |> 
+  mutate(
+    res = pred.mass - mass
+  )
+
+# 1. Configurar la ventana para tener 1 fila y 2 columnas
+par(mfrow = c(1, 2))
+
+# 2. Primer gráfico (Capacidad predictiva)
+plot(
+  predictions.validation$mass, 
+  predictions.validation$pred.mass,
+  main = "Predictive capacity of shrub mass.",
+  xlab = "Measured mass (g)",
+  ylab = "Estimated mass (g)"
+)
+abline(0, 1, col = "red", lty = 2)
+
+# 3. Segundo gráfico (Homocedasticidad)
+plot(
+  x = predictions.validation$pred.mass, 
+  y = predictions.validation$res, 
+  main = "Homoscedasticity of residuals", 
+  xlab = "Estimated mass (g)", 
+  ylab = "Residuals"
+)
+abline(h = 0, col = "red", lty = 2)
+
+# 4. (Opcional) Restaurar la ventana gráfica a su estado normal (1 fila, 1 columna)
+par(mfrow = c(1, 1))
+
+#RMSE
+rmse <- sqrt(mean((predictions.validation$mass - predictions.validation$pred.mass)^2))
+
+# R2 predictivo
+predictive.r2 <- 1 - sum((predictions.validation$mass - predictions.validation$pred.mass)^2) /
+  sum((predictions.validation$mass - mean(predictions.validation$mass))^2)
+
+cat(
+  "Biomass estimation script has run successfully. \n",
+  "Predictive capacity and homoscedasticity plots are displayed. \n",
+  "Root Mean Square Error (RMSE):", rmse, "\n", 
+  "Predictive R2:", predictive.r2, "\n"
+  )
+```
+
+
+### Results Integration
+
+Estimated biomass values were incorporated into the main dataset (`df.surv`), making them available for subsequent analyses. The original shrub dimension data were also retained. Elevation was integrated too. 
+
+```{r}
+df.surv.mass <- df.surv |> 
+  left_join(predictions |> dplyr::select(Individual, pred.mass), 
+            by = "Individual") |> 
+  dplyr::select(-microsite.y) |> 
+  rename(
+    "microsite" = "microsite.x"
+  )
+
+df.surv.vol.mass <- 
+  merge(x = df.surv.mass, 
+        y = df.vol, 
+        by = "Individual")
+
+# Load digital terrain model 5m
+r <- terra::rast("00-data/PNOA_MDT05_ETRS89_HU30_0486_LID.tif")
+
+# Load shrub positions
+df.shrubs.gps <- read.csv2(file = "00-data/shrubs_gps.csv")
+
+## Change variable names and
+## codification of zone
+df.shrubs.gps <- df.shrubs.gps |> 
+  dplyr::select(-X.1, -RP) |> 
+  rename(
+    Individual     = Tratamiento, 
+    Zone           = Ambiente, 
+    microsite_code = SP
+    ) |> 
+  mutate(
+    Zone = dplyr::recode(
+      Zone, 
+      "abierto" = "gap", 
+      "pinar "   = "pine canopy"
+    )
+  )
+
+pts <- sf::st_as_sf(
+  df.shrubs.gps,
+  coords = c("X", "Y"),
+  crs = 25830
+)
+
+# Convert points to SpatVector
+vpts <- terra::vect(pts)
+  
+  dem_crop <- terra::crop(
+    r,
+    terra::ext(vpts) + 25  
+  )
+  
+  
+dem_mask <- terra::mask(dem_crop, vpts)
+
+# Compute slope
+slope <- terra::terrain(
+  dem_crop,
+  v = "slope",
+  unit = "degrees"
+)
+
+# extract elevation and slope data
+elev <- terra::extract(dem_crop, vpts)
+slop <- terra::extract(   slope, vpts)
+df.shrubs.gps$Elevation <- elev[,2]
+df.shrubs.gps$Slope     <- slop[,2]
+
+df.surv.vol.mass.elev <- merge(x = df.surv.vol.mass, 
+      y = df.shrubs.gps |> dplyr::select(Individual, Elevation, Slope), 
+      by = "Individual")
+
+head(df.surv.vol.mass.elev)
+```
+
+## Model selection
+
+Once the predicted biomass variable was obtained, we proceeded to select the best-fit model to explain survival as a function of treatments, elevation, and shrub biomass. We began with a saturated model; however, instead of `dredge`, we employed a stepwise approach.
+
+Stepwise model selection involves starting with a full model and evaluating the change in AIC upon the removal of higher-order coefficients. If the removal of a coefficient results in a decrease of more than two AIC units, that coefficient is removed, and the process restarts. If no removal results in a decrease of more than two units, the coefficient that yields the greatest AIC reduction is removed. If none of the removals reduce the AIC—but rather increase it—the coefficient that worsens the AIC by less than two units is removed, if applicable. If removing any coefficient increases the AIC by more than two units, the model is considered selected.
+
+The stepwise procedure is an alternative to `dredge`, and both are appropriate for model selection. However, `dredge` evaluates all possible model combinations. In models with many interactions, processing time becomes unmanageable. This is the case with our model, which includes five interactions. While the stepwise procedure is computationally less expensive, it carries a higher risk of falling into a local AIC minimum, potentially precluding the evaluation of better models.
+
+```{r}
+df.surv.vol.mass.elev.t3 <- 
+  df.surv.vol.mass.elev |> filter(surv_date == "27/05/2026")
+
+df <- df.surv.vol.mass.elev.t3 |> 
+  dplyr::select(survival, Individual, microsite.x, Environment, quercus_sp, Elevation, pred.mass) |> 
+  drop_na() |> 
+  rename(
+    microsite = microsite.x
+  ) |> 
+  mutate(
+    Elevation_c = scale(Elevation), 
+    log.pred.mass = log(pred.mass), 
+    log.pred.mass_c = scale(log.pred.mass)
+  )
+
+# Modelo saturado
+m_full <- glmmTMB(survival ~ Environment*microsite*quercus_sp*Elevation_c*log.pred.mass_c +
+    (1 | Individual),
+  data = df,
+  family = binomial()
+  )
+```
+
+```{r}
+# Iteración manual
+m2 <- update(m_full, . ~ . - Environment:microsite:quercus_sp:Elevation_c:log.pred.mass_c)
+
+m3 <- update(m2, . ~ . - Environment:microsite:Elevation_c:log.pred.mass_c)
+
+m4 <- update(m3, . ~ . - Environment:quercus_sp:Elevation_c:log.pred.mass_c)
+
+m5 <- update(m4, . ~ . - Environment:microsite:quercus_sp:log.pred.mass_c)
+
+m6 <- update(m5, . ~ . - Environment:microsite:log.pred.mass_c)
+
+m7 <- update(m6, . ~ . - Environment:Elevation_c:log.pred.mass_c)
+
+m8 <- update(m7, . ~ . - microsite:quercus_sp:Elevation_c:log.pred.mass_c)
+
+m9 <- update(m8, . ~ . - quercus_sp:Elevation_c:log.pred.mass_c)
+
+m10 <- update(m9, . ~ . - microsite:quercus_sp:log.pred.mass_c)
+
+m11 <- update(m10, . ~ . - microsite:Elevation_c:log.pred.mass_c)
+
+m12 <- update(m11, . ~ . - Elevation_c:log.pred.mass_c)
+
+m13 <- update(m12, . ~ . - Environment:quercus_sp:log.pred.mass_c)
+
+m14 <- update(m13, . ~ . - quercus_sp:log.pred.mass_c)
+
+# Hay una interaccion de 4v sin interacciones signficiativas de 3 vias por debajo, eliminarla y comparar explicitamente
+m15 <- update(m14, . ~ . - Environment:microsite:quercus_sp:Elevation_c)
+# AIC(m14, m15)
+
+m16 <- update(m15, . ~ . - microsite:quercus_sp:Elevation_c)
+
+m17 <- update(m16, . ~ . - Environment:microsite:quercus_sp)
+
+m18 <- update(m17, . ~ . - Environment:microsite:Elevation_c)
+
+# Eliminar primero el que más baja el AIC
+m19 <- update(m18, . ~ . - microsite:quercus_sp)
+
+m20 <- update(m19, . ~ . - Environment:quercus_sp:Elevation_c)
+
+m21 <- update(m20, . ~ . - quercus_sp:Elevation_c)
+
+m22 <- update(m21, . ~ . - Environment:quercus_sp)
+
+m23 <- update(m22, . ~ . - Environment:log.pred.mass_c)
+
+m24 <- update(m23, . ~ . - Environment:Elevation_c)
+
+m25 <- update(m24, . ~ . - microsite:Elevation_c)
+
+m26 <- update(m25,  . ~ . - Elevation_c)
+
+m26a <- update(m26, . ~ . - Environment:microsite)
+m26b <- update(m26, . ~ . - quercus_sp)
+m26c <- update(m26, . ~ . - microsite:log.pred.mass_c)
+```
+
+```{r}
+# Residuos con DHARMa (diseñado para glmmTMB)
+library(DHARMa)
+sim_res <- simulateResiduals(modelo, n = 5000)
+plot(sim_res)
+testDispersion(sim_res)
+
+library(performance)
+
+performance(modelo)
+check_model(modelo)
+check_collinearity(modelo)
+```
+
+
+# Results
+
+### Stepwise Procedure
+
+Model selection was performed using a backward stepwise elimination procedure based on the Akaike Information Criterion (AIC). We started with a saturated model that included all main effects of **Environment**, **microsite**, **quercus_sp**, **Elevation_c**, and **log.pred.mass_c**, as well as all possible interactions between them, in addition to a random intercept for the individual.
+
+During this process, there was a nearly continuous reduction in AIC, from **469.61** in the saturated model to **425.24** in the final model (ΔAIC = **44.37**), indicating that the simplification substantially improved the trade-off between model fit and complexity.
+
+The simplification followed a logical hierarchy, first removing higher-order interactions. Initially, five-way interactions involving different combinations of **Environment**, **microsite**, **quercus_sp**, **Elevation_c**, and **log.pred.mass_c** were successively removed. Subsequently, remaining four-way interactions were removed, followed by various three-way interactions that were no longer supported by the data. Once higher-order interactions were discarded, double interactions were simplified, successively eliminating **quercus_sp × Elevation_c**, **Environment × quercus_sp**, **Environment × log.pred.mass_c**, **Environment × Elevation_c**, and **microsite × Elevation_c**.
+
+The last effect removed was the main effect of **Elevation_c**. Although its removal produced a slight increase in AIC (425.24 versus 426.61; ΔAIC = 1.38), this increase was below the two-unit threshold established during the selection procedure; therefore, we opted for a more parsimonious model without this predictor. This result is particularly interesting because, in previous analyses, elevation showed a subtel but significant on survival. However, after incorporating predicted shrub biomass (**log.pred.mass_c**) into the set of predictors, the independent contribution of elevation no longer justified its retention in the model, suggesting that part of the pattern previously attributed to elevation might be explained by differences in shrub size.
+
+The final model retained four main effects (**Environment**, **microsite**, **quercus_sp**, and **log.pred.mass_c**) and two double interactions (**Environment × microsite** and **microsite × log.pred.mass_c**). According to Type II Wald tests, **Environment** had a highly significant effect on survival (*P* < 0.001), as did **quercus_sp** (*P* = 0.0026). The main effect of **microsite** was not significant (*P* = 0.55), but it participated in two significant interactions, indicating that its effect depends on both the environment and shrub size. Specifically, the **Environment × microsite** (*P* = 0.014) and **microsite × log.pred.mass_c** (*P* = 0.016) interactions remained in the final model, while the main effect of **log.pred.mass_c** was not significant (*P* = 0.376). This pattern indicates that shrub biomass does not exert a uniform effect on survival; rather, its influence depends on the microsite in which the seedling is established.
+
+
+```{r}
+# Graficar proceso selectivo
+mods <- list(
+  m_full,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,
+  m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22, m23, m24, m25, m26, m26a, m26b, m26c
+)
+
+aics <- sapply(mods, AIC)
+
+plot(aics, type="b",
+     xlab="Iteración",
+     ylab="AIC")
+
+# Calculamos los valores de la diferencia
+d_aics <- c(diff(aics[1:26]), 
+            aics[27] - aics[26], 
+            aics[28] - aics[26], 
+            aics[29] - aics[26])
+
+# Graficamos ajustando el ylim para que incluya -2 y 2
+plot(d_aics, type="b", 
+     xlab="Iteración", 
+     ylab="ΔAIC",
+     ylim=range(c(d_aics, -2, 2))) # Esto fuerza a que -2 y 2 siempre aparezcan
+
+# Ahora añadimos las líneas
+abline(h = c(-2, 2), col = "red", lty = 2)
+
+```
+
+The fact that elevation no longer has a significant effect in the model once biomass is introduced suggests a possible high correlation between biomass and elevation. To test this, a Pearson correlation test was applied.
+
+```{r}
+df.elev.mass <- df |> 
+  dplyr::select(Individual, microsite, Environment, Elevation, Elevation_c, pred.mass, log.pred.mass, log.pred.mass_c) |> 
+  unique()
+
+plot(correlation::cor_test(df.elev.mass, x = "log.pred.mass_c", y = "Elevation_c"))
+```
+
+The correlation is **positive but weak** (**r = 0.22**) and statistically significant (**p = 0.004**). This indicates that, on average, shrubs tend to have greater biomass as elevation increases.
+
+Therefore, this result is **consistent** with the hypothesis that part of the effect previously attributed to elevation is captured by shrub biomass when it is incorporated into the model. However, the correlation is too modest to conclude that both variables are equivalent or that there is a significant problem with collinearity. Instead, it suggests a **partial overlap** in the information they provide.
+
+The removal of elevation in the final step suggests that, although its contribution is small, it could function well as a covariate to increase the rigor of our conclusions by allowing us to control for the potential effect of elevation.
+
+## Chosen model
+
+The model results show that survival was primarily determined by **Environment**, the **Quercus species**, and two interactions: **Environment × microsite** and **microsite × shrub biomass** (*log.pred.mass_c*).
+
+```{r}
+# Confirmar que es el mejor de toda la secuencia
+AIC(m_full, m26)
+
+# Modelo seleccionado
+modelo <- update(m26, REML = TRUE)
+
+# Tabla de efectos
+car::Anova(modelo)
+
+# Resumen completo
+summary(modelo)
+
+# Parámetros
+parameters::parameters(modelo)
+```
+
+The **Environment × microsite** interaction reveals that the effect of the microsite depends on the environment in which the seedlings are established. In the **gap**, estimated survival probabilities were 11.7% under *Genista scorpius*, 18.7% under *Rosa canina*, and 31.5% under *Cistus ladanifer*, although these differences were not statistically significant. Conversely, in the **pine canopy**, survival increased to 40.7% under *Cistus ladanifer*, 61.8% under *Rosa canina*, and 68.2% under *Genista scorpius*, likewise showing no significant differences between microsites. However, when comparing both environments for each microsite, significant differences emerge for *Genista scorpius* and *Rosa canina*, whose survival values are considerably higher under the pine canopy than in the gaps. Conversely, *Cistus ladanifer* exhibits similar probabilities in both environments, indicating greater stability in its facilitative effect regardless of the environment.
+
+```{r}
+pred.env.micro <- ggpredict(
+  modelo,
+  terms = c("Environment", "microsite"),
+  type = "fixed"
+)
+
+ggplot(pred.env.micro,
+       aes(x = x,
+           y = predicted,
+           colour = group,
+           group = group)) +
+  geom_point(size = 3, position = position_dodge(width = .5)) +
+  geom_line(position = position_dodge(width = .5)) +
+  geom_errorbar(aes(ymin = conf.low,
+                    ymax = conf.high),
+                width = 0.1, 
+                position = position_dodge(width = .5)) +
+  labs(x = "Environment",
+       y = "Survival probability",
+       colour = "Microsite") +
+  ylim(0,1) +
+  theme_classic()
+```
+
+```{r}
+emm_env_micro <- emmeans(
+  modelo,
+  ~ Environment * microsite,
+  type = "response"
+)
+
+cld(emm_env_micro, Letters = letters, by = "Environment")
+cld(emm_env_micro, Letters = letters, by = "microsite")
+```
+
+The **Quercus species** also showed a clear effect on survival. Estimated marginal probabilities were 27.8% for **Q. faginea** and 45.6% for **Q. ilex**, a difference that was statistically significant. Therefore, regardless of the environment and microsite, **Q. ilex** exhibits a higher probability of survival.
+
+```{r}
+pred.sp <- ggpredict(
+  modelo,
+  terms = "quercus_sp",
+  type = "fixed"
+)
+
+ggplot(pred.sp,
+       aes(x = x,
+           y = predicted)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = conf.low,
+                    ymax = conf.high),
+                width = 0.1) +
+  labs(x = "Species",
+       y = "Survival probability") +
+  ylim(0,1) +
+  theme_classic()
+```
+
+```{r}
+emm_species <- emmeans(
+  modelo,
+  ~ quercus_sp,
+  type = "response"
+)
+
+cld(emm_species, Letters = letters)
+```
+
+The interaction between **microsite** and **shrub biomass** reveals a more complex pattern. Estimating survival probabilities for low (5th percentile) and high (95th percentile) biomass values, it is observed that under *Genista scorpius*, survival increases notably with shrub size, rising from approximately 15% to 67%, a significant difference. Under *Cistus ladanifer*, conversely, survival remains practically constant (36% at both biomass extremes), while under *Rosa canina*, the estimate even decreases (from 62% to 16%), although this difference does not reach statistical significance due to the high uncertainty of the estimates.
+
+Comparisons between microsites for the same level of biomass show an apparently different pattern. With low biomass, *Rosa canina* exhibits significantly higher survival than *Genista scorpius*, while *Cistus ladanifer* occupies an intermediate position. However, with high biomass, no significant differences between the three microsites are detected. This result may appear contradictory to the graphical representation, where the positive slope of *Genista scorpius* suggests a clear increase in survival as biomass increases. Nevertheless, both observations are compatible. The interaction reflects that the **survival response to biomass differs among microsites**, whereas marginal mean comparisons evaluate only differences at two specific biomass values. At the upper end of the gradient, the uncertainty of the estimates (wide confidence intervals) makes differences between microsites no longer statistically detectable, even though the visual trend indicates a greater facilitative capacity of *Genista scorpius* when it reaches larger sizes.
+
+```{r}
+pred.mass <- ggpredict(
+  modelo,
+  terms = c("log.pred.mass_c [all]", "microsite"),
+  type = "fixed"
+)
+
+ggplot() +
+
+  ## Observaciones
+  geom_jitter(
+    data = df,
+    aes(x = log.pred.mass_c,
+        y = survival,
+        colour = microsite),
+    width = 0,
+    height = 0.03,
+    alpha = 0.2,
+    size = 2
+  ) +
+
+  ## Predicciones
+  geom_line(
+    data = pred.mass,
+    aes(x = x,
+        y = predicted,
+        colour = group),
+    linewidth = 1
+  ) +
+
+  ## IC
+  geom_ribbon(
+    data = pred.mass,
+    aes(x = x,
+        ymin = conf.low,
+        ymax = conf.high,
+        fill = group),
+    alpha = 0.1,
+    colour = NA
+  ) +
+
+  labs(
+    x = "Predicted shrub biomass (log)",
+    y = "Survival probability",
+    colour = "Microsite",
+    fill = "Microsite"
+  ) +
+
+  coord_cartesian(ylim = c(-0.05, 1.05)) +
+  theme_classic()
+```
+
+```{r}
+vec <- as.vector(quantile(df.elev.mass$log.pred.mass_c, 
+                probs = c(.05, .95)))
+
+emm_mass <- emmeans(
+  modelo,
+  ~ microsite | log.pred.mass_c,
+  at = list(
+    log.pred.mass_c = vec
+  ),
+  type = "response"
+)
+
+cld(emm_mass, Letters = letters, by = "microsite")
+cld(emm_mass, Letters = letters, by = "log.pred.mass_c")
+```
+

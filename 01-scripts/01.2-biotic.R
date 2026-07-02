@@ -1,9 +1,11 @@
-# 1. Load biomass
+# 1. Load survival and growth
 
-# 2. Load SLA
 
-# 3. Load size
 
-# 4. Load survival and growth
+# Load biomass
 
-# 5. Load RII
+# Load SLA
+
+# Load size
+
+# Load RII

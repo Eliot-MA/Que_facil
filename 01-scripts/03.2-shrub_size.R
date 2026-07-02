@@ -184,15 +184,15 @@ car::Anova(modelo)
 
 # Residuos con DHARMa (diseñado para glmmTMB)
 library(DHARMa)
-sim_res <- simulateResiduals(m22)
+sim_res <- simulateResiduals(modelo, n = 5000)
 plot(sim_res)
 testDispersion(sim_res)
 
 library(performance)
 
-performance(m22)
-check_model(m22)
-check_collinearity(m22)
+performance(modelo)
+check_model(modelo)
+check_collinearity(modelo)
 
 library(ggeffects)
 

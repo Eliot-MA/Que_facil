@@ -275,3 +275,4 @@ figura_mass <- (p1 | p2) / (p3 | p4) +
   )
 
 ggsave("08-img/patch_survival_volume_zone_microsite.png", figura_mass, width = 14, height = 10, dpi = 300)
+
