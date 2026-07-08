@@ -8,7 +8,7 @@ options(na.action = "na.fail")
 # Load data
 df.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
 
-# source("01-scripts/01.2-surv_par_vol.R")
+source("01-scripts/01.2-surv_par_vol.R")
 
 df.biomass <- 
 df.biomass |> 
@@ -43,7 +43,7 @@ m_full <- glmmTMB(log.mass ~ log.volume * microsite * zone,
 dd <- dredge(m_full)
 modelo <- get.models(dd, subset = 1)[[1]]
 
-easystats::model_dashboard(modelo, output_dir = "07-html/", output_file = "dashborad_model_biomass.html", browse_html = FALSE, quiet = TRUE)
+# easystats::model_dashboard(modelo, output_dir = "07-html/", output_file = "dashborad_model_biomass.html", browse_html = FALSE, quiet = TRUE)
 
 results_biomass <- df.biomass |>
   group_by(microsite, zone) |>
