@@ -150,59 +150,39 @@ ggsave("08-img/eda_meanse_rii.png", width = 10, height = 8, dpi = 300)
 
 library(tidyverse)
 
-## 1. Bootstrap por separado: controles y tratamientos ----
+## 1. Bootstrap SOLO sobre controles ----
 
-bootstrap_survival_v2 <- function(df) {
+bootstrap_controls_only <- function(df) {
   
-  # Separar controles (open) y tratamientos
-  df_controls    <- df |> filter(microsite == "open")
-  df_treatments  <- df |> filter(microsite != "open")
+  df_controls   <- df |> filter(microsite == "open")
+  df_treatments <- df |> filter(microsite != "open")
   
-  # --- Controles: un único bootstrap compartido ---
+  # Resamplear solo los controles
   boot_controls <- df_controls |>
-    group_by(Environment, microsite, surv_date) |>
+    group_by(Environment, microsite, surv_date, quercus_sp) |>
     group_modify(~ {
       boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
-      boot$Individual <- paste0(boot$Individual, "_", boot$quercus_sp, "_", seq_len(nrow(boot)))
+      boot$Individual <- paste0(boot$Individual, "_", seq_len(nrow(boot)))
       boot
     }) |>
     ungroup()
   
-  # --- Tratamientos: bootstrap dentro de cada quercus_sp ---
-  boot_treatments <- df_treatments |>
-    group_by(Environment, microsite, surv_date, quercus_sp) |>  # añadimos quercus_sp
-    group_modify(~ {
-      boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
-      boot$Individual <- paste0(boot$Individual, "_", boot$quercus_sp, "_", seq_len(nrow(boot)))
-      boot
-    }) |>
-    ungroup()
-  
-  # Devolver lista para usar los controles compartidos
-  list(
-    controls   = boot_controls,
-    treatments = boot_treatments
-  )
+  # Devolver focales intactos + controles resampleados
+  bind_rows(df_treatments, boot_controls)
   
 }
 
-## 2. Calcular RII por quercus_sp, con controles compartidos ----
+## 2. Calcular RII para TODOS los individuos focales (sin promediar aún) ----
 
-calc_rii_by_sp <- function(boot_list, comparisons) {
+bootstrap_once_v3 <- function(df) {
   
-  map_dfr(unique(boot_list$treatments$quercus_sp), function(sp) {
+  df_boot <- bootstrap_controls_only(df)
+  
+  # Calcular RII para cada combinación de comparisons y quercus_sp
+  map_dfr(unique(df$quercus_sp), function(sp) {
     
-    # Subset de tratamientos para esta especie
-    trt_sp <- boot_list$treatments |> filter(quercus_sp == sp)
+    df_sp <- df_boot |> filter(quercus_sp == sp)
     
-    # Controles: filtramos también por especie para mantener coherencia
-    # (si los controles tienen las dos especies mezcladas, filtramos aquí)
-    ctrl_sp <- boot_list$controls |> filter(quercus_sp == sp)
-    
-    # Reconstruir df para esta especie: tratamientos + sus controles compartidos
-    df_sp <- bind_rows(trt_sp, ctrl_sp)
-    
-    # Calcular RII con las comparisons habituales
     pmap(comparisons, calc_rii, df = df_sp) |>
       bind_rows() |>
       mutate(quercus_sp = sp)
@@ -211,36 +191,129 @@ calc_rii_by_sp <- function(boot_list, comparisons) {
   
 }
 
-## 3. Una iteración completa ----
-
-bootstrap_once_v2 <- function(df) {
-  
-  boot_list <- bootstrap_survival_v2(df)
-  
-  rii_boot  <- calc_rii_by_sp(boot_list, comparisons)
-  
-  # Resumen ahora incluye quercus_sp
-  rii_boot |>
-    group_by(surv_date, type_RII, Interacting_species, quercus_sp) |>
-    summarise(RII = mean(RII, na.rm = TRUE), .groups = "drop")
-  
-}
-
-## 4. Bootstrap final: 5000 iteraciones ----
+## 3. Bootstrap final: 5000 iteraciones ----
+## Se guarda la tabla completa con todos los individuos y todas las iteraciones
 
 set.seed(123)
 
+n_iter <- 500
+
+pb <- cli_progress_bar(
+  name   = "Bootstrap",
+  total  = n_iter,
+  format = "{cli::pb_bar} {cli::pb_current}/{cli::pb_total} | {cli::pb_eta_str}"
+)
+
+df <- df.surv |> filter(Environment == "gap" & microsite %in% c("Genista scorpius", "open") & quercus_sp == "QI", surv_date == "27/05/2026")
+
 boot.results <- map_dfr(
-  seq_len(5000),
+  seq_len(n_iter),
   function(i) {
-    bootstrap_once_v2(df.surv) |>
+    cli_progress_update(id = pb)  # <- pasar el ID explícitamente
+    bootstrap_once_v3(df) |>
       mutate(iteration = i)
   }
 )
+
+cli_progress_done(id = pb)
+
+
+boot.results.ind <- boot.results |> 
+  group_by(ind_A, iteration) |> 
+  summarise(
+    boot_RII = mean(RII, na.rm = TRUE), 
+    boot_lower_ci = quantile(RII, probs = .025, na.rm = TRUE),
+    boot_upper_ci = quantile(RII, probs = .975, na.rm = TRUE)
+  )
+
 
 # Change it depending on the quercus species used
 write.csv2(boot.results, file = "00-data/boot_RII.csv")
 
 
+library(dplyr)
+library(ggplot2)
 
+hist(boot.results.ind$boot_RII, breaks = 10)
 
+df.surv |> 
+  group_by(Environment, microsite, quercus_sp, surv_date) |> 
+  summarise(
+    n = n(), 
+    n_vivo = sum(survival, na.rm = TRUE)
+  ) |> 
+  filter(Environment == "gap" & microsite %in% c("Genista scorpius", "open") & quercus_sp == "QI", surv_date == "12/06/2025")
+
+df.surv |> 
+  filter(Environment == "gap" & microsite == "Genista scorpius" & quercus_sp == "QI", surv_date == "12/06/2025")
+
+vivos_gap <- df.surv |> 
+  filter(Environment == "gap" & microsite == "open" & quercus_sp == "QI", surv_date == "12/06/2025") |> 
+  summarise(n_vivo = sum(survival, na.rm = TRUE)) |> pull(n_vivo)
+
+1:vivos_gap
+posibles_RII <- c()
+
+for (i in 0:vivos_gap) {
+posibles_RII[i] <- 1 - (i/30)
+}
+
+hist(posibles_RII, breaks = 150)
+
+## 1. Calcular estadísticos acumulativos ----
+
+convergence <- boot.results |>
+  #group_by(iteration, surv_date, type_RII, Interacting_species, quercus_sp) |>
+  group_by(iteration, ind_A) +
+  summarise(RII_mean = mean(RII, na.rm = TRUE), .groups = "drop") |>
+  arrange(iteration) |>
+  #group_by(surv_date, type_RII, Interacting_species, quercus_sp) |>
+  group_by(Ind_A) |> 
+  mutate(
+    cum_mean  = cumsum(RII_mean) / seq_len(n()),
+    cum_lower = sapply(seq_len(n()), function(i) quantile(RII_mean[1:i], 0.025)),
+    cum_upper = sapply(seq_len(n()), function(i) quantile(RII_mean[1:i], 0.975))
+  ) |>
+  ungroup()
+
+## 2. Graficar convergencia ----
+
+ggplot(convergence, aes(x = iteration)) +
+  geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.2, fill = "steelblue") +
+  geom_line(aes(y = cum_mean), color = "steelblue", linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  facet_grid(quercus_sp ~ Interacting_species + type_RII) +
+  labs(
+    x     = "Número de iteraciones",
+    y     = "RII acumulado",
+    title = "Convergencia del bootstrap"
+  ) +
+  theme_bw()
+
+## 1. Calcular estadísticos acumulativos por individuo ----
+
+convergence_ind <- boot.results |>
+  filter(!is.na(RII)) |>                        # <- eliminar NAs antes
+  arrange(iteration) |>
+  group_by(ind_A, surv_date, type_RII, Interacting_species, quercus_sp) |>
+  mutate(
+    cum_mean  = cumsum(RII) / seq_len(n()),
+    cum_lower = sapply(seq_len(n()), function(i) quantile(RII[1:i], 0.025, na.rm = TRUE)),
+    cum_upper = sapply(seq_len(n()), function(i) quantile(RII[1:i], 0.975, na.rm = TRUE))
+  ) |>
+  ungroup()
+
+## 2. Graficar convergencia por individuo ----
+convergence_ind |> 
+ggplot(aes(x = iteration)) +
+  #geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.05, fill = "steelblue") +
+  geom_point(aes(y = cum_mean), alpha = .01) +
+  geom_line(aes(y = cum_mean), color = "steelblue", alpha = 0.3, linewidth = 0.3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  facet_grid(quercus_sp ~ Interacting_species + type_RII) +
+  labs(
+    x     = "Número de iteraciones",
+    y     = "RII acumulado",
+    title = "Convergencia del bootstrap por individuo"
+  ) +
+  theme_bw()

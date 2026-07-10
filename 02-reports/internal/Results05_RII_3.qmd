@@ -1,0 +1,111 @@
+---
+title: "Relative interaction Index on survival data"
+subtitle: "Corrections on Bootstrapping"
+author: "Mompeán, E."
+date: "today"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-summary: "Code"
+    theme: cosmo
+    code-line-numbers: true
+editor: visual
+execute:
+  warning: false
+  message: false
+bibliography: ../../09-bib/bibliography.bib
+biblio-style: ../../09-bib/ecology.csl
+lightbox: true
+---
+
+# Introducción
+
+En el anterior reporte de resultados explorando la aplicación del bootstrapping en el cálculo del RII se tomó la decisión de promediar por tratamiento en cada iteración. Esto permitía obtener una distribución gausiana de cada tratamiento por separado, pero no permitía trabajar con los individuos particulares. 
+
+Entre las desventajas que suponía esto, la aproximación a la inferencia estadística a través de t-test y ANOVA quedaba descartada. La aplicación de estos tests a los resultados del bootstrapping daba p valores extremadamente bajos. Las diferentes iteraciones no pueden tratarse como completamente indepentientes, lo que invalida el uso de tests estadísticos tradicionales. En su lugar se optó por inferencia a través de la interpretación de la media y el intervalo de confianza. 
+
+Sin embargo, durante la pasada reunión con el equipo de investigación de Burdeos, Florian Delereu llamó la atención sobre que el resultado del bootstrap debería devolver una tabla con un valor de RII estimado por individuo. Esto sí permitiría aplicar inferencia estadística mediante los métodos comunes que el grupo utiliza en sus publicaciones. 
+
+Este reporte busca reflejar los resultados de la aplicación del método bootstrap a nivel individual. Entre los objetivos a desarrollar encontramos: 
+
+1) Elaborar una metodología que permita llegar a una conclusión sobre el número de iteraciones por individuo necesarias para estabilizar el RII estimado. 
+
+2) Aplicar la metodología bootstrap sobre todos los individuos y aplicar los tests estadísticos mencionados para inferir los efectos de las especies. 
+
+# Metodología
+
+## Alternative bootstrap strategies for inference of Relative Interaction Index (RII)
+
+The previous bootstrap implementation was designed to estimate a single RII value for each combination of sampling date, interaction type, interacting species and *Quercus* species. At each bootstrap iteration, both treatment and control individuals were resampled, and the resulting RII values were averaged across all focal individuals. Consequently, each iteration produced one estimate of the mean RII for every treatment combination. This approach is appropriate for estimating the sampling distribution of the overall RII, but it changes the statistical unit from individual plants to bootstrap iterations. As a consequence, the resulting bootstrap replicates cannot be regarded as independent observations and therefore are not suitable for conventional hypothesis testing based on t-tests or ANOVA.
+
+Following discussions with the research group, we explored an alternative bootstrap strategy in which the individual remained the fundamental sampling unit throughout the analysis. Rather than estimating a single RII value per treatment, the bootstrap was used to estimate the RII associated with each focal individual.
+
+### Bootstrap estimation of individual RII
+
+For every focal individual, the RII was recalculated over 5,000 bootstrap iterations. Unlike the previous implementation, bootstrap resampling was applied exclusively to the control individuals (i.e. open microsites), whereas focal individuals remained fixed throughout the procedure.
+
+This decision was taken because the objective was no longer to estimate uncertainty in the treatment population itself, but rather the uncertainty associated with the selection of the reference individuals used to compute the RII. Since every focal individual is compared against the control group, resampling the controls generates a bootstrap distribution describing the range of plausible RII values that could arise from alternative realizations of the reference population while preserving the identity of the focal individual.
+
+Bootstrap samples of each control group were generated independently within each environment and sampling date. Importantly, all focal individuals sharing the same reference group were compared against the same bootstrap realization of that control group during a given iteration, thereby preserving the dependence structure imposed by the original experimental design.
+
+This procedure generated a large dataset containing one RII estimate for every focal individual in every bootstrap iteration.
+
+### Approach 1: Inference using individual RII estimates
+
+The first inferential strategy consisted of summarising the bootstrap distribution of each focal individual by its mean RII across the 5,000 bootstrap iterations.
+
+The resulting dataset retained exactly the same experimental structure as the original survival dataset, with one observation per focal individual, while replacing the deterministic RII value by a bootstrap-derived estimate. Consequently, the individual remained the experimental unit and conventional statistical models could be fitted without introducing pseudoreplication due to bootstrap iterations.
+
+General linear or mixed-effects models were then fitted to evaluate the effects of interaction type, interacting species, *Quercus* species and sampling date on individual RII. Pairwise comparisons among treatment combinations were performed using the corresponding post-hoc procedures. Statistical inference therefore followed the standard frequentist framework based on model coefficients, hypothesis tests and estimated marginal means.
+
+### Approach 2: Bootstrap inference on model coefficients
+
+The second inferential strategy retained the complete bootstrap distribution throughout the analysis.
+
+Instead of averaging the bootstrap estimates of each individual, an independent statistical model was fitted to every bootstrap iteration. Each model was therefore constructed from one complete bootstrap realization of the experiment, preserving the experimental units while propagating bootstrap uncertainty into the model fitting process.
+
+For every fitted model, the coefficients associated with the explanatory variables and the corresponding contrasts of biological interest were extracted. This resulted in bootstrap distributions for every regression coefficient and every estimated comparison.
+
+Statistical inference was then performed directly from these empirical bootstrap distributions by calculating the bootstrap mean, the 95% percentile confidence interval and, where appropriate, the proportion of bootstrap estimates supporting each biological hypothesis. Confidence intervals excluding zero were interpreted as evidence of statistically supported effects.
+
+Unlike the first approach, this strategy does not rely on asymptotic assumptions regarding the sampling distribution of the estimators, as uncertainty is propagated from the bootstrap procedure to the final model coefficients.
+
+### Comparison between inferential approaches
+
+Finally, the conclusions obtained from both inferential strategies will be compared. Specifically, we will evaluate whether both approaches identify the same interaction effects, whether they agree in the magnitude and direction of estimated treatment effects, and whether they lead to consistent biological conclusions regarding facilitation and competition.
+
+Particular attention will be paid to discrepancies between methods, as these may reveal situations in which conventional model-based inference underestimates or overestimates the uncertainty associated with the estimation of RII. This comparison will allow us to assess the robustness of the conclusions to the inferential framework adopted and to identify the most appropriate analytical strategy for applying the Relative Interaction Index to binary survival data.
+
+
+## Assessment of bootstrap convergence
+
+The required number of iterations depends on the stability of the estimator rather than on an arbitrary threshold. Consequently, before performing statistical inference, a bootstrap convergence analysis will be conducted to evaluate whether the selected number of iterations provides stable estimates of the Relative Interaction Index (RII).
+
+The complete bootstrap procedure will first be executed using 5,000 iterations, and the RII estimated at each iteration will be retained. Bootstrap convergence will then be evaluated retrospectively by calculating cumulative estimates of the bootstrap distribution. Specifically, after the first $i$ iterations ($i = 1, 2, ..., 5,000$), the cumulative bootstrap mean, together with the 2.5th and 97.5th percentiles of the distribution, will be recalculated. These cumulative estimates will be plotted against the number of bootstrap iterations to determine the point at which they become stable.
+
+To quantify convergence, the cumulative estimates obtained after the first *i* iterations will be compared with the final estimates obtained using all 5,000 iterations. For each statistic, the absolute difference will be computed as
+
+$$
+\Delta_{\mu}(i)=\left|\mu_i-\mu_{5000}\right|
+$$
+
+$$
+\Delta_{2.5}(i)=\left|IC_{2.5,i}-IC_{2.5,5000}\right|
+$$
+
+$$
+\Delta_{97.5}(i)=\left|IC_{97.5,i}-IC_{97.5,5000}\right|,
+$$
+
+where ($\mu_i$), ($IC_{2.5,i}$) and ($IC_{97.5,i}$) denote the cumulative bootstrap mean and confidence interval limits obtained after the first $i$ iterations. 
+
+Because convergence may differ among experimental conditions, this analysis will be performed both for the complete bootstrap distribution and separately for every combination of sampling date, interaction type, interacting species and *Quercus* species. The treatment exhibiting the slowest convergence will determine the minimum number of bootstrap iterations required for the study.
+
+If all cumulative statistics stabilize well before 5,000 iterations and their differences with respect to the final estimates become negligible, the selected number of iterations will be considered sufficient. Conversely, if convergence has not yet been achieved, increasing of iterations must be considered. 
+
+
+

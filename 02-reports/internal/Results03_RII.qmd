@@ -4,15 +4,42 @@ subtitle: "First approaches"
 author: "Mompeán, E."
 date: "today"
 format:
-  html:
+  # html:
+  #   toc: true
+  #   toc-depth: 2
+  #   number-sections: true
+  #   code-fold: true
+  #   code-tools: true
+  #   code-summary: "Code"
+  #   theme: cosmo
+  #   code-line-numbers: true
+  pdf:
+    documentclass: scrartcl      # tipografía más cuidada que "article"
+    pdf-engine: xelatex          # mejor manejo de fuentes/acentos
     toc: true
     toc-depth: 2
-    number-sections: true
-    code-fold: true
-    code-tools: true
-    code-summary: "Code"
-    theme: cosmo
-    code-line-numbers: true
+    number-sections: true        # <- lo que pedías: headings numerados
+    number-depth: 2
+    fig-cap-location: bottom
+    fig-align: center
+    fig-width: 6
+    fig-height: 4
+    highlight-style: github
+    geometry:
+      - margin=2.5cm
+    linestretch: 1.15
+    colorlinks: true
+    keep-tex: false
+    code-overflow: wrap
+    code-block-bg: true
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+          breaklines,
+          breakanywhere=true,
+          commandchars=\\\{\}
+        }
 editor: visual
 execute:
   warning: false
@@ -30,26 +57,26 @@ Although the initial methodology used to calculate the RII generated a binomial 
 
 Plant–plant interactions are key drivers of community composition and diversity. These interactions can be direct (between two species) or indirect (when a third species modifies the interaction between the first two) [@Michalet2014].
 
-* **Types of indirect effects:**
+- **Types of indirect effects:**
 
-  * **Indirect facilitation:** Occurs when one species reduces the competition experienced by two other species [@Michalet2014 & @Michalet2017].
-  * **Indirect competition:** Occurs when a facilitator increases the biomass of a competing species to such an extent that it ultimately harms a third species (the original beneficiary) [@Michalet2014 & @Michalet2017].
+  - **Indirect facilitation:** Occurs when one species reduces the competition experienced by two other species [@Michalet2014 & @Michalet2017].
+  - **Indirect competition:** Occurs when a facilitator increases the biomass of a competing species to such an extent that it ultimately harms a third species (the original beneficiary) [@Michalet2014 & @Michalet2017].
 
-* **Interaction mechanisms:**
+- **Interaction mechanisms:**
 
-  * **Resource competition (exploitation):** Indirect interaction through a shared limiting resource (water, nutrients) [@Michalet2017].
-  * **Interference:** A direct form of competition in which one organism actively interferes with another’s ability to acquire resources, for example through litter accumulation that acts as a physical barrier or alters soil moisture [@Michalet2017].
-  * **Canopy vs. root effects:** Plants may exert positive (thermal buffering) or negative (light competition) effects through their canopy, and variable effects through their roots (nutrient competition or facilitation via mycorrhizal associations) [@Wang2017].
+  - **Resource competition (exploitation):** Indirect interaction through a shared limiting resource (water, nutrients) [@Michalet2017].
+  - **Interference:** A direct form of competition in which one organism actively interferes with another’s ability to acquire resources, for example through litter accumulation that acts as a physical barrier or alters soil moisture [@Michalet2017].
+  - **Canopy vs. root effects:** Plants may exert positive (thermal buffering) or negative (light competition) effects through their canopy, and variable effects through their roots (nutrient competition or facilitation via mycorrhizal associations) [@Wang2017].
 
-* **“Hidden” interactions:** At the community level, net effects may appear neutral when positive and negative interactions compensate each other, although these interactions still structure species composition [@Michalet2014 & @Wang2017].
+- **“Hidden” interactions:** At the community level, net effects may appear neutral when positive and negative interactions compensate each other, although these interactions still structure species composition [@Michalet2014 & @Wang2017].
 
 The use of the **RII (Relative Interaction Index)** responds to the need for a standardized comparative metric that quantifies both the **strength** and **direction** of biotic interactions between species. Unlike other indices, RII is **symmetric around zero**, enabling a balanced statistical interpretation where positive values indicate facilitation and negative values indicate competition, constrained between +1 and −1. This property is essential in complex community studies, as it allows the decomposition and mathematical comparison of different interaction components—such as canopy vs. root effects, or direct vs. indirect effects—revealing **“hidden interactions”** that may cancel out at the net community level [@Michalet2014; @Michalet2017 & @Wang2017].
 
 # Objectives
 
-1. To establish the methodology for applying RII calculations to our case study.
-2. To explore the results of RII calculations.
-3. To define the statistical methodology required to determine which RII-derived effects are significant.
+1.  To establish the methodology for applying RII calculations to our case study.
+2.  To explore the results of RII calculations.
+3.  To define the statistical methodology required to determine which RII-derived effects are significant.
 
 # Methodology
 
@@ -57,11 +84,11 @@ The use of the **RII (Relative Interaction Index)** responds to the need for a s
 
 The study combined three main factors to analyze facilitation:
 
-* **Environment (2 levels):** Two adjacent areas in Monte Público Jócar (Guadalajara, Spain) were selected: a *Pinus pinaster* forest (tree cover) and gap dominated by shrubland following a wildfire in 2014.
+- **Environment (2 levels):** Two adjacent areas in Monte Público Jócar (Guadalajara, Spain) were selected: a *Pinus pinaster* forest (tree cover) and gap dominated by shrubland following a wildfire in 2014.
 
-* **Microsite (4 levels):** Defined according to nurse shrub species: *Cistus ladanifer*, *Genista scorpius*, *Rosa canina*, and a vegetation-free control (“open area”).
+- **Microsite (4 levels):** Defined according to nurse shrub species: *Cistus ladanifer*, *Genista scorpius*, *Rosa canina*, and a vegetation-free control (“open area”).
 
-* **Facilitated species (2 levels):** Two oak species with contrasting ecological strategies were planted: *Quercus ilex* (evergreen and stress-tolerant) and *Quercus faginea* (deciduous and more drought-sensitive).
+- **Facilitated species (2 levels):** Two oak species with contrasting ecological strategies were planted: *Quercus ilex* (evergreen and stress-tolerant) and *Quercus faginea* (deciduous and more drought-sensitive).
 
 Sixty replicates per microsite were randomly selected, evenly distributed between the two environments (30 in pine forest and 30 in gap habitat), totaling 240 microsites. In each microsite, two individuals were planted: one from each *Quercus* species.
 
@@ -69,17 +96,15 @@ Sixty replicates per microsite were randomly selected, evenly distributed betwee
 
 The $RII$ is a standardized index used to quantify the strength and direction of biotic interactions. Its general formula is:
 
-$$
-RII =
-\frac{X_{\text{with neighbors}} - X_{\text{without neighbors}}}{X_{\text{with neighbors}} + X_{\text{without neighbors}}}
-$$
+$$RII =
+\frac{X_{\text{with neighbors}} - X_{\text{without neighbors}}}{X_{\text{with neighbors}} + X_{\text{without neighbors}}}$$
 
 Where $X$ represents a measure of plant performance (commonly biomass, species richness, or abundance).
 
 Properties of RII:
 
-* Symmetric around zero
-* Ranges from −1 (maximum competition) to +1 (maximum facilitation)
+- Symmetric around zero
+- Ranges from −1 (maximum competition) to +1 (maximum facilitation)
 
 RII is typically calculated on continuous (biomass) or positive discrete data. However, its application to binary survival data (0/1) is less common, though still possible with adaptations.
 
@@ -87,24 +112,21 @@ RII is typically calculated on continuous (biomass) or positive discrete data. H
 
 RII can be computed in a similar way for binary data. For a pair of observations $i$ and $j$ ($RII_{ij}$), survival under shrub presence ($S_{a_i}$) is compared with survival in open conditions ($S_{b_j}$). Since values are binary, the result can only be +1, 0, or −1. When both $S_{a_i}$ and $S_{b_j}$ are 0, $RII_{ij}$ is defined as 0 by convention.
 
-$$
-RII_{ij} = \frac{S_{a_i}-S_{b_j}}{S_{a_i}+S_{b_j}}
-$$ {#eq-RII}
+$$RII_{ij} = \frac{S_{a_i}-S_{b_j}}{S_{a_i}+S_{b_j}}$$
+ {#eq-RII}
 
 except when:
 
-$$
-S_a + S_B = 0 ;; \Rightarrow ;; RII = 0
-$$
+$$S_a + S_B = 0 ;; \Rightarrow ;; RII = 0$$
 
 | ($S_{a_i}$) | ($S_{b_j}$) | ($RII_{ij}$)      |
-| ----------- | ----------- | ----------------- |
+|-------------|-------------|-------------------|
 | 1           | 0           | 1                 |
 | 0           | 1           | -1                |
 | 1           | 1           | 0                 |
 | 0           | 0           | 0 (by convention) |
 
-: Possible RII outcomes for binary (0/1) data {#tbl-posible.RII}
+: Possible RII outcomes for binary (0/1) data
 
 ### RII in our experimental design
 
@@ -118,15 +140,11 @@ For example, to compute the $RII$ for the direct interaction under *Cistus ladan
 
 A single value of $RII_{Cistus_1}$ is then obtained by averaging all pairwise values:
 
-$$
-\overline{RII}_{Cistus_1}
+$$\overline{RII}_{Cistus_1}
 =
 \frac{1}{m}
 \sum_{j=1}^{m}
-RII_{Cistus_1j}
-$$
-
-[^1]: This approach produces many RII values per individual. The repeated-measures structure allows the use of mixed models to account for nested observations. However, this is not addressed in this report.
+RII_{Cistus_1j}$$
 
 **Defining meaningful comparisons**
 
@@ -134,30 +152,29 @@ The computation of a single RII per individual requires defining which compariso
 
 We impose the following constraints:
 
-1. All RII values are computed within the same oak species. For example, it is not meaningful to compare *Quercus ilex* under *Cistus ladanifer* with *Quercus faginea* under the same shrub. The experimental design assumes that the planted oaks are young enough (one year old) and sufficiently spaced to avoid direct competition.
+1.  All RII values are computed within the same oak species. For example, it is not meaningful to compare *Quercus ilex* under *Cistus ladanifer* with *Quercus faginea* under the same shrub. The experimental design assumes that the planted oaks are young enough (one year old) and sufficiently spaced to avoid direct competition.
 
-2. **Direct effects of shrubs** ($RII_{direct}^{shrubs}$): Effect of shrubs on oak survival without pine influence, comparing shrub microsites vs. open area in the gap environment.
+2.  **Direct effects of shrubs** ($RII_{direct}^{shrubs}$): Effect of shrubs on oak survival without pine influence, comparing shrub microsites vs. open area in the gap environment.
 
-3. **Indirect effects of shrubs** ($RII_{indirect}^{shrubs}$): Effect of shrubs on oak survival under pine cover, comparing shrub microsites vs. without-shrubs within the pine forest.
+3.  **Indirect effects of shrubs** ($RII_{indirect}^{shrubs}$): Effect of shrubs on oak survival under pine cover, comparing shrub microsites vs. without-shrubs within the pine forest.
 
-4. **Direct effects of pine** ($RII_{direct}^{pine}$): Effect of pine forest on oak survival in open area (no shrubs), comparing pine vs. gap conditions.
+4.  **Direct effects of pine** ($RII_{direct}^{pine}$): Effect of pine forest on oak survival in open area (no shrubs), comparing pine vs. gap conditions.
 
-5. **Indirect effects of pine** ($RII_{indirect}^{pine}$): Effect of pine on oak survival under shrubs, comparing pine vs. open conditions within shrub microsites. This would capture contextual effects of pine mediated by shrub presence. However, this is not central to the study’s theoretical assumptions, which treat pine as a background environmental modifier rather than a target of shrub feedbacks.
+5.  **Indirect effects of pine** ($RII_{indirect}^{pine}$): Effect of pine on oak survival under shrubs, comparing pine vs. open conditions within shrub microsites. This would capture contextual effects of pine mediated by shrub presence. However, this is not central to the study’s theoretical assumptions, which treat pine as a background environmental modifier rather than a target of shrub feedbacks.
 
-| Effect                    | Type              | Comparison (treatment vs control) | Pine condition     | Shrub condition | Interpretation                                                                      |
-| ------------------------- | ----------------- | --------------------------------- | ------------------ | --------------- | ----------------------------------------------------------------------------------- |
-| $RII_{direct}^{shrubs}$   | Shrubs (direct)   | Under shrub vs open                | Without pine       | Shrub vs open    | Direct shrub effect on oak survival without pine influence                          |
-| $RII_{indirect}^{shrubs}$ | Shrubs (indirect) | Under shrub vs open                | With pine          | Shrub vs open    | Shrub effect on oak survival in presence of pine                                    |
-| $RII_{direct}^{pine}$     | Pine (direct)     | Pine vs no pine (gap)                   | In open (no shrub) | No shrub        | Direct pine effect on survival without shrubs                                       |
+| Effect | Type | Comparison (treatment vs control) | Pine condition | Shrub condition | Interpretation |
+|----------|----------|----------|----------|----------|----------------------|
+| $RII_{direct}^{shrubs}$ | Shrubs (direct) | Under shrub vs open | Without pine | Shrub vs open | Direct shrub effect on oak survival without pine influence |
+| $RII_{indirect}^{shrubs}$ | Shrubs (indirect) | Under shrub vs open | With pine | Shrub vs open | Shrub effect on oak survival in presence of pine |
+| $RII_{direct}^{pine}$ | Pine (direct) | Pine vs no pine (gap) | In open (no shrub) | No shrub | Direct pine effect on survival without shrubs |
 
 ## Statistical analysis
 
 To determine whether the detected effects are statistically significant and how they influence the community, two methods will be used:
 
-* **One-sample t-test:** This test is used to assess whether the mean RII value is significantly different from zero. If it is, a significant effect is present (facilitative if > 0, competitive if < 0).
+- **One-sample t-test:** This test is used to assess whether the mean RII value is significantly different from zero. If it is, a significant effect is present (facilitative if \> 0, competitive if \< 0).
 
-* **ANOVA:** This is used to compare whether different types of RII (e.g., direct vs. indirect RII) differ significantly from each other, indicating a significant indirect effect.
-
+- **ANOVA:** This is used to compare whether different types of RII (e.g., direct vs. indirect RII) differ significantly from each other, indicating a significant indirect effect.
 
 # Results
 
@@ -272,7 +289,6 @@ aggID.df.rii.qf <- df.rii.qf |>
   )
 ```
 
-
 **Holm oak (Quercus ilex)**
 
 In the direct shrub effects, values are positive for all three nurse species at both sampling dates. This indicates that, in the absence of pine forest, *Q. ilex* survival was generally higher under shrubs than in gaps. The strongest effect appears in the direct effect of *Pinus pinaster*. Across dates, the facilitative effect of *Cistus ladanifer* becomes stronger in May 2026, while the effect of *Genista scorpius* moves closer to zero (@fig-rii).
@@ -281,10 +297,9 @@ In the indirect shrub effects, the pattern shifts slightly. *Cistus ladanifer* s
 
 **Portuguese oak (Quercus faginea)**
 
-In *Q. faginea*, a more contrasted pattern emerges than in *Q. ilex*. In the direct effects, pine shows the highest RII values in both dates (0.567 and 0.530), indicating a clear and consistent facilitative effect of the pine canopy on survival relative to gap conditions. Among shrubs, *Cistus ladanifer* shows positive but more moderate values (0.233 and 0.133), while *Genista scorpius* and *Rosa canina* show weak direct effects, close to zero in the second date. This suggests that, for **Q. faginea*, the favourable microsite effect of shrubs is modest, whereas pine exerts a stronger influence (@fig-rii).
+In *Q. faginea*, a more contrasted pattern emerges than in *Q. ilex*. In the direct effects, pine shows the highest RII values in both dates (0.567 and 0.530), indicating a clear and consistent facilitative effect of the pine canopy on survival relative to gap conditions. Among shrubs, *Cistus ladanifer* shows positive but more moderate values (0.233 and 0.133), while *Genista scorpius* and *Rosa canina* show weak direct effects, close to zero in the second date. This suggests that, for \*\*Q. faginea\*, the favourable microsite effect of shrubs is modest, whereas pine exerts a stronger influence (@fig-rii).
 
 In the indirect effects, the most striking pattern appears: *Cistus ladanifer* shows clearly negative values at both dates (−0.287 and −0.330), substantially more negative than in *Q. ilex*. This indicates that, under pine cover, the presence of *Cistus* is associated with a reduction in *Q. faginea* survival relative to open (without shrubs) within the same environment. In contrast, *Genista scorpius* and *Rosa canina* remain close to zero (0.0333–0.0370 and 0.0667–0.00370), suggesting very weak or nearly neutral indirect effects. Overall, *Q. faginea* appears more sensitive to the contextual conditions imposed by pine and by certain shrubs, especially *Cistus*, consistent with its higher sensitivity to environmental stress (@fig-rii).
-
 
 ```{r}
 #| label: fig-rii
@@ -417,7 +432,6 @@ ggplot(
   )
 ```
 
-
 However, the analysis of the data distribution reveals clear departures from normality. As shown in the following count histogram, for the May 2026 survival data, RII values collapse into only two numerical possibilities for each species and each RII type (direct/indirect).
 
 ```{r}
@@ -442,33 +456,29 @@ A normal distribution of RII values was expected, given that the index is standa
 
 An examination of the RII calculation formula may help explain this pattern (@eq-RII). For binary variables, the expression simplifies exactly to:
 
-$$
-RII_{ij} = S_{A_i} - S_{B_j}
-$${#eq-RII_summ}
+$$RII_{ij} = S_{A_i} - S_{B_j}$$
+ {#eq-RII_summ}
 
 because the four possible cases reproduce the same outcomes shown in table @tbl-posible.RII:
 
-$$
-\begin{array}{c c c}
+$$\begin{array}{c c c}
 S_{A_i} & S_{B_j} & RII_{ij} \\
 \hline
 1 & 0 & 1 \\
 0 & 1 & -1 \\
 1 & 1 & 0 \\
 0 & 0 & 0 \\
-\end{array}
-$$
+\end{array}$$
 
 Since $S_{A_i}$ is constant for each focal individual:
 
-$$
-\overline{RII_i} = S_{A_i} - \bar{B}
-$${#eq-RII_summ2}
+$$\overline{RII_i} = S_{A_i} - \bar{B}$$
+ {#eq-RII_summ2}
 
-This has a direct consequence: 
+This has a direct consequence:
 
-- if the focal individual survives, then $\overline{RII_i} = 1 - \bar{B}$, 
-- if the focal individual does not survive, then $\overline{RII_i} = 0 - \bar{B} = -\bar{B}$. 
+- if the focal individual survives, then $\overline{RII_i} = 1 - \bar{B}$,
+- if the focal individual does not survive, then $\overline{RII_i} = 0 - \bar{B} = -\bar{B}$.
 
 In other words, for each specific combination, the aggregated RII per individual can only take **two possible values**. In the following code example, it can be observed that the original calculation (@eq-RII), the simplified formulation (@eq-RII_summ), and the formulation where RII is expressed as the simple difference between survival in $A$ and the mean of $B$ (@eq-RII_summ2) all yield identical results.
 
@@ -494,21 +504,20 @@ ejemplo |>
   )
 ```
 
-This would explain why: 
+This would explain why:
 
-- the distributions are non-normal, 
-- histograms show only a few discrete peaks, 
-- quantiles repeat across observations, 
-- the Shapiro–Wilk test rejects normality in all cases. 
+- the distributions are non-normal,
+- histograms show only a few discrete peaks,
+- quantiles repeat across observations,
+- the Shapiro–Wilk test rejects normality in all cases.
 
 In practical terms, the mean RII per individual is equivalent to a **difference in survival probabilities**:
 
-$$
-\overline{RII} = p_A - p_B
-$$
+$$\overline{RII} = p_A - p_B$$
 
 where:
 
-- $p_A$ is the probability of survival under the focal condition, 
+- $p_A$ is the probability of survival under the focal condition,
 - $p_B$ is the probability of survival under the reference condition.
 
+# References

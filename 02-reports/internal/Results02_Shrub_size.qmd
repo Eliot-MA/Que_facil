@@ -13,7 +13,7 @@ format:
   #   code-summary: "Code"
   #   theme: cosmo
   #   code-line-numbers: true
-  pdf: 
+  pdf:
     documentclass: scrartcl      # tipografía más cuidada que "article"
     pdf-engine: xelatex          # mejor manejo de fuentes/acentos
     toc: true
@@ -24,14 +24,22 @@ format:
     fig-align: center
     fig-width: 6
     fig-height: 4
-    code-overflow: wrap          # <- evita que el código se salga de la página
-    code-block-bg: true
     highlight-style: github
     geometry:
       - margin=2.5cm
     linestretch: 1.15
     colorlinks: true
     keep-tex: false
+    code-overflow: wrap
+    code-block-bg: true
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+          breaklines,
+          breakanywhere=true,
+          commandchars=\\\{\}
+        }
 editor: visual
 execute:
   warning: false
@@ -51,12 +59,12 @@ To convert volume measurements into biomass, five individuals per environment an
 
 # Objectives
 
-1. To evaluate the best-fit model for predicting shrub biomass.
-2. To evaluate the effect of biomass on seedling survival, after controlling for other variables such as elevation.
+1.  To evaluate the best-fit model for predicting shrub biomass.
+2.  To evaluate the effect of biomass on seedling survival, after controlling for other variables such as elevation.
 
 In previous reports, elevation appeared to have a detectable yet subtle effect on survival. In this regard, an additional objective is:
 
-3. To assess whether the observed effect of elevation remains significant after incorporating this new variable.
+3.  To assess whether the observed effect of elevation remains significant after incorporating this new variable.
 
 # Methods
 
@@ -77,7 +85,6 @@ library(multcomp)
 ### Data Preparation
 
 We utilized a field dataset (`shrub_biomass.csv`) comprising shrub volume (m³) and dry mass (g), alongside species (microsite) and zone type (pine canopy vs. open area) for each individual. Variables were renamed to a standardized English format, and categories for the variables `microsite` (Gs, Cl, Rc → *Genista scorpius*, *Cistus ladanifer*, *Rosa canina*) and `zone` (Open area, Pine canopy) were recoded for interpretability. Both variables were defined as factors.
-
 
 ```{r}
 options(na.action = "na.fail")
@@ -112,13 +119,11 @@ df.biomass |>
 head(df.biomass)
 ```
 
-
 ### Model Selection
 
 A generalized linear mixed model (`glmmTMB`) was fitted to the log-transformed allometric relationship between mass and volume (`log.mass ~ log.volume * microsite * zone`), including all possible interactions between volume, microsite, and zone. From this saturated model, we performed model selection using the `dredge` function from the `MuMIn` package [@pkg-mumin], generating all possible combinations of predictors and selecting the best-fit model (lowest AICc, `subset = 1`). Heteroscedasticity of residuals was detected in the chosen model; therefore, a Gamma distribution was selected to mitigate this issue.[^1]
 
 [^1]: Tengo dudas todavía de si el gamma es el mejor modelo, porque parece aumentar un poco el error.
-
 
 ```{r}
 m_full <- glmmTMB(log.mass ~ log.volume * microsite * zone,
@@ -141,11 +146,9 @@ check_model(m_gamma, check = c("qq", "homogeneity"))
 check_overdispersion(m_gamma)
 ```
 
-
 ### Treatment-Specific Models
 
 Following the selection of the best model, data were grouped by the `microsite` × `zone` combination. For each group, a generalized linear model (GLM) was fitted with a Gamma distribution and a log-link function (`mass ~ volume`, `family = Gamma(link = "log")`). This approach captures the non-linear allometric relationship between volume and mass specifically for each species-environment combination, while accounting for the continuous and strictly positive nature of the response variable (mass). Fitting specific models enhances individual predictive performance. Coefficients (`broom::tidy`) and goodness-of-fit statistics (`broom::glance`) were extracted for each individual model.
-
 
 ```{r}
 results_biomass <- df.biomass |>
@@ -157,7 +160,6 @@ results_biomass <- df.biomass |>
     glanced = map(model, broom::glance)                 # R², AIC, etc.
   )
 ```
-
 
 ### Biomass Prediction
 
@@ -248,7 +250,6 @@ df.vol <- df.vol |>
 head(df.vol)
 ```
 
-
 The group-specific Gamma models were applied to predict shrub biomass within the original experimental dataset. Individual volumes (excluding the "gap" category) were used, matching each individual with the model corresponding to its specific microsite and zone combination.
 
 ```{r}
@@ -275,13 +276,12 @@ predictions <- df.model |>
   unnest(c(data, pred.mass))       # devuelve un dataframe plano
 ```
 
-
 ### Predictive Model Validation
 
 Predictive performance was evaluated by applying the group-specific models to the calibration dataset itself (measured biomass), comparing predicted versus observed values. Two diagnostic plots were generated: (i) measured mass vs. estimated mass to assess general predictive capacity, and (ii) residuals vs. estimated mass to assess homoscedasticity. Model performance was quantified using:
 
-* **RMSE** (Root Mean Square Error)
-* **Predictive R²**, calculated as 1 − (Residual SS / Total SS)
+- **RMSE** (Root Mean Square Error)
+- **Predictive R²**, calculated as 1 − (Residual SS / Total SS)
 
 ```{r}
 # Prediction validation
@@ -344,10 +344,9 @@ cat(
   )
 ```
 
-
 ### Results Integration
 
-Estimated biomass values were incorporated into the main dataset (`df.surv`), making them available for subsequent analyses. The original shrub dimension data were also retained. Elevation was integrated too. 
+Estimated biomass values were incorporated into the main dataset (`df.surv`), making them available for subsequent analyses. The original shrub dimension data were also retained. Elevation was integrated too.
 
 ```{r}
 df.surv.mass <- df.surv |> 
@@ -529,7 +528,6 @@ check_model(modelo)
 check_collinearity(modelo)
 ```
 
-
 # Results
 
 ### Stepwise Procedure
@@ -542,8 +540,7 @@ The simplification followed a logical hierarchy, first removing higher-order int
 
 The last effect removed was the main effect of **Elevation_c**. Although its removal produced a slight increase in AIC (425.24 versus 426.61; ΔAIC = 1.38), this increase was below the two-unit threshold established during the selection procedure; therefore, we opted for a more parsimonious model without this predictor. This result is particularly interesting because, in previous analyses, elevation showed a subtel but significant on survival. However, after incorporating predicted shrub biomass (**log.pred.mass_c**) into the set of predictors, the independent contribution of elevation no longer justified its retention in the model, suggesting that part of the pattern previously attributed to elevation might be explained by differences in shrub size.
 
-The final model retained four main effects (**Environment**, **microsite**, **quercus_sp**, and **log.pred.mass_c**) and two double interactions (**Environment × microsite** and **microsite × log.pred.mass_c**). According to Type II Wald tests, **Environment** had a highly significant effect on survival (*P* < 0.001), as did **quercus_sp** (*P* = 0.0026). The main effect of **microsite** was not significant (*P* = 0.55), but it participated in two significant interactions, indicating that its effect depends on both the environment and shrub size. Specifically, the **Environment × microsite** (*P* = 0.014) and **microsite × log.pred.mass_c** (*P* = 0.016) interactions remained in the final model, while the main effect of **log.pred.mass_c** was not significant (*P* = 0.376). This pattern indicates that shrub biomass does not exert a uniform effect on survival; rather, its influence depends on the microsite in which the seedling is established.
-
+The final model retained four main effects (**Environment**, **microsite**, **quercus_sp**, and **log.pred.mass_c**) and two double interactions (**Environment × microsite** and **microsite × log.pred.mass_c**). According to Type II Wald tests, **Environment** had a highly significant effect on survival (*P* \< 0.001), as did **quercus_sp** (*P* = 0.0026). The main effect of **microsite** was not significant (*P* = 0.55), but it participated in two significant interactions, indicating that its effect depends on both the environment and shrub size. Specifically, the **Environment × microsite** (*P* = 0.014) and **microsite × log.pred.mass_c** (*P* = 0.016) interactions remained in the final model, while the main effect of **log.pred.mass_c** was not significant (*P* = 0.376). This pattern indicates that shrub biomass does not exert a uniform effect on survival; rather, its influence depends on the microsite in which the seedling is established.
 
 ```{r}
 # Graficar proceso selectivo
@@ -754,4 +751,3 @@ emm_mass <- emmeans(
 cld(emm_mass, Letters = letters, by = "microsite")
 cld(emm_mass, Letters = letters, by = "log.pred.mass_c")
 ```
-

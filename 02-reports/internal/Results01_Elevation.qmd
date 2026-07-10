@@ -3,15 +3,42 @@ title: "Effect of elevation on survival"
 author: "Mompeán, E."
 date: "today"
 format:
-  html:
+  # html:
+  #   toc: true
+  #   toc-depth: 2
+  #   number-sections: true
+  #   code-fold: true
+  #   code-tools: true
+  #   code-summary: "Code"
+  #   theme: cosmo
+  #   code-line-numbers: true
+  pdf:
+    documentclass: scrartcl      # tipografía más cuidada que "article"
+    pdf-engine: xelatex          # mejor manejo de fuentes/acentos
     toc: true
     toc-depth: 2
-    number-sections: true
-    code-fold: true
-    code-tools: true
-    code-summary: "Code"
-    theme: cosmo
-    code-line-numbers: true
+    number-sections: true        # <- lo que pedías: headings numerados
+    number-depth: 2
+    fig-cap-location: bottom
+    fig-align: center
+    fig-width: 6
+    fig-height: 4
+    highlight-style: github
+    geometry:
+      - margin=2.5cm
+    linestretch: 1.15
+    colorlinks: true
+    keep-tex: false
+    code-overflow: wrap
+    code-block-bg: true
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+          breaklines,
+          breakanywhere=true,
+          commandchars=\\\{\}
+        }
 editor: visual
 execute:
   warning: false

@@ -145,14 +145,223 @@ m6 <- update(
   as.formula(paste(". ~ . -", drop.coef))
 )
 
-modelo <- m5
-terminos <- attr(terms(modelo), "term.labels")
-orden <- sapply(strsplit(terminos, ":"), length)
-df.terms <- data.frame(
-  termino = terminos,
-  orden = orden
-)
-max.terms <- df.terms$termino[df.terms$orden == max(df.terms$orden)]
+modelo <- m6
 d <- drop1(modelo, test = "Chisq")
-n <- which.min(d$AIC[row.names(d) %in% max.terms])
-drop.coef <- row.names(d[row.names(d) %in% max.terms,])[n]
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m7 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m7
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m8 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m8
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m9 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m9
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m10 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m10
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m11 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m11
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m12 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m12
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m13 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m13
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m14 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m14
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m15 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m15
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m16 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m16
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m17 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m17
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m18 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m18
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m19 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m19
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m20 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m20
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m21 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m21
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+m22 <- update(
+  modelo,
+  as.formula(paste(". ~ . -", drop.coef))
+)
+
+modelo <- m22
+d <- drop1(modelo, test = "Chisq")
+d
+drop.coef <- row.names(d)[which.min(d$AIC)]
+drop.coef
+
+mfinal <- update(m22, REML = TRUE)
+
+#---
+
+car::Anova(mfinal)
+
+library(sjPlot)
+
+plot_model(mfinal, type = "pred", terms = "Environment")
+plot_model(mfinal, type = "pred", terms = c("quercus_sp", "quercus_volume_c"))
+plot_model(mfinal, type = "pred", terms = c("shrub_volume_c", "shrub_pred_mass_c", "Environment"))
+
+library(MASS)
+stepAIC(full)
+
+modelo_final <- stepAIC(
+  full,
+  direction = "backward"
+)
+
+#==
+full <- glmmTMB(
+  survival ~ quercus_sp * quercus_volume_c * shrub_volume_c * Environment + 
+    (1 | Individual),
+  data = df,
+  family = binomial(), 
+  REML = FALSE
+)
+
+library(MuMIn)
+
+options(na.action = "na.fail")
+
+library(parallel)
+parallel::detectCores()
+
+cl <- makeCluster(detectCores() - 1)
+
+dd <- dredge(
+  full,
+  cluster = cl
+)
+
+dd <- dredge(
+  full,
+  component = "cond",
+  cluster = cl
+)
+
+dd <- dredge(
+  full,
+  fixed = c("(Intercept)"),
+  cluster = cl
+)
