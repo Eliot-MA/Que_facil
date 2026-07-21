@@ -15,3 +15,5 @@ source("01-scripts/01.2c-SLA.R")
 source("01-scripts/01.2d-shrub_size.R")
 
 # Load RII
+
+source("01-scripts/01.2e-RII.R")

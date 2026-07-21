@@ -1,4 +1,7 @@
-# source("01-scripts/01.21-survival.R")
+source("01-scripts/01.2a-survival_growth.R")
+
+mantener <- c("df.surv")
+rm(list = setdiff(ls(), mantener))
 
 # 1. Prepare data ----
 
@@ -103,7 +106,7 @@ aggID.df.rii.qf <- df.rii.qf |>
 
 agg.rii.qi <- 
   aggID.df.rii.qi |> 
-  filter_out(surv_date == "12/06/2025") |> 
+  filter(surv_date != "12/06/2025") |> 
   group_by(surv_date, type_RII, Interacting_species) |> 
   summarise(
     n = sum(!is.na(mean)),
@@ -115,7 +118,7 @@ agg.rii.qi <-
 
 agg.rii.qf <- 
   aggID.df.rii.qf |> 
-  filter_out(surv_date == "12/06/2025") |> 
+  filter(surv_date != "12/06/2025") |> 
   group_by(surv_date, type_RII, Interacting_species) |> 
   summarise(
     n = sum(!is.na(mean)),
@@ -193,10 +196,11 @@ bootstrap_once_v3 <- function(df) {
 
 ## 3. Bootstrap final: 5000 iteraciones ----
 ## Se guarda la tabla completa con todos los individuos y todas las iteraciones
+library(cli)
 
 set.seed(123)
 
-n_iter <- 500
+n_iter <- 5000
 
 pb <- cli_progress_bar(
   name   = "Bootstrap",
@@ -204,7 +208,8 @@ pb <- cli_progress_bar(
   format = "{cli::pb_bar} {cli::pb_current}/{cli::pb_total} | {cli::pb_eta_str}"
 )
 
-df <- df.surv |> filter(Environment == "gap" & microsite %in% c("Genista scorpius", "open") & quercus_sp == "QI", surv_date == "27/05/2026")
+df <- df.surv |> 
+  filter(Environment == "gap" & microsite %in% c("Genista scorpius", "open") & quercus_sp == "QI", surv_date == "16/09/2025")
 
 boot.results <- map_dfr(
   seq_len(n_iter),
@@ -228,13 +233,34 @@ boot.results.ind <- boot.results |>
 
 
 # Change it depending on the quercus species used
-write.csv2(boot.results, file = "00-data/boot_RII.csv")
+# write.csv2(boot.results, file = "00-data/boot_RII.csv")
 
 
 library(dplyr)
 library(ggplot2)
 
-hist(boot.results.ind$boot_RII, breaks = 10)
+hist(boot.results.ind$boot_RII, breaks = 50)
+
+p1 <- ggplot(boot.results.ind, aes(x = boot_RII)) +
+  geom_histogram() +
+  coord_cartesian(xlim = c(-1, 1))
+
+p2 <- aggID.df.rii.qi |> 
+  filter(type_RII == "Direct" & Interacting_species == "Genista scorpius" & surv_date == "16/09/2025") |> 
+  ggplot(aes(x = mean)) +
+  geom_histogram() +
+  coord_cartesian(xlim = c(-1, 1)) +
+  xlab("RII")
+
+library(patchwork)
+patch_plot <- p2 / p1 + plot_annotation(
+  title = "Comparison of RII results. \nSubsample: Quercus ilex, Genista scorpius, gap environment, sep2025 census",
+  subtitle = "A: Classic calculation \nB: Bootstrap calculation with 5000 iterations per individual",
+  tag_levels = "A"
+)
+
+# Luego, guarda el gráfico:
+ggsave("08-img/rii_calculation_comparison_bootstrap.png", width = 10, height = 8, dpi = 300)
 
 df.surv |> 
   group_by(Environment, microsite, quercus_sp, surv_date) |> 
@@ -263,12 +289,13 @@ hist(posibles_RII, breaks = 150)
 ## 1. Calcular estadísticos acumulativos ----
 
 convergence <- boot.results |>
-  #group_by(iteration, surv_date, type_RII, Interacting_species, quercus_sp) |>
-  group_by(iteration, ind_A) +
-  summarise(RII_mean = mean(RII, na.rm = TRUE), .groups = "drop") |>
+  group_by(iteration, ind_A) |>
+  summarise(
+    RII_mean = mean(RII, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
   arrange(iteration) |>
-  #group_by(surv_date, type_RII, Interacting_species, quercus_sp) |>
-  group_by(Ind_A) |> 
+  group_by(ind_A) |>
   mutate(
     cum_mean  = cumsum(RII_mean) / seq_len(n()),
     cum_lower = sapply(seq_len(n()), function(i) quantile(RII_mean[1:i], 0.025)),
@@ -295,7 +322,7 @@ ggplot(convergence, aes(x = iteration)) +
 convergence_ind <- boot.results |>
   filter(!is.na(RII)) |>                        # <- eliminar NAs antes
   arrange(iteration) |>
-  group_by(ind_A, surv_date, type_RII, Interacting_species, quercus_sp) |>
+  group_by(ind_A, surv_date, type_RII, Interacting_species) |>
   mutate(
     cum_mean  = cumsum(RII) / seq_len(n()),
     cum_lower = sapply(seq_len(n()), function(i) quantile(RII[1:i], 0.025, na.rm = TRUE)),
