@@ -130,7 +130,7 @@ df.gap.shrub.par.control <-
 
 ## 6. Compute par extinction ----
 df.par.open.ext <- df.par.open |> 
-  filter_out(microsite == "gap") |> 
+  filter(microsite != "gap") |> 
   left_join(df.gap.shrub.par.control, 
             by = c("Individual" = "Individual_shrub"))
 

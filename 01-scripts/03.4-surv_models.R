@@ -313,6 +313,15 @@ drop.coef
 
 mfinal <- update(m22, REML = TRUE)
 
+mfinal <- glmmTMB(survival ~ quercus_sp + quercus_volume_c + shrub_volume_c + shrub_pred_mass_c + 
+                    Environment + (1 | Individual) + quercus_sp:quercus_volume_c + 
+                    shrub_volume_c:shrub_pred_mass_c + shrub_volume_c:Environment + 
+                    shrub_pred_mass_c:Environment + shrub_volume_c:shrub_pred_mass_c:Environment, 
+                  data = df,
+                  family = binomial(), 
+                  REML = TRUE
+)
+
 #---
 
 car::Anova(mfinal)

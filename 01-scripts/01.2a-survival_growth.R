@@ -1,8 +1,11 @@
-library(dplyr) 
-library(tidyr) 
+cat("This script loads and prepares survival data from two census dates (2025 and 2026),\n")
+cat("cleans and reshapes growth measurements, and computes volume growth for Quercus seedlings.\n\n")
+
+library(dplyr)
+library(tidyr)
 library(rlang)
 library(readr)
-library(dplyr) 
+library(dplyr)
 #library(readxl)
 library(ggplot2)
 #library(writexl)
@@ -11,7 +14,9 @@ library(purrr)
 ##
 # SURVIVAL ----
 ##
-cat("Loading survival\n")
+cat("Loading and merging survival data from both census dates...\n")
+
+library(tidyverse)
 
 # Cargar supervivencia
 df.surv1 <- read.csv2("00-data/vol_par_surv.csv")
@@ -66,13 +71,17 @@ df.surv2 <- df.surv2 |>
   )
 
 df.surv <- rbind(df.surv1, df.surv2)
+
+cat("Survival data merged: n =", nrow(df.surv), "rows,",
+    n_distinct(df.surv$Individual), "unique individuals\n\n")
+
 glimpse(df.surv)
 
 
 ##
 # GROWTH
-## 
-cat("Loading growth \n")
+##
+cat("\n Loading and reshaping growth data...\n")
 
 rD.growth <- read.csv2(file = "00-data/growth.csv")
 
@@ -186,7 +195,7 @@ df.growth <- df.growth |>
 df.growth.volume <- df.growth |> 
   select(Arbusto, Posición, Especie, Ambiente, id_quercus, Volume_cm3, Date) |> 
   unique() |> 
-  filter_out(Especie == "") |> 
+  filter(Especie != "") |> 
   drop_na()
 
 df.growth.volume.diff <- df.growth.volume |> 
@@ -210,6 +219,13 @@ df.growth.volume.diff <- df.growth.volume |>
 glimpse(df.growth)
 glimpse(df.growth.volume)
 glimpse(df.growth.volume.diff)
+
+cat("\nScript completed successfully.\n\n")
+cat("Main datasets created:\n")
+cat("  - df.surv:", nrow(df.surv), "rows | survival from census 2025 and 2026\n")
+cat("  - df.growth:", nrow(df.growth), "rows | long-format growth (height, diameter, volume per branch and time)\n")
+cat("  - df.growth.volume:", nrow(df.growth.volume), "rows | volume per individual and time\n")
+cat("  - df.growth.volume.diff:", nrow(df.growth.volume.diff), "rows | volume growth (t2 - t1) per individual\n")
 
 
 

@@ -1,46 +1,30 @@
 # Que_facil
 Analyses conducted within the framework of the QueVadis Project on the facilitative capacity of Mediterranean shrub species, how this effect changes depending on target species with contrasting ecologies, and whether this effect can in turn be modulated by the presence of a tree canopy.
 
-# Workflow
+## Project structure
 
-```mermaid
-flowchart LR
+The project is organized hierarchically, with a main script responsible for loading and orchestrating the execution of thematic modules. Each module groups analyses related to a specific component of the study and calls a set of independent scripts implementing individual analyses.
 
-  subgraph S1["01-load_data.R"]
-    direction TB
-    A[01.1-gps.R]
-    B[01.2-surv_par_vol.R]
-    C[01.3-Microclimate.R]
-    D[01.3.1-merge_dataloggers.R]
-    E[01.3.2-correct_errors.R]
-    F[01.3.3-add_microsite_environment.R]
-    G[01.3.4-compute_derived_variables.R]
-    H[01.4-RII.R]
-    I[01.5-predict_biomass.R]
-  end
+```text
+01-load-data.R
+├── 01.1-abiotic.R
+│   ├── 01.1.a-microclimate.R
+│   ├── 01.1.b-elevation.R
+│   └── 01.1.c-PAR_extintion.R
+└── 01.2-biotic.R
+    ├── 01.2.a-surv-growth.R
+    ├── 01.2.b-biomass.R
+    ├── 01.2.c-SLA.R
+    ├── 01.2.d-size.R
+    └── 01.2.e-RII.R
 
-  subgraph S2["02-eda.R"]
-    direction TB
-    J[02.1-elevation.R]
-    K[02.2-shrub_size.R]
-    L[02.3-extinction.R]
-  end
-
-  subgraph S3["03-models.R"]
-    direction TB
-    M[03.1-elevation.R]
-    N[03.2-shrub_size.R]
-  end
-
-  D --> C
-  E --> C
-  F --> C
-  G --> C
-  H --> B
-  I --> B
-  J --> A
-  K --> B
-  L --> B
-  M --> A
-  N --> B
 ```
+
+### Workflow
+
+- **`01-load-data.R`** loads the required datasets and initializes the analysis workflow.
+- **`01.1-biotic.R`** runs analyses based on biotic variables, including biomass, specific leaf area (SLA), plant size, survival and growth, and Relative Interaction Index (RII).
+- **`01.2-abiotic.R`** runs analyses based on abiotic variables, including microclimate, elevation, photosynthetically active radiation (PAR), and extinction-related analyses.
+
+This modular organization keeps each analysis self-contained while allowing the complete workflow to be reproduced from a single entry-point script.
+

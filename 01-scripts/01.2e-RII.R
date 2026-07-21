@@ -19,19 +19,19 @@ df.surv.qi <- df.surv |>
 
 comparisons <- tibble(
   env_A  = c("pine canopy", "pine canopy",    "pine canopy",
-              "gap",   "gap",       "gap",
-              "pine canopy"),
+             "gap",   "gap",       "gap",
+             "pine canopy"),
   ms_A    = c("Cistus ladanifer",  "Rosa canina",    "Genista scorpius",
               "Cistus ladanifer",  "Rosa canina",    "Genista scorpius",
               "open"),
   env_B  = c("pine canopy", "pine canopy",    "pine canopy",
-              "gap",   "gap",       "gap",
-              "gap"),
+             "gap",   "gap",       "gap",
+             "gap"),
   ms_B    = c("open",         "open",            "open",
               "open",         "open",            "open",
               "open"), 
   type_RII = c("Indirect", "Indirect", "Indirect",
-                 "Direct",   "Direct",   "Direct",
+               "Direct",   "Direct",   "Direct",
                "Direct"), 
   Interacting_species = c("Cistus ladanifer", "Rosa canina", "Genista scorpius", 
                           "Cistus ladanifer", "Rosa canina", "Genista scorpius", 
@@ -102,7 +102,7 @@ aggID.df.rii.qf <- df.rii.qf |>
   )
 
 agg.rii.qi <- 
-aggID.df.rii.qi |> 
+  aggID.df.rii.qi |> 
   filter_out(surv_date == "12/06/2025") |> 
   group_by(surv_date, type_RII, Interacting_species) |> 
   summarise(
@@ -255,7 +255,7 @@ vivos_gap <- df.surv |>
 posibles_RII <- c()
 
 for (i in 0:vivos_gap) {
-posibles_RII[i] <- 1 - (i/30)
+  posibles_RII[i] <- 1 - (i/30)
 }
 
 hist(posibles_RII, breaks = 150)
@@ -305,7 +305,7 @@ convergence_ind <- boot.results |>
 
 ## 2. Graficar convergencia por individuo ----
 convergence_ind |> 
-ggplot(aes(x = iteration)) +
+  ggplot(aes(x = iteration)) +
   #geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.05, fill = "steelblue") +
   geom_point(aes(y = cum_mean), alpha = .01) +
   geom_line(aes(y = cum_mean), color = "steelblue", alpha = 0.3, linewidth = 0.3) +

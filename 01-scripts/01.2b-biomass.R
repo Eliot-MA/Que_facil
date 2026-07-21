@@ -4,14 +4,17 @@ library(MuMIn)
 library(performance)
 library(glmmTMB)
 
+cat("This script predicts mass using allometric models based on shrub volume \n")
+
 options(na.action = "na.fail")
 # Load data
+## Biomass measurements
 df.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
 
-source("01-scripts/01.2-surv_par_vol.R")
+#source("01-scripts/01.2-surv_par_vol.R")
 
 df.biomass <- 
-df.biomass |> 
+  df.biomass |> 
   rename(volume = Volumen.arbusto..m3., 
          mass = Peso.seco.arbusto..g., 
          log.volume = Log.Volumen, 
@@ -20,10 +23,10 @@ df.biomass |>
          microsite = Especie) |> 
   mutate(
     microsite = recode(microsite, 
-                  "Gs" = "Genista scorpius",
-                  "Cl" = "Cistus ladanifer", 
-                  "Rc" = "Rosa canina"
-                  ),
+                       "Gs" = "Genista scorpius",
+                       "Cl" = "Cistus ladanifer", 
+                       "Rc" = "Rosa canina"
+    ),
     zone = recode(zone, 
                   "Abierto" = "open area", 
                   "pinar"   = "pine canopy")
@@ -33,10 +36,38 @@ df.biomass |>
     microsite = factor(microsite)
   ) 
 
+## Shrubs size
+df.surv.par.vol <- read.csv2("00-data/vol_par_surv.csv")
+
+df.vol <- df.surv.par.vol |> 
+  dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var
+                altura, diametro_1, diametro_2) |> 
+  dplyr::rename(
+    Individual = micrositio,
+    zone       = ambiente,
+    microsite  = especie_facilitadora, 
+    quercus_sp = especie_facilitada, 
+    height     = altura, 
+    diam_1     = diametro_1, 
+    diam_2     = diametro_2
+  ) |> 
+  mutate(microsite = recode(microsite, "claro" = "gap", "Cistus sp." = "Cistus ladanifer"),
+         zone      = recode(zone, "abierto" = "open area", "pinar" = "pine canopy")
+  ) |> unique()
+
+### Calculate volume
+
+df.vol <- df.vol |> 
+  mutate(
+    volume = 4/3 * pi * height/2 * diam_1/2 * diam_2/2
+  )
+
+## Volume calculated asuming an ellipsoide shape
 
 
+# Models
 m_full <- glmmTMB(log.mass ~ log.volume * microsite * zone,
-             data = df.biomass)
+                  data = df.biomass)
 
 
 
@@ -57,11 +88,11 @@ results_biomass <- df.biomass |>
 
 
 # Predict biomass values
-df.surv.par.vol <- df.surv.par.vol |> 
+df.vol <- df.vol |> 
   mutate(log.volume = log(volume))
 
 df.model <- 
-df.surv.par.vol |> 
+  df.vol |> 
   select(Individual, volume, microsite, zone) |> 
   filter(microsite != "gap") |> 
   droplevels() |> 
@@ -133,7 +164,7 @@ predictive.r2 <- 1 - sum((predictions.validation$mass - predictions.validation$p
   sum((predictions.validation$mass - mean(predictions.validation$mass))^2)
 
 # Merge predicted biomass
-df.surv.par.vol<- df.surv.par.vol |> 
+df.vol<- df.vol |> 
   left_join(predictions |> select(Individual, pred.mass), 
             by = "Individual") |> 
   select(-zone.y, -microsite.y) |> 
@@ -147,56 +178,5 @@ cat(
   "Predictive capacity and homoscedasticity plots are displayed. \n",
   "Root Mean Square Error (RMSE):", rmse, "\n", 
   "Predictive R2:", predictive.r2, "\n", 
-  "Estimated shrub mass has been added to the 'df.surv.par.vol' dataset. \n"
+  "Estimated shrub mass has been added to the 'df.vol' dataset. \n"
 )
-
-# performance(m4)
-# performance(modelo)
-# 
-# check_model(modelo)
-# 
-# car::Anova(m4, type = "II")
-
-# 
-
-# ggplot(df.biomass, 
-#        aes(x = log.volume, 
-#            y = log.mass, 
-#            colour = Especie)) +
-#   geom_point() +
-#   geom_smooth(method = "lm") +
-#   facet_wrap( ~ambiente)
-# 
-# df.biomass |> 
-#   group_by(ambiente, Especie) |> 
-#   summarise(
-#     n = n(), 
-#     mean_vol = mean(volume),
-#     median_vol = median(volume),
-#     sd_vol = sd(volume), 
-#     mean_mass = mean(mass), 
-#     median_mass = median(mass), 
-#     sd_mass = sd(mass)
-#   )
-
-# INTENTANDO REPLICAR EL RESULTADO DE PEDRO
-
-# options(contrasts = c("contr.sum", "contr.poly"))
-# 
-# m4_spss <- lm(log.mass ~ log.volume * Especie * ambiente,
-#               data = df.biomass)
-# 
-# car::Anova(m4_spss, type = 3)
-# 
-# df.biomass.pinar <- df.biomass |>
-#   filter(ambiente == "pinar") |>
-#   droplevels()
-# 
-# df.biomass.abierto <- df.biomass |>
-#   filter(ambiente == "Abierto") |>
-#   droplevels()
-# 
-# m5.p <- lm(log.mass ~ log.volume*Especie, data = df.biomass.pinar)
-# m5.a <- lm(log.mass ~ log.volume*Especie, data = df.biomass.abierto)
-# 
-# car::Anova(m5.p, type = 3)
