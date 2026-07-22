@@ -8,7 +8,8 @@ rm(list = setdiff(ls(), mantener))
 # Select variables of interest
 df.surv <- df.surv |> 
   select(Individual, Environment, microsite, quercus_sp, survival, surv_date) |> 
-  mutate(survival = if_else(survival == 2, 1, survival))
+  mutate(survival = if_else(survival == 2, 1, survival)) |> 
+  filter(surv_date != "") # J_53bis aparece con campo vacío en fecha
 
 # Create subdatasets per quercus species
 df.surv.qf <- df.surv |> 
@@ -148,7 +149,7 @@ ggplot(agg.rii, aes(x = media, y = Interacting_species, colour = quercus_sp)) +
 ggsave("08-img/eda_meanse_rii.png", width = 10, height = 8, dpi = 300)
 
 ##
-# Bootstrapping approach ----
+# Bootstrapping inside individuals, only on controls  ----
 ##
 
 library(tidyverse)
@@ -344,3 +345,260 @@ convergence_ind |>
     title = "Convergencia del bootstrap por individuo"
   ) +
   theme_bw()
+
+##
+# Bootstrap + GLMM + RII ----
+# 1. Resample ALL individuals within each (Environment x microsite x quercus_sp x surv_date)
+# 2. Fit GLMM per surv_date: survival ~ quercus_sp + Environment * microsite + (1 | Individual)
+# 3. Predict survival probabilities for every treatment combination
+# 4. Calculate RII from predicted probabilities
+##
+
+library(glmmTMB)
+library(cli)
+library(purrr)
+
+# Helper: RII from predicted probabilities (one value per group) ----
+# Adapted from calc_rii: no cross-join, no averaging needed since we work
+# with model-estimated group probabilities instead of individual binary data.
+
+calc_rii_prob <- function(df_prob, env_A, ms_A, env_B, ms_B,
+                          type_RII, Interacting_species) {
+
+  focal <- df_prob |>
+    filter(Environment == env_A, microsite == ms_A) |>
+    select(p_A = survival, surv_date)
+
+  ref <- df_prob |>
+    filter(Environment == env_B, microsite == ms_B) |>
+    select(p_B = survival, surv_date)
+
+  inner_join(focal, ref, by = "surv_date") |>
+    mutate(
+      type_RII           = type_RII,
+      Interacting_species = Interacting_species,
+      RII = (p_A - p_B) / (p_A + p_B)
+    ) |>
+    select(surv_date, type_RII, Interacting_species, RII)
+}
+
+# 1. Prediction grid: all treatment combinations ----
+#    Individual is included as a dummy so predict() finds the random effect term.
+pred_grid <- df.surv |>
+  select(Environment, microsite, quercus_sp) |>
+  distinct() |>
+  expand_grid(surv_date = unique(df.surv$surv_date)) |>
+  mutate(Individual = "dummy")
+
+# 2. Store results ----
+all_prob  <- list()
+all_rii   <- list()
+
+# 3. Bootstrap loop ----
+set.seed(123)
+n_iter <- 500
+
+pb <- cli_progress_bar(
+  name   = "Bootstrap GLMM",
+  total  = n_iter,
+  format = "{cli::pb_bar} {cli::pb_current}/{cli::pb_total} | {cli::pb_eta_str}"
+)
+
+for (i in seq_len(n_iter)) {
+
+  cli_progress_update(id = pb)
+
+  # 3a. Resample individuals within each group ----
+  #     Appends a suffix so the same original individual can appear
+  #     multiple times without breaking the (1 | Individual) structure.
+
+  df_boot <- df.surv |>
+    group_by(Environment, microsite, quercus_sp, surv_date) |>
+    group_modify(~ {
+      boot <- slice_sample(.x, n = nrow(.x), replace = TRUE)
+      boot$Individual <- paste0(boot$Individual, "_", seq_len(nrow(boot)))
+      boot
+    }) |>
+    ungroup()
+
+  # 3b. Fit GLMM separately for each surv_date ----
+  dates <- unique(df_boot$surv_date)
+  prob_list  <- list()
+  rii_list   <- list()
+
+  for (d in dates) {
+
+    df_d <- df_boot |> filter(surv_date == d)
+
+    m <- tryCatch(
+      glmmTMB(
+        survival ~ quercus_sp + Environment * microsite +
+          (1 | Individual),
+        data    = df_d,
+        family  = binomial()
+      ),
+      error   = function(e) NULL,
+      warning = function(e) NULL
+    )
+
+    if (is.null(m)) next
+
+    # 3c. Predict probabilities for the full prediction grid ----
+    prob_d <- pred_grid |>
+      filter(surv_date == d) |>
+      mutate(
+        survival = predict(m, newdata = pred_grid |> filter(surv_date == d),
+                           type = "response",
+                           allow.new.levels = TRUE),
+        iteration = i
+      )
+
+    prob_list[[d]] <- prob_d
+
+    # 3d. Calculate RII for each comparison ----
+    rii_d <- pmap(comparisons, calc_rii_prob, df_prob = prob_d) |>
+      bind_rows() |>
+      mutate(iteration = i)
+
+    rii_list[[d]] <- rii_d
+  }
+
+  all_prob[[i]] <- bind_rows(prob_list)
+  all_rii[[i]]  <- bind_rows(rii_list)
+}
+
+cli_progress_done(id = pb)
+
+# 4. Assemble results ----
+boot_probs <- bind_rows(all_prob)
+boot_rii   <- bind_rows(all_rii)
+
+# 5. Summarise RII across iterations ----
+boot_rii_summary <- boot_rii |>
+  group_by(surv_date, type_RII, Interacting_species) |>
+  summarise(
+    n           = n(),
+    boot_mean   = mean(RII, na.rm = TRUE),
+    boot_median = median(RII, na.rm = TRUE),
+    boot_sd     = sd(RII, na.rm = TRUE),
+    boot_CI2.5  = quantile(RII, probs = 0.025, na.rm = TRUE),
+    boot_CI97.5 = quantile(RII, probs = 0.975, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 6. Quick look ----
+print(boot_rii_summary)
+
+ggplot(boot_rii_summary,
+       aes(x = boot_mean, y = Interacting_species)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(size = 2) +
+  geom_errorbarh(aes(xmin = boot_CI2.5, xmax = boot_CI97.5), height = 0.3) +
+  facet_grid(surv_date ~ type_RII) +
+  coord_cartesian(xlim = c(-1, 1)) +
+  labs(x = "RII (bootstrap mean ± 95% CI)", y = "") +
+  theme_light()
+
+##
+# Convergence analysis (GLMM bootstrap) ----
+##
+
+# 1. Cumulative statistics per comparison group ----
+
+convergence_glmm <- boot_rii |>
+  filter(!is.na(RII)) |>
+  arrange(iteration) |>
+  group_by(surv_date, type_RII, Interacting_species) |>
+  mutate(
+    iter_in_group = seq_len(n()),
+    cum_mean  = cumsum(RII) / iter_in_group,
+    cum_lower = sapply(iter_in_group, function(j) quantile(RII[1:j], 0.025)),
+    cum_upper = sapply(iter_in_group, function(j) quantile(RII[1:j], 0.975))
+  ) |>
+  ungroup()
+
+# 2. Plot convergence ----
+
+ggplot(convergence_glmm, aes(x = iteration)) +
+  geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.2, fill = "steelblue") +
+  geom_line(aes(y = cum_mean), color = "steelblue", linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  facet_grid(Interacting_species ~ surv_date + type_RII) +
+  labs(
+    x     = "Iterations",
+    y     = "Cumulative RII",
+    title = "Bootstrap convergence (GLMM-based RII)"
+  ) +
+  theme_bw()
+
+# 3. Save both plots to PDF ----
+
+pdf("08-img/bootstrap_glmm_RII.pdf", width = 12, height = 10)
+
+# --- Plot 1: RII estimates ---
+p1 <- ggplot(boot_rii_summary,
+             aes(x = boot_mean, y = Interacting_species)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_point(size = 2) +
+  geom_errorbarh(aes(xmin = boot_CI2.5, xmax = boot_CI97.5), height = 0.3) +
+  facet_grid(surv_date ~ type_RII) +
+  coord_cartesian(xlim = c(-1, 1)) +
+  labs(x = "RII (bootstrap mean ± 95% CI)", y = "",
+       title = "Relative Interaction Index (RII) estimated via GLMM bootstrap") +
+  theme_light()
+print(p1)
+
+# --- Plot 2: Convergence ---
+p2 <- ggplot(convergence_glmm, aes(x = iteration)) +
+  geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.2, fill = "steelblue") +
+  geom_line(aes(y = cum_mean), color = "steelblue", linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  facet_grid(Interacting_species ~ surv_date + type_RII) +
+  labs(x = "Iterations", y = "Cumulative RII",
+       title = "Bootstrap convergence (GLMM-based RII)") +
+  theme_bw()
+print(p2)
+
+# --- Explanatory text page ---
+par(mar = c(5, 5, 5, 5))
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1))
+text(0.5, 0.95,
+     "GLMM Bootstrap RII — Methodology and Interpretation",
+     cex = 1.6, font = 2, adj = 0.5)
+text(0.5, 0.82,
+     paste("These results were obtained by resampling all individuals (shrubs and \n",
+           "controls) with replacement within each combination of environment,\n",
+           "microsite, Quercus species and census date. For each of the 500 \n",
+           "bootstrap iterations, a GLMM was fitted separately per census date:\n"),
+     cex = 1.05, adj = 0.5)
+text(0.5, 0.68,
+     "survival ~ quercus_sp + Environment * microsite + (1 | Individual) \n",
+     cex = 1.1, font = 3, adj = 0.5)
+text(0.5, 0.58,
+     paste("From each fitted model, survival probabilities were predicted for every \n",
+           "treatment combination. The RII was then computed from these predicted \n",
+           "probabilities for seven biologically meaningful comparisons: \n"),
+     cex = 1.05, adj = 0.5)
+text(0.5, 0.42,
+     paste("Direct effects of Cistus ladanifer, Rosa canina and Genista scorpius \n",
+           "(shrub vs. open in gap). Direct effect of Pinus pinaster \n",
+           "(canopy vs. gap in open). Indirect effects of the three shrub species \n",
+           "(shrub vs. open under pine canopy)."),
+     cex = 1.0, adj = 0.5)
+text(0.5, 0.25,
+     paste("Plot 1: Bootstrap mean RII and 95% CI for each comparison. \n",
+           "Values above the dashed red line indicate facilitation; \n",
+           "values below indicate competition.",
+           "\n\nPlot 2: Cumulative mean and confidence bounds across iterations, \n",
+           "to assess whether 500 iterations are sufficient for stable estimates. \n"),
+     cex = 1.05, adj = 0.5)
+text(0.5, 0.06,
+     paste("Positive RII = facilitation  |  Negative RII = competition  |  RII = 0 = neutral \n",
+           "\nBootstrap iterations: 500  |  Seed: 123"),
+     cex = 0.9, col = "grey40", adj = 0.5)
+
+dev.off()
+
+cat("PDF saved to 08-img/bootstrap_glmm_RII.pdf\n")
+
