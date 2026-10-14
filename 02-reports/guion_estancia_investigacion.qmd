@@ -1,0 +1,457 @@
+---
+title: "Guion de la estancia de investigación: Análisis de la capacidad facilitadora de arbustos mediterráneos"
+author: "Eliot Mompeán"
+date: "today"
+format:
+  pdf:
+    documentclass: scrartcl
+    pdf-engine: xelatex
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: bottom
+    fig-align: center
+    fig-width: 6
+    fig-height: 4
+    highlight-style: github
+    geometry:
+      - margin=2.5cm
+    linestretch: 1.15
+    colorlinks: true
+    keep-tex: false
+    code-overflow: wrap
+    code-block-bg: true
+editor: visual
+execute:
+  warning: false
+  message: false
+bibliography: ../09-bib/bibliography.bib
+biblio-style: ../09-bib/ecology.csl
+lightbox: true
+---
+
+# Introducción
+
+Este documento describe los análisis realizados durante la estancia de investigación de dos meses (abril-mayo 2026) en el marco del proyecto QueVadis. El proyecto estudia la capacidad facilitadora de arbustos mediterráneos, cómo este efecto varía según las especies diana con ecologías contrastadas, y si este efecto puede ser modulado por la presencia de un dosel arbóreo (pino).
+
+El trabajo se desarrolló en el Departamento de Biología Vegetal y Ecología de la Universidad de Sevilla, bajo la dirección del Dr. Pedro Villar Salvador, y en colaboración con el grupo de investigación de la Universidad de Burdeos (Florian Delereu, Dr. Michalet, Dr. Cavieres).
+
+## Contexto del proyecto QueVadis
+
+El proyecto QueVadis (Queen's University - Vegetation Dynamics and Interactions Study) se centra en:
+
+- La capacidad facilitadora de arbustos mediterráneos sobre especies leñosas
+- Cómo este efecto varía según la especie facilitada
+- La modulación por el dosel arbóreo (pino)
+- La validación de la hipótesis del gradiente de estrés
+
+## Objetivos de la estancia
+
+Los objetivos planteados para la estancia fueron:
+
+1.  **Comparar la facilitación por arbustos de tres especies:** *Cistus ladanifer*, *Genista scorpius* y *Rosa canina*
+2.  **Comparar la facilitación por arbustos vs. el pino**
+3.  **Comparar la facilitación bajo ambientes contrastados:** dosel de pino vs. claro
+4.  **Comparar la supervivencia de dos especies de *Quercus* con tolerancia al estrés contrastada:** *Q. ilex* (perennifolia, tolerante) vs. *Q. faginea* (caducifolia, sensible)
+
+## Diseño experimental
+
+El diseño combina tres factores principales:
+
+- **Ambiente (2 niveles):** Dos áreas adyacentes en Monte Público Jócar (Guadalajara): un bosque de *Pinus pinaster* (cobertura arbórea) y un claro dominado por matorral tras un incendio en 2014
+- **Micrositio (4 niveles):** Definido según la especie de arbusto nodriza: *Cistus ladanifer*, *Genista scorpius*, *Rosa canina* y un control sin vegetación ("área abierta")
+- **Especie facilitada (2 niveles):** Dos especies de roble con estrategias ecológicas contrastadas: *Quercus ilex* (perennifolia, tolerante al estrés) y *Quercus faginea* (caducifolia, más sensible a la sequía)
+
+Se seleccionaron 60 réplicas por micrositio distribuidas equitativamente entre los dos ambientes (30 en bosque de pino y 30 en hábitat de claro), totalizando 240 micrositios. En cada micrositio se plantaron dos individuos: uno de cada especie de *Quercus*.
+
+# Análisis realizados
+
+## 1. Preparación y limpieza de datos
+
+### 1.1 Datos de posición GPS
+
+Se utilizaron datos de GPS de los arbustos para obtener coordenadas UTM (EPSG:25830). A partir de un modelo digital de terreno (DTM) de 5 m de resolución (PNOA-MDT05-ETRS89-HU30-0486-LID.TIF), se extrajeron valores de elevación y pendiente para cada punto de muestreo de arbustos.
+
+**Script clave:** `01-scripts/01.1-gps.R`
+
+**Proceso:**
+
+- Carga de datos GPS de arbustos (`shrubs_gps.csv`)
+- Conversión a objetos espaciales usando `sf`
+- Recorte del DTM al área de estudio con buffer de 25 m
+- Extracción de elevación y pendiente
+- Creación de clases de elevación basadas en cuantiles (2 y 3 niveles)
+
+### 1.2 Datos de supervivencia y dimensiones de arbustos
+
+Se cargaron datos de supervivencia de plántulas de *Quercus* y dimensiones de arbustos (altura, diámetros, volumen).
+
+**Script clave:** `01-scripts/01.2-surv_par_vol.R`
+
+**Proceso:**
+
+- Carga de datos de supervivencia y volumen (`vol_par_surv.csv`)
+- Renombrado y estandarización de variables
+- Recodificación de categorías (micrositio, ambiente)
+- Cálculo de volumen elipsoidal: $V = \frac{4}{3} \pi \frac{h}{2} \frac{d_1}{2} \frac{d_2}{2}$
+
+### 1.3 Datos de microclima
+
+Se procesaron datos de dataloggers para obtener variables microclimáticas derivadas.
+
+**Scripts clave:** `01-scripts/01.1a-microclimate.R`, `01-scripts/01.3-microclimate.R`
+
+**Proceso:**
+
+- Fusión de dataloggers (`01-scripts/01.3.1-merge_dataloggers.R`)
+- Corrección de errores (`01-scripts/01.3.2.Correct_errors.R`)
+- Adición de información de micrositio y ambiente (`01-scripts/01.3.3-Add_microsite_environment.R`)
+- Cálculo de variables derivadas (`01-scripts/01.3.4-Compute_derived_variables.R`)
+
+## 2. Análisis exploratorio de datos (EDA)
+
+### 2.1 Análisis de elevación
+
+**Objetivos:**
+
+1.  Definir un método para particionar el paisaje en tres zonas elevacionales que reflejen la estructura del terreno manteniendo tamaños muestrales equilibrados
+2.  Evaluar si los tipos de hábitat (dosel arbóreo vs. claro) y micrositios (especies de arbusto vs. áreas abiertas) están distribuidos homogéneamente a lo largo del gradiente de elevación
+3.  Evaluar si la elevación afecta la supervivencia de las plántulas
+
+**Resultados clave:**
+
+- El gradiente de elevación es muy estrecho (solo \~8 m de diferencia total)
+- La partición en bandas elevacionales mediante cuantiles genera grupos equilibrados en número de observaciones pero con anchos desiguales
+- *Rosa canina* está casi exclusivamente en elevaciones bajas bajo dosel de pino
+- *Genista scorpius* se encuentra principalmente en elevaciones altas en áreas abiertas
+- La supervivencia generalmente disminuye con la elevación en la mayoría de los micrositios
+- La excepción es *Rosa canina*, que muestra una tendencia opuesta débil
+- La inclusión de elevación refina el ranking de micrositios
+- No hay evidencia de efectos no lineales fuertes (GAM: edf ≈ 1)
+
+**Reporte:** `02-reports/internal/Results01_Elevation.qmd`
+
+### 2.2 Análisis del tamaño de arbustos
+
+**Objetivos:**
+
+1.  Evaluar el mejor modelo para predecir la biomasa de arbustos
+2.  Evaluar el efecto de la biomasa en la supervivencia de plántulas
+3.  Evaluar si el efecto de la elevación permanece significativo tras incorporar la biomasa
+
+**Proceso de predicción de biomasa:**
+
+1.  **Preparación de datos:** Se utilizaron datos de campo de 5 arbustos por especie y ambiente, con mediciones de volumen y peso seco
+2.  **Modelos de tratamiento específicos:** Para cada combinación micrositio × ambiente, se ajustó un GLM con distribución Gamma y enlace logarítmico: $masa \sim volumen$
+3.  **Predicción:** Los modelos específicos se aplicaron para predecir biomasa en el conjunto de datos experimental original
+4.  **Validación:** Se evaluó la capacidad predictiva mediante RMSE y R² predictivo
+
+**Resultados clave:**
+
+- Los arbustos en el bosque de pino tienden a ser más voluminosos pero menos densos (menos ramas, copa más dispersa)
+- La relación volumen-masa varía entre especies y ambientes
+- La biomasa predicha permite una mejor representación del tamaño real del arbusto que el volumen solo
+
+**Reporte:** `02-reports/internal/Results02_Shrub_size.qmd`
+
+**Script clave:** `01-scripts/01.5-predict_biomass.R`
+
+## 3. Modelos estadísticos
+
+### 3.1 Modelo con elevación
+
+Se ajustaron modelos lineales generalizados mixtos (GLMM) para evaluar el efecto de la elevación en la supervivencia, incluyendo interacciones con micrositio y ambiente.
+
+**Modelo global:**
+
+``` r
+glmmTMB(survival ~ quercus_sp + Elevation_c * microsite * zone + 
+        (1 | Individual), 
+        data = df, 
+        family = binomial(link = "logit"))
+```
+
+**Resultados:**
+
+- La elevación continua mejor que la categórica (AIC/BIC)
+- No hay evidencia de efectos no lineales (GAM)
+- El BIC favorece un modelo simplificado con efecto general de elevación sin interacciones
+- La elevación debe mantenerse como covariable lineal continua
+
+### 3.2 Modelo con tamaño de arbusto y biomasa
+
+Se realizó un procedimiento de selección de modelos por pasos (backward stepwise) partiendo de un modelo saturado que incluía todas las interacciones posibles entre ambiente, micrositio, especie de *Quercus*, elevación y biomasa predicha.
+
+**Modelo final seleccionado:**
+
+``` r
+glmmTMB(survival ~ Environment + microsite + quercus_sp + log.pred.mass_c + 
+        Environment:microsite + microsite:log.pred.mass_c + 
+        (1 | Individual), 
+        data = df, 
+        family = binomial())
+```
+
+**Resultados clave:**
+
+- **Ambiente** tiene un efecto altamente significativo (P \< 0.001)
+- **Especie de *Quercus*** tiene un efecto significativo (P = 0.0026)
+- La interacción **Ambiente × micrositio** es significativa (P = 0.014)
+- La interacción **micrositio × biomasa** es significativa (P = 0.016)
+- *Genista scorpius* muestra un aumento notable de supervivencia con el tamaño del arbusto (de \~15% a \~67%)
+- *Cistus ladanifer* mantiene supervivencia constante (\~36%)
+- *Rosa canina* muestra una tendencia a la disminución (de 62% a 16%, sin significancia estadística)
+- La elevación pierde significatividad cuando se incorpora la biomasa, sugiriendo solapamiento parcial
+
+### 3.3 Comparación de modelos
+
+Se compararon múltiples modelos utilizando:
+
+- **AIC/AICc:** Para selección de modelos
+- **BIC:** Para favorecer modelos más parsimoniosos
+- **R² condicional y marginal:** Para evaluar capacidad explicativa
+- **RMSE y LogLoss:** Para métricas predictivas
+- **DHARMa:** Para diagnóstico de residuos
+- **GAMs:** Para evaluar no linealidad
+
+## 4. Índice de Interacción Relativo (RII)
+
+### 4.1 Cálculo del RII
+
+El RII se calculó como:
+
+$$RII = \frac{X_{\text{con vecinos}} - X_{\text{sin vecinos}}}{X_{\text{con vecinos}} + X_{\text{sin vecinos}}}$$
+
+Para datos binarios de supervivencia (0/1), el RII solo puede tomar valores +1, 0 o -1. Para cada individuo focal, se comparó con todos los controles (30 réplicas), obteniendo 30 valores de RII que se promediaron.
+
+**Comparaciones definidas:**
+
+| Tipo | Especie interactuante | Comparación | Interpretación |
+|---------------|------------------------|---------------|-----------------|
+| Directo | *Cistus ladanifer* | Arbusto vs. abierto en claro | Efecto directo del arbusto |
+| Directo | *Rosa canina* | Arbusto vs. abierto en claro | Efecto directo del arbusto |
+| Directo | *Genista scorpius* | Arbusto vs. abierto en claro | Efecto directo del arbusto |
+| Directo | *Pinus pinaster* | Dosel vs. claro | Efecto directo del pino |
+| Indirecto | *Cistus ladanifer* | Arbusto vs. abierto bajo dosel | Efecto condicionado del arbusto |
+| Indirecto | *Rosa canina* | Arbusto vs. abierto bajo dosel | Efecto condicionado del arbusto |
+| Indirecto | *Genista scorpius* | Arbusto vs. abierto bajo dosel | Efecto condicionado del arbusto |
+
+### 4.2 Distribución del RII con datos binarios
+
+Se descubrió que el RII calculado a partir de datos binarios de supervivencia presenta una distribución discreta (no continua), ya que:
+
+- Cada par comparado solo puede dar +1, 0 o -1
+- Al promediar por individuo, el RII solo puede tomar dos valores posibles
+- Esto invalida la aplicación directa de t-tests y ANOVA tradicionales
+
+**Formulación simplificada:**
+
+$$\overline{RII}_i = S_{A_i} - \bar{B}$$
+
+Donde $S_{A_i}$ es la supervivencia del individuo focal y $\bar{B}$ es la supervivencia media del grupo de referencia.
+
+### 4.3 Estrategias alternativas de inferencia
+
+Se exploraron tres enfoques:
+
+1.  **Bootstrapping:** Remuestreo de pares para obtener distribución gaussiana del RII
+2.  **RII basado en probabilidades estimadas:** Ajustar un GLMM binomial y calcular RII con probabilidades de grupo
+3.  **Modelos multinomiales mixtos:** Modelos para variables con tres categorías (-1, 0, 1)
+
+### 4.4 Resultados del bootstrapping
+
+Se implementó un procedimiento bootstrap con 5,000 iteraciones:
+
+- Los controles se remuestrearon con reemplazo dentro de cada grupo de control
+- Todos los individuos focales del mismo grupo de referencia compartieron la misma muestra bootstrap
+- Se calcularon distribuciones bootstrap para cada estimación de RII
+
+**Resultados clave:**
+
+- **Efectos simples:** Consistentemente facilitadores; el pino muestra el mayor efecto
+- *Cistus ladanifer* muestra efecto facilitador claro en ambas especies de *Quercus*
+- *Genista scorpius* beneficia solo a *Q. ilex*; *Rosa canina* solo a *Q. faginea*
+- **Efectos condicionados:** Solo *Cistus ladanifer* muestra efecto competitivo, y solo sobre *Q. faginea*
+- Los patrones se establecen principalmente después del primer verano (septiembre 2025)
+- No se encontraron diferencias significativas en RII entre especies de *Quercus*
+
+**Reportes:** `02-reports/internal/Results03_RII.qmd`, `02-reports/internal/Results04_RII_2.qmd`, `02-reports/internal/Results05_RII_3.qmd`
+
+# Consecución de objetivos
+
+## Objetivo 1: Comparar la facilitación por arbustos de tres especies
+
+**Estado: CUMPLIDO**
+
+Resultados obtenidos:
+
+- ***Genista scorpius*****:** Mejor capacidad facilitadora global (mayor supervivencia bajo esta especie)
+- ***Cistus ladanifer*****:** Efecto más estable entre ambientes (similar supervivencia en claro y bajo dosel)
+- ***Rosa canina*****:** Efecto facilitador más débil
+
+La interacción Ambiente × micrositio revela que:
+
+- En el claro: supervivencia baja bajo todas las especies (11.7% *G. scorpius*, 18.7% *R. canina*, 31.5% *C. ladanifer*)
+- Bajo dosel: supervivencia aumenta considerablemente (40.7% *C. ladanifer*, 61.8% *R. canina*, 68.2% *G. scorpius*)
+
+## Objetivo 2: Comparar la facilitación por arbustos vs. el pino
+
+**Estado: CUMPLIDO**
+
+Resultados obtenidos:
+
+- El dosel de pino muestra el **mayor efecto facilitador** en todas las comparaciones
+- Los efectos simples del pino son consistentemente positivos y superiores a los de los arbustos
+- Esto apoya la hipótesis del gradiente de estrés: en ambientes más estresantes, el efecto facilitador es mayor
+
+## Objetivo 3: Comparar la facilitación bajo ambientes contrastados
+
+**Estado: CUMPLIDO**
+
+Resultados obtenidos:
+
+- Bajo dosel de pino: supervivencia significativamente mayor que en claros
+- *Genista scorpius* y *Rosa canina* muestran diferencias significativas entre ambientes
+- *Cistus ladanifer* muestra estabilidad (similar supervivencia en ambos ambientes)
+- El efecto de interacción indirecta de *Cistus ladanifer* es competitivo bajo el dosel, especialmente para *Q. faginea*
+
+## Objetivo 4: Comparar la supervivencia de dos especies de *Quercus*
+
+**Estado: CUMPLIDO**
+
+Resultados obtenidos:
+
+- *Quercus ilex* tiene mayor probabilidad de supervivencia (45.6%) que *Q. faginea* (27.8%)
+- La diferencia es estadísticamente significativa
+- *Q. faginea* muestra mayor sensibilidad al estrés ambiental
+- En el RII, *Cistus ladanifer* muestra efecto competitivo indirecto solo sobre *Q. faginea*
+
+# Conclusiones principales
+
+## 1. Validación de la hipótesis del gradiente de estrés
+
+Los resultados apoyan la hipótesis del gradiente de estrés (SGH):
+
+- Bajo condiciones de mayor estrés (claros), la facilitación es más importante
+- El dosel de pino mitiga el estrés ambiental, aumentando la supervivencia
+- Las especies más sensibles (*Q. faginea*) se benefician más de la facilitación
+
+## 2. Especificidad de las interacciones
+
+- La facilitación no es uniforme entre especies de arbustos nodrizas
+- *Genista scorpius* es la mejor facilitadora global
+- *Cistus ladanifer* es la más estable ambientalmente
+- El tamaño del arbusto (biomasa) modula la intensidad de la facilitación
+
+## 3. Complejidad de las interacciones
+
+- Las interacciones no son simplemente facilitadoras o competidoras
+- Los efectos dependen del contexto ambiental y de la especie facilitada
+- Los "efectos ocultos" (competencia indirecta) pueden no ser detectados en análisis simples
+
+## 4. Importancia del tamaño del arbusto
+
+- La biomasa predicha explica parte de la variabilidad en supervivencia
+- La relación tamaño-efecto varía entre especies
+- *Genista scorpius* muestra mayor dependencia del tamaño
+
+# Aspectos pendientes y futuro
+
+## 1. Finalización del análisis del tercer censo
+
+- Se incorporaron datos del censo de mayo 2026 (286 días desde la plantación)
+- Análisis completados para modelos de supervivencia y RII
+- Pendiente: Integración completa de resultados temporales
+
+## 2. Optimización de la metodología bootstrap
+
+**Pendientes:**
+
+- Determinar el número óptimo de iteraciones bootstrap para estabilizar el RII
+- Evaluar convergencia del bootstrap por combinación de tratamientos
+- Comparar enfoques inferenciales (individual vs. por tratamiento)
+
+**Enfoques propuestos:**
+
+1.  **Enfoque 1:** Inferencia usando estimaciones individuales de RII (media bootstrap por individuo)
+2.  **Enfoque 2:** Inferencia bootstrap sobre coeficientes del modelo (ajuste de modelo en cada iteración)
+
+## 3. Modelos multinomiales mixtos
+
+- Los modelos multinomiales mixtos serían los más adecuados para reflejar la estructura de datos (RII con tres categorías)
+- Requieren experiencia adicional en este tipo de modelización
+- Se consideran para análisis futuros
+
+## 4. Modelos predictivos de biomasa
+
+**Pendientes:**
+
+- Validación completa de modelos Gamma vs. otros distributional families
+- Evaluación de la influencia de la distribución elegida en las predicciones
+- Integración de biomasa en análisis temporales
+
+## 5. Análisis de pendiente
+
+- La pendiente fue extraída del DTM pero no se integró en los modelos principales
+- Podría ser un factor confundente adicional
+- Pendiente de explorar en análisis futuros
+
+## 6. Variables microclimáticas
+
+- Los datos de dataloggers fueron procesados pero no integrados completamente
+- La temperatura del aire y la humedad del suelo podrían explicar variabilidad adicional
+- Pendiente de análisis completo
+
+## 7. Publicación científora
+
+- Los resultados son/publicables y relevantes para la ecología de la restauración
+- Se requiere síntesis de hallazgos en formato de artículo
+- Colaboración con grupo de Burdeos para desarrollo futuro
+
+# Anexos
+
+## Scripts principales utilizados
+
+| Script | Descripción |
+|----------------------------|--------------------------------------------|
+| `01-scripts/01-load_data.R` | Orquestador principal de carga de datos |
+| `01-scripts/01.1-gps.R` | Carga de datos GPS y elevación |
+| `01-scripts/01.2-surv_par_vol.R` | Carga de supervivencia y volumen |
+| `01-scripts/01.4-RII.R` | Cálculo del RII |
+| `01-scripts/01.5-predict_biomass.R` | Predicción de biomasa |
+| `01-scripts/03.4-surv_models.R` | Modelos de supervivencia |
+| `02-reports/internal/Results01_Elevation.qmd` | Reporte: efecto de la elevación |
+| `02-reports/internal/Results02_Shrub_size.qmd` | Reporte: tamaño de arbustos |
+| `02-reports/internal/Results03_RII.qmd` | Reporte: RII (primeros enfoques) |
+| `02-reports/internal/Results04_RII_2.qmd` | Reporte: RII (bootstrapping) |
+| `02-reports/internal/Results05_RII_3.qmd` | Reporte: RII (correcciones) |
+
+## Paquetes R utilizados
+
+- **Manejo de datos:** `tidyverse`, `dplyr`, `tidyr`, `readr`, `purrr`
+- **Modelos:** `glmmTMB`, `lme4`, `lmerTest`, `mgcv`
+- **Selección de modelos:** `MuMIn`, `MASS`
+- **Diagnóstico:** `DHARMa`, `performance`, `car`
+- **Visualización:** `ggplot2`, `sjPlot`, `patchwork`
+- **Estadística:** `emmeans`, `multcomp`, `ggeffects`
+- **Geoespacial:** `sf`, `terra`
+- **Reportes:** `knitr`, `kableExtra`, `DT`
+
+## Figuras generadas
+
+- Mapas de distribución de arbustos por elevación
+- Boxplots de elevación por tratamientos
+- Gráficos de distribución de especies por zona y micrositio
+- Predicciones de modelos GLMM
+- Distribuciones bootstrap del RII
+- Diagramas de masa vs. volumen
+- Gráficos de capacidad predictiva de biomasa
+
+# Referencias
+
+- Michalet, X., et al. (2014). Bidirectional facilitation and indirect effects in plant communities
+- Michalet, X., et al. (2017). Common effects of plant neighbours on plant performance
+- Wang, J., et al. (2017). Canopy vs. root effects on plant performance
+- Package `MuMIn`: R-core MuMIn (2025). Multi-model inference
+- Package `glmmTMB`: Brooks, M.E., et al. (2017). glmmTMB balances speed and flexibility

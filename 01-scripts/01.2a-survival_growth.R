@@ -81,6 +81,9 @@ glimpse(df.surv)
 ##
 # GROWTH
 ##
+
+## ACTUALIZAR PARA INCLUIR FECHA DE MEDICIÓN !!!!!!!!!!!!!!!!!!!!!
+
 cat("\n Loading and reshaping growth data...\n")
 
 rD.growth <- read.csv2(file = "00-data/growth.csv")
