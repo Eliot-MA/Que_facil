@@ -8,9 +8,9 @@ Estados: `[ ]` pendiente · `[~]` en progreso · `[x]` hecho.
 ---
 
 ## FASE 0 — Congelar y ordenar el repo
-- [ ] **0.1** Commitear lo pendiente: la línea `## ACTUALIZAR PARA INCLUIR FECHA DE MEDICIÓN` (`01.2a-survival_growth.R:85`) y añadir el guion `02-reports/guion_estancia_investigacion.qmd` (hoy *untracked*).
-- [ ] **0.2** Sincronizar `main` con `origin/main` (hay 1 commit local sin pushear).
-- [ ] **0.3** Crear rama de trabajo `fix/pipeline` para ir acumulando los arreglos.
+- [x] **0.1** Commitear lo pendiente: la línea `## ACTUALIZAR PARA INCLUIR FECHA DE MEDICIÓN` (`01.2a-survival_growth.R:85`) y añadir el guion `02-reports/guion_estancia_investigacion.qmd` (hoy *untracked*).
+- [x] **0.2** Sincronizar `main` con `origin/main` (hay 1 commit local sin pushear).
+- [x] **0.3** Crear rama de trabajo `fix/pipeline` para ir acumulando los arreglos.
 
 ## FASE 1 — Pipeline ejecutable (bloqueante)
 Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
