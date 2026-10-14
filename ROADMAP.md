@@ -14,16 +14,16 @@ Estados: `[ ]` pendiente · `[~]` en progreso · `[x]` hecho.
 
 ## FASE 1 — Pipeline ejecutable (bloqueante)
 Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
-- [ ] **1.1** Inventariar todos los `source()` del repo y contrastarlos con los nombres reales de `01-scripts/`.
-- [ ] **1.2** Reescribir `01-load_data.R:10-12` para que invoque los módulos actuales (`01.1-abiotic.R`, `01.2-biotic.R`).
-- [ ] **1.3** Corregir referencias rotas:
-  - `01.2-biotic.R:7` → `01.2b-biomass.R` (typo `01.2b.biomass.R`)
-  - `01.1a-microclimate.R:4` → `01.1a.4-compute_derived_variables.R`
-  - `02.1-elevation.R:1`, `02.2-shrub_size.R:10-12`, `02.3-extinction.R:3`
-  - `03.1`, `03.2`, `03.3:4-5`, `03.4:48`
-  - `.qmd`: `Results03_RII.qmd:188`, `Presentation01.qmd:112,181-183`
-- [ ] **1.4** Decidir qué hacer con `03.3-RII.R` y `03.4-surv_models.R` (parecen duplicar lógica vieja de `01.2e`/`03.5`): recuperar, fusionar o eliminar.
-- [ ] **1.5** Verificación: ejecutar el pipeline completo desde `01-load_data.R` sin errores.
+- [x] **1.1** Inventariar todos los `source()` del repo y contrastarlos con los nombres reales de `01-scripts/`.
+- [x] **1.2** `01-load_data.R` ahora sourcea `01.1-abiotic.R` y `01.2-biotic.R`.
+- [x] **1.3** Referencias corregidas (`01.2-biotic.R:7`, `01.1a-microclimate.R:4`, `02.1`, `02.2`, `02.3`, `03.1`, `03.2`, `03.3`, `03.4`, `.qmd`).
+- [x] **1.4** Decisión: **reconectar** `03.3-RII.R`→`01.2e-RII.R` y `03.4-surv_models.R`→`01.2b-biomass.R` + `df.biomass` (no archivar).
+- [x] **1.5** Verificación (estática + ejecución modular):
+  - Los 28 scripts parsean sin error; todas las llamadas `source()` vivas resuelven.
+  - Cada loader dedicado crea su BD: `df.surv`(1441×6), `df.sla`(60×6), `df.vol`(481×8), `df.biomass`(481×10)+`rD.biomass`(30×7), `df.wood_density`(59×9), `df.shrubs.gps`(240×7), `df.par.ext`(333×9), microclima OK.
+  - `01.2e-RII.R` ejecuta completo (validado a 50+20 iteraciones; el bootstrap real es 5000+500).
+  - `02.1` y `02.3` corren OK; `03.1` llega al bug conocido de Fase 2 (`gam1`).
+  - **Bugs descubiertos y arreglados aquí:** (a) la BD de compatibilidad `df.surv.par.vol` explotaba many-to-many (5761 filas) y cruzaba `quercus_sp` al unir por `Individual`; corregido uniendo por `(Individual, quercus_sp)` en `02.2`, `03.1`, `03.2`, `Presentation01.qmd` → 1441 filas, 0 NAs en datos modelados. (b) el plot de convergencia de `01.2e-RII.R:289` perdía las columnas de facet con `summarise()`; corregido reteniéndolas.
 
 ## FASE 2 — Bugs y robustez
 - [ ] **2.1** `03.1-elevation.R:198` usa `gam1` que nunca se crea → usar el objeto real (`glm`/`gam`).
@@ -39,6 +39,7 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [ ] **3.2** Corregir `.gitignore:55` (`.pdf` → `*.pdf`) para no trackear salidas.
 - [ ] **3.3** Actualizar `README.md` al árbol real de scripts.
 - [ ] **3.4** Documentar dónde viven los datos no versionados (`00-data/`).
+- [x] **3.5** (adelantado) Instalados los paquetes que faltaban en el entorno: `here`, `tidylog`, `kableExtra`, `gtsummary` y `waffle` (este último desde el archivo CRAN + `extrafont`, al estar retirado de CRAN).
 
 ## FASE 4 — Completar análisis pendientes
 - [ ] **4.1** Terminar SLA (`01.2c-SLA.R`, hoy "Working on it…") + reporte.

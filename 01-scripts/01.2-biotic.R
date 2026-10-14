@@ -4,7 +4,7 @@ source("01-scripts/01.2a-survival_growth.R")
 
 # Load biomass
 
-source("01-scripts/01.2b.biomass.R")
+source("01-scripts/01.2b-biomass.R")
 
 # Load SLA
 

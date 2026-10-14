@@ -1,7 +1,7 @@
 ## Shrubs size
-df.surv.par.vol <- read.csv2("00-data/vol_par_surv.csv")
+rD.vol <- read.csv2("00-data/vol_par_surv.csv")
 
-df.vol <- df.surv.par.vol |> 
+df.vol <- rD.vol |> 
   dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var
                 altura, diametro_1, diametro_2) |> 
   dplyr::rename(

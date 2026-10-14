@@ -1,8 +1,5 @@
 source("01-scripts/01.2a-survival_growth.R")
 
-mantener <- c("df.surv")
-rm(list = setdiff(ls(), mantener))
-
 # 1. Prepare data ----
 
 # Select variables of interest
@@ -290,13 +287,13 @@ hist(posibles_RII, breaks = 150)
 ## 1. Calcular estadísticos acumulativos ----
 
 convergence <- boot.results |>
-  group_by(iteration, ind_A) |>
+  group_by(iteration, ind_A, quercus_sp, surv_date, Interacting_species, type_RII) |>
   summarise(
     RII_mean = mean(RII, na.rm = TRUE),
     .groups = "drop"
   ) |>
   arrange(iteration) |>
-  group_by(ind_A) |>
+  group_by(ind_A, quercus_sp, surv_date, Interacting_species, type_RII) |>
   mutate(
     cum_mean  = cumsum(RII_mean) / seq_len(n()),
     cum_lower = sapply(seq_len(n()), function(i) quantile(RII_mean[1:i], 0.025)),

@@ -185,7 +185,7 @@ library(tidyverse)
 ```
 
 ```{r}
-source("01-scripts/01.21-survival.R")
+source("01-scripts/01.2a-survival_growth.R")
 
 # 1. Prepare data ----
 

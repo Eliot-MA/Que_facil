@@ -9,12 +9,12 @@ cat("This script predicts mass using allometric models based on shrub volume \n"
 options(na.action = "na.fail")
 # Load data
 ## Biomass measurements
-df.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
+rD.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
 
 #source("01-scripts/01.2-surv_par_vol.R")
 
-df.biomass <- 
-  df.biomass |> 
+rD.biomass <- 
+  rD.biomass |> 
   rename(volume = Volumen.arbusto..m3., 
          mass = Peso.seco.arbusto..g., 
          log.volume = Log.Volumen, 
@@ -37,9 +37,9 @@ df.biomass <-
   ) 
 
 ## Shrubs size
-df.surv.par.vol <- read.csv2("00-data/vol_par_surv.csv")
+rD.vol <- read.csv2("00-data/vol_par_surv.csv")
 
-df.vol <- df.surv.par.vol |> 
+df.biomass <- rD.vol |> 
   dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var
                 altura, diametro_1, diametro_2) |> 
   dplyr::rename(
@@ -57,7 +57,7 @@ df.vol <- df.surv.par.vol |>
 
 ### Calculate volume
 
-df.vol <- df.vol |> 
+df.biomass <- df.biomass |> 
   mutate(
     volume = 4/3 * pi * height/2 * diam_1/2 * diam_2/2
   )
@@ -67,7 +67,7 @@ df.vol <- df.vol |>
 
 # Models
 m_full <- glmmTMB(log.mass ~ log.volume * microsite * zone,
-                  data = df.biomass)
+                  data = rD.biomass)
 
 
 
@@ -76,7 +76,7 @@ modelo <- get.models(dd, subset = 1)[[1]]
 
 # easystats::model_dashboard(modelo, output_dir = "07-html/", output_file = "dashborad_model_biomass.html", browse_html = FALSE, quiet = TRUE)
 
-results_biomass <- df.biomass |>
+results_biomass <- rD.biomass |>
   group_by(microsite, zone) |>
   nest() |>                                              # crea list-column 'data'
   mutate(
@@ -88,11 +88,11 @@ results_biomass <- df.biomass |>
 
 
 # Predict biomass values
-df.vol <- df.vol |> 
+df.biomass <- df.biomass |> 
   mutate(log.volume = log(volume))
 
 df.model <- 
-  df.vol |> 
+  df.biomass |> 
   select(Individual, volume, microsite, zone) |> 
   filter(microsite != "gap") |> 
   droplevels() |> 
@@ -112,7 +112,7 @@ predictions <- df.model |>
   unnest(c(data, pred.mass))       # devuelve un dataframe plano
 
 # Prediction validation
-predictions.validation <- df.biomass |>
+predictions.validation <- rD.biomass |>
   group_by(microsite, zone) |>
   nest() |>
   left_join(
@@ -164,7 +164,7 @@ predictive.r2 <- 1 - sum((predictions.validation$mass - predictions.validation$p
   sum((predictions.validation$mass - mean(predictions.validation$mass))^2)
 
 # Merge predicted biomass
-df.vol<- df.vol |> 
+df.biomass<- df.biomass |> 
   left_join(predictions |> select(Individual, pred.mass), 
             by = "Individual") |> 
   select(-zone.y, -microsite.y) |> 
@@ -178,5 +178,5 @@ cat(
   "Predictive capacity and homoscedasticity plots are displayed. \n",
   "Root Mean Square Error (RMSE):", rmse, "\n", 
   "Predictive R2:", predictive.r2, "\n", 
-  "Estimated shrub mass has been added to the 'df.vol' dataset. \n"
+  "Estimated shrub mass has been added to the 'df.biomass' dataset. \n"
 )

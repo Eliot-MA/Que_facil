@@ -45,9 +45,9 @@ df.merge <- df.merge |>
                             false = survival)))
 
 # Load shrub biomass
-source("01-scripts/01.5-predict_biomass.R")
+source("01-scripts/01.2b-biomass.R")
 
-df.shrub.biomass <- df.surv.par.vol |> 
+df.shrub.biomass <- df.biomass |> 
   select(Individual, volume, log.volume, pred.mass) |> 
   rename(shrub_volume = volume, 
          shrub_log_volume = log.volume, 

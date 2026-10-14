@@ -73,7 +73,7 @@ Se seleccionaron 60 réplicas por micrositio distribuidas equitativamente entre 
 
 Se utilizaron datos de GPS de los arbustos para obtener coordenadas UTM (EPSG:25830). A partir de un modelo digital de terreno (DTM) de 5 m de resolución (PNOA-MDT05-ETRS89-HU30-0486-LID.TIF), se extrajeron valores de elevación y pendiente para cada punto de muestreo de arbustos.
 
-**Script clave:** `01-scripts/01.1-gps.R`
+**Script clave:** `01-scripts/01.1b-elevation.R`
 
 **Proceso:**
 
@@ -87,7 +87,7 @@ Se utilizaron datos de GPS de los arbustos para obtener coordenadas UTM (EPSG:25
 
 Se cargaron datos de supervivencia de plántulas de *Quercus* y dimensiones de arbustos (altura, diámetros, volumen).
 
-**Script clave:** `01-scripts/01.2-surv_par_vol.R`
+**Script clave:** `01-scripts/01.2a-survival_growth.R` (supervivencia) y `01-scripts/01.2d-shrub_size.R` (dimensiones y volumen)
 
 **Proceso:**
 
@@ -100,14 +100,14 @@ Se cargaron datos de supervivencia de plántulas de *Quercus* y dimensiones de a
 
 Se procesaron datos de dataloggers para obtener variables microclimáticas derivadas.
 
-**Scripts clave:** `01-scripts/01.1a-microclimate.R`, `01-scripts/01.3-microclimate.R`
+**Scripts clave:** `01-scripts/01.1a-microclimate.R`
 
 **Proceso:**
 
-- Fusión de dataloggers (`01-scripts/01.3.1-merge_dataloggers.R`)
-- Corrección de errores (`01-scripts/01.3.2.Correct_errors.R`)
-- Adición de información de micrositio y ambiente (`01-scripts/01.3.3-Add_microsite_environment.R`)
-- Cálculo de variables derivadas (`01-scripts/01.3.4-Compute_derived_variables.R`)
+- Fusión de dataloggers (`01-scripts/01.1a.1-merge_dataloggers.R`)
+- Corrección de errores (`01-scripts/01.1a.2-correct_errors.R`)
+- Adición de información de micrositio y ambiente (`01-scripts/01.1a.3-add_microsite_environment.R`)
+- Cálculo de variables derivadas (`01-scripts/01.1a.4-compute_derived_variables.R`)
 
 ## 2. Análisis exploratorio de datos (EDA)
 
@@ -155,7 +155,7 @@ Se procesaron datos de dataloggers para obtener variables microclimáticas deriv
 
 **Reporte:** `02-reports/internal/Results02_Shrub_size.qmd`
 
-**Script clave:** `01-scripts/01.5-predict_biomass.R`
+**Script clave:** `01-scripts/01.2b-biomass.R`
 
 ## 3. Modelos estadísticos
 
@@ -416,10 +416,11 @@ Los resultados apoyan la hipótesis del gradiente de estrés (SGH):
 | Script | Descripción |
 |----------------------------|--------------------------------------------|
 | `01-scripts/01-load_data.R` | Orquestador principal de carga de datos |
-| `01-scripts/01.1-gps.R` | Carga de datos GPS y elevación |
-| `01-scripts/01.2-surv_par_vol.R` | Carga de supervivencia y volumen |
-| `01-scripts/01.4-RII.R` | Cálculo del RII |
-| `01-scripts/01.5-predict_biomass.R` | Predicción de biomasa |
+| `01-scripts/01.1b-elevation.R` | Carga de datos GPS y elevación |
+| `01-scripts/01.2a-survival_growth.R` | Carga de supervivencia y crecimiento |
+| `01-scripts/01.2d-shrub_size.R` | Carga de dimensiones y volumen de arbustos |
+| `01-scripts/01.2e-RII.R` | Cálculo del RII |
+| `01-scripts/01.2b-biomass.R` | Predicción de biomasa |
 | `01-scripts/03.4-surv_models.R` | Modelos de supervivencia |
 | `02-reports/internal/Results01_Elevation.qmd` | Reporte: efecto de la elevación |
 | `02-reports/internal/Results02_Shrub_size.qmd` | Reporte: tamaño de arbustos |

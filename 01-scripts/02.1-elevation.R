@@ -1,4 +1,4 @@
-source("01-scripts/01.1-elevation.R")
+source("01-scripts/01.1b-elevation.R")
 
 library(tidyverse)
 library(terra)

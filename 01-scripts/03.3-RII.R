@@ -1,8 +1,7 @@
 library(tidyverse)
 library(broom)
 
-source("01-scripts/01.21-survival.R")
-source("01-scripts/01.22-RII.R")
+source("01-scripts/01.2e-RII.R")
 
 # Añadir nombre de especie
 rii.qi <- aggID.df.rii.qi |>

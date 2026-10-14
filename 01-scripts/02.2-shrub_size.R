@@ -7,9 +7,17 @@ library(tidyverse)
 #############
 
 # Load data
-source("01-scripts/01.1-gps.R")             # gps and elevation info
-source("01-scripts/01.2-surv_par_vol.R")    # survival, par and volume
-source("01-scripts/01.5-predict_biomass.R") # load biomass
+source("01-scripts/01.1b-elevation.R")        # gps and elevation info
+source("01-scripts/01.2a-survival_growth.R")  # survival
+source("01-scripts/01.2d-shrub_size.R")       # shrub size and volume
+source("01-scripts/01.2b-biomass.R")          # predicted biomass
+
+# Compatibility dataset assembled from the dedicated databases
+df.surv.par.vol <- df.vol |>
+  dplyr::left_join(df.surv |> dplyr::select(Individual, quercus_sp, survival, surv_date),
+                   by = c("Individual", "quercus_sp")) |>
+  dplyr::left_join(df.biomass |> dplyr::select(Individual, quercus_sp, pred.mass, log.volume),
+                   by = c("Individual", "quercus_sp"))
 
 rm(list = setdiff(ls(), c("df.surv.par.vol", "df.shrubs.gps")))
 

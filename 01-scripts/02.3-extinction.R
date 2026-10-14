@@ -1,12 +1,13 @@
 library(tidyverse)
 
-source("01-scripts/01.2-surv_par_vol.R")
+source("01-scripts/01.1c-PAR_extintion.R")
+source("01-scripts/01.2a-survival_growth.R")
 
-ggplot(df.ext, aes(x = extinction, fill = zone)) + 
+ggplot(df.par.ext, aes(x = extinction, fill = zone)) + 
   geom_histogram()  
 
-ind <- df.ext$Individual[df.ext$extinction < 0]
+ind <- df.par.ext$Individual[df.par.ext$extinction < 0]
 
-df.surv.par.vol |> 
+df.surv |> 
   filter(Individual %in% ind) |> 
   View()
