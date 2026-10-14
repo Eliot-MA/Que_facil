@@ -28,3 +28,20 @@ The project is organized hierarchically, with a main script responsible for load
 
 This modular organization keeps each analysis self-contained while allowing the complete workflow to be reproduced from a single entry-point script.
 
+## Dependencies
+
+The scripts rely on a number of R packages. Most are available on CRAN, but the
+less obvious ones are called out here so a fresh environment can be set up:
+
+- Data handling: `dplyr`, `tidyr`, `purrr`, `readr`, `tibble`, `janitor`, `stringr`, `lubridate`, `tidylog`
+- Reading Excel inputs: `readxl`
+- **Fuzzy matching of datalogger time windows: `fuzzyjoin`** (used in `01.1a.3-add_microsite_environment.R`)
+- Modelling: `glmmTMB`, `mgcv`, `car`, `performance`, `DHARMa`, `broom.mixed`
+- Plotting & reporting: `ggplot2`, `patchwork`, `ggeffects`, `kableExtra`, `gtsummary`
+
+Some raw CSV inputs are stored in **latin1** (e.g.
+`00-data/datos_humedad_temperatura_tamajon.csv`, whose bytes are not valid
+UTF-8). These are read with `fileEncoding = "latin1"`, which is intentional and
+should be preserved for correct accented characters.
+
+

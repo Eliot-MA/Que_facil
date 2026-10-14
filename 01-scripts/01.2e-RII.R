@@ -230,8 +230,40 @@ boot.results.ind <- boot.results |>
   )
 
 
-# Change it depending on the quercus species used
-# write.csv2(boot.results, file = "00-data/boot_RII.csv")
+# Exportar el bootstrap completo a 00-data/boot_RII.csv ----
+# 03.3-RII.R y Results04_RII_2.qmd consumen este CSV como entrada. Se regenera
+# aquí a partir del dataset completo (todas las especies, fechas y ambientes),
+# agregando la media de RII de los individuos focales por iteración y combinación.
+# (El bloque anterior bootstrapea solo un subconjunto para la figura comparativa;
+#  este otro produce la tabla que alimenta los análisis de 03.3.)
+
+if (!exists("n_iter_export")) n_iter_export <- 5000
+
+set.seed(123)
+
+pb_export <- cli_progress_bar(
+  name   = "Bootstrap (export)",
+  total  = n_iter_export,
+  format = "{cli::pb_bar} {cli::pb_current}/{cli::pb_total} | {cli::pb_eta_str}"
+)
+
+boot_export <- map_dfr(
+  seq_len(n_iter_export),
+  function(i) {
+    cli_progress_update(id = pb_export)
+    bootstrap_once_v3(df.surv) |>
+      mutate(iteration = i)
+  }
+)
+
+cli_progress_done(id = pb_export)
+
+boot_RII <- boot_export |>
+  group_by(surv_date, type_RII, Interacting_species, quercus_sp, iteration) |>
+  summarise(RII = mean(RII, na.rm = TRUE), .groups = "drop") |>
+  select(surv_date, type_RII, Interacting_species, quercus_sp, RII, iteration)
+
+write.csv2(boot_RII, file = "00-data/boot_RII.csv")
 
 
 library(dplyr)
@@ -285,21 +317,22 @@ for (i in 0:vivos_gap) {
 hist(posibles_RII, breaks = 150)
 
 ## 1. Calcular estadísticos acumulativos ----
+## El bootstrap remuestrea un subconjunto fijo (gap, Genista scorpius/open, QI,
+## sep2025), por lo que quercus_sp, surv_date, Interacting_species y type_RII son
+## constantes. La convergencia se resume agrupando solo por iteración.
 
 convergence <- boot.results |>
-  group_by(iteration, ind_A, quercus_sp, surv_date, Interacting_species, type_RII) |>
+  group_by(iteration) |>
   summarise(
     RII_mean = mean(RII, na.rm = TRUE),
     .groups = "drop"
   ) |>
   arrange(iteration) |>
-  group_by(ind_A, quercus_sp, surv_date, Interacting_species, type_RII) |>
   mutate(
     cum_mean  = cumsum(RII_mean) / seq_len(n()),
     cum_lower = sapply(seq_len(n()), function(i) quantile(RII_mean[1:i], 0.025)),
     cum_upper = sapply(seq_len(n()), function(i) quantile(RII_mean[1:i], 0.975))
-  ) |>
-  ungroup()
+  )
 
 ## 2. Graficar convergencia ----
 
@@ -307,7 +340,6 @@ ggplot(convergence, aes(x = iteration)) +
   geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.2, fill = "steelblue") +
   geom_line(aes(y = cum_mean), color = "steelblue", linewidth = 0.6) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-  facet_grid(quercus_sp ~ Interacting_species + type_RII) +
   labs(
     x     = "Número de iteraciones",
     y     = "RII acumulado",
@@ -320,7 +352,7 @@ ggplot(convergence, aes(x = iteration)) +
 convergence_ind <- boot.results |>
   filter(!is.na(RII)) |>                        # <- eliminar NAs antes
   arrange(iteration) |>
-  group_by(ind_A, surv_date, type_RII, Interacting_species) |>
+  group_by(ind_A) |>
   mutate(
     cum_mean  = cumsum(RII) / seq_len(n()),
     cum_lower = sapply(seq_len(n()), function(i) quantile(RII[1:i], 0.025, na.rm = TRUE)),
@@ -330,12 +362,11 @@ convergence_ind <- boot.results |>
 
 ## 2. Graficar convergencia por individuo ----
 convergence_ind |> 
-  ggplot(aes(x = iteration)) +
+  ggplot(aes(x = iteration, group = ind_A)) +
   #geom_ribbon(aes(ymin = cum_lower, ymax = cum_upper), alpha = 0.05, fill = "steelblue") +
   geom_point(aes(y = cum_mean), alpha = .01) +
   geom_line(aes(y = cum_mean), color = "steelblue", alpha = 0.3, linewidth = 0.3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-  facet_grid(quercus_sp ~ Interacting_species + type_RII) +
   labs(
     x     = "Número de iteraciones",
     y     = "RII acumulado",

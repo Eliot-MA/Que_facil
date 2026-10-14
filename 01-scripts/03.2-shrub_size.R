@@ -172,21 +172,10 @@ summary(m22)
 
 car::Anova(m22)
 
-modelo <- glmmTMB(survival ~ 
-                    zone +
-                    microsite +
-                    quercus_sp + 
-                    Elevation_c + 
-                    log.pred.mass_c + 
-                    zone:microsite + 
-                    zone:Elevation_c + 
-                    microsite:Elevation_c +
-                    zone:log.pred.mass_c +
-                    microsite:log.pred.mass_c +
-                    (1 | Individual),
-                  data = df,
-                  family = binomial()
-)
+# Modelo final seleccionado en la secuencia de eliminacion hacia atras.
+# Su formula explicita es identica a m22 (mismos terminos y AIC), por lo que
+# se reutiliza el objeto ajustado en lugar de re-ajustarlo a mano.
+modelo <- m22
 
 car::Anova(modelo)
 

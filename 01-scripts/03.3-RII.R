@@ -155,7 +155,7 @@ library(tidyr)
 ## Bootstrap summary functions ----
 
 
-interpret_boot <- function(mean, IC2.5, IC97.5,
+interpret_boot <- function(values, boot_mean, IC2.5, IC97.5,
                            positive_label,
                            negative_label,
                            neutral_label){
@@ -165,11 +165,13 @@ interpret_boot <- function(mean, IC2.5, IC97.5,
   interpretation <-
     dplyr::case_when(
       contains_zero ~ neutral_label,
-      mean > 0      ~ positive_label,
+      boot_mean > 0 ~ positive_label,
       TRUE          ~ negative_label
     )
   
-  p_boot <- 2 * min(mean <= 0, mean >= 0)
+  # Two-sided bootstrap p-value: twice the smallest tail probability, capped at 1.
+  values <- values[!is.na(values)]
+  p_boot <- min(1, 2 * min(mean(values <= 0), mean(values >= 0)))
   
   tibble(
     contains_zero = contains_zero,
@@ -187,6 +189,8 @@ summarise_boot <- function(df,
   
   value <- rlang::ensym(value)
   
+  values <- dplyr::pull(df, !!value)
+  
   out <-
     df |>
     summarise(
@@ -201,6 +205,7 @@ summarise_boot <- function(df,
   bind_cols(
     out,
     interpret_boot(
+      values,
       out$bootstrap_mean,
       out$IC2.5,
       out$IC97.5,

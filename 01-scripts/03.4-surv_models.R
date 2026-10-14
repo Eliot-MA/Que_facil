@@ -107,15 +107,6 @@ m3 <- update(
   as.formula(paste(". ~ . -", drop.coef))
 )
 
-modelo <- m2
-d <- drop1(modelo, test = "Chisq")
-d
-drop.coef <- row.names(d)[which.min(d$AIC)]
-m3 <- update(
-  modelo,
-  as.formula(paste(". ~ . -", drop.coef))
-)
-
 modelo <- m3
 d <- drop1(modelo, test = "Chisq")
 d

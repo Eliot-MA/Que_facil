@@ -26,13 +26,15 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
   - **Bugs descubiertos y arreglados aquí:** (a) la BD de compatibilidad `df.surv.par.vol` explotaba many-to-many (5761 filas) y cruzaba `quercus_sp` al unir por `Individual`; corregido uniendo por `(Individual, quercus_sp)` en `02.2`, `03.1`, `03.2`, `Presentation01.qmd` → 1441 filas, 0 NAs en datos modelados. (b) el plot de convergencia de `01.2e-RII.R:289` perdía las columnas de facet con `summarise()`; corregido reteniéndolas.
 
 ## FASE 2 — Bugs y robustez
-- [ ] **2.1** `03.1-elevation.R:198` usa `gam1` que nunca se crea → usar el objeto real (`glm`/`gam`).
-- [ ] **2.2** `03.2-shrub_size.R:520,526,527` usa `modelo` donde el ajuste se llama `m22`.
-- [ ] **2.3** `03.4-surv_models.R:110-117` bloque duplicado de `modelo <- m2…m3`.
-- [ ] **2.4** `01.2e-RII.R:173` `p_boot <- 2*min(...)`: operación sobre lógicos, probable bug → revalidar.
-- [ ] **2.5** `01.2e-RII.R:212-222` bootstrap de convergencia sobre subconjunto fijo pero agrupado como si hubiera varios → corregir filtro/agrupación.
-- [ ] **2.6** `01.2e-RII.R:237` `write.csv2(...)` comentado: los `boot_RII*.csv` se leen como entrada → asegurar reproducibilidad en cadena.
-- [ ] **2.7** Declarar dependencias no obvias (`fuzzyjoin`) y arreglar el `fileEncoding="latin1"` de `01.1a.3`.
+> Nota: los números de línea del plan original quedaron obsoletos tras el refactor de Fase 1;
+> abajo se indican las ubicaciones reales.
+- [x] **2.1** `03.1-elevation.R:207-208` usaba `summary(gam1)`/`plot(gam1)` sobre un objeto inexistente → corregido a `gam` (el modelo con término suave `s(Elevation_c)`, cuyo edf/p comenta el script).
+- [x] **2.2** `03.2-shrub_size.R`: `modelo` era un re-ajuste manual **idéntico** a `m22` (mismos términos y AIC = 430.24) → reemplazado por `modelo <- m22` (elimina duplicación y riesgo de divergencia).
+- [x] **2.3** `03.4-surv_models.R:110-117` bloque duplicado (`modelo <- m2` … `m3 <- update(...)`) eliminado.
+- [x] **2.4** `p_boot <- 2*min(...)` está en **`03.3-RII.R:172`** (y su copia en `Results04_RII_2.qmd`), no en `01.2e`: operaba sobre un valor lógico. Ahora es un p-valor bootstrap bilateral `min(1, 2*min(P(v≤0), P(v≥0)))` sobre los replicados. Verificado: rango [0,1].
+- [x] **2.5** `01.2e-RII.R`: la convergencia sobre el subconjunto fijo se agrupa ahora solo por lo que varía (`iteration`; y `ind_A` en la versión por individuo) y se eliminaron los `facet_grid` sobre columnas constantes.
+- [x] **2.6** `01.2e-RII.R`: sustituido el `write.csv2` comentado por un **exportador** que corre `bootstrap_once_v3` sobre `df.surv` completo y agrega por `(surv_date,type_RII,Interacting_species,quercus_sp,iteration)` → escribe `00-data/boot_RII.csv`. Verificado (5 iter): 42 grupos/iter y mismo esquema que el CSV legado (210000 filas = 5000×42).
+- [x] **2.7** Dependencias declaradas en `README.md` (sección *Dependencies*, con `fuzzyjoin` destacado). El `fileEncoding="latin1"` de `01.1a.3` se verificó correcto (CSV con bytes no-UTF8) y se mantiene, documentado en el README.
 
 ## FASE 3 — Reproducibilidad y entorno
 - [ ] **3.1** Crear `renv` + `renv.lock` (hoy no hay versiones fijadas).

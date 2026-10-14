@@ -204,8 +204,8 @@ glm2 <- gam(
 )
 
 
-summary(gam1)
-plot(gam1)
+summary(gam)
+plot(gam)
 AIC(glm, glm2, gam)
 
 # There is no strong evidence of linearity. 
