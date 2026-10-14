@@ -72,18 +72,18 @@ df.par <- merge(x = df.par,
                 by.x = "Individual", 
                 by.y = "micrositio")
 
-df.par.open <- df.par |> filter(zone == "gap")
+df.par.gap <- df.par |> filter(zone == "gap")
 df.par.pine <- df.par |> filter(zone == "pine canopy")
 
 
 ## 3. Compute absolute time difference ----
 
 ### 1) Convertir la hora a formato temporal ----
-df.par.open <- df.par.open %>%
+df.par.gap <- df.par.gap %>%
   mutate(hora_luminosidad = as_hms(hora_luminosidad))
 
 ### 2) Separar no-gap y gap ----
-df.shrub.open <- df.par.open %>%
+df.shrub.open <- df.par.gap %>%
   filter(microsite != "open") %>%
   transmute(
     Individual_shrub = Individual,
@@ -91,7 +91,7 @@ df.shrub.open <- df.par.open %>%
     hora_shrub       = hora_luminosidad
   )
 
-df.gap.open <- df.par.open %>%
+df.gap.open <- df.par.gap %>%
   filter(microsite == "open") %>%
   transmute(
     Individual_gap = Individual,
@@ -114,7 +114,7 @@ df.dif.hora.open.min <- df.dif.hora.open %>%
 ## 5. Compute gap controls ----
 
 ### 1) merge gaps par ----
-df <- df.par.open |> select(Individual,par)
+df <- df.par.gap |> select(Individual,par)
 df.dif.hora.open.min.par <- df.dif.hora.open.min |> 
   left_join(df, by = c("Individual_gap" = "Individual"))
 
@@ -129,12 +129,12 @@ df.gap.shrub.par.control <-
   )
 
 ## 6. Compute par extinction ----
-df.par.open.ext <- df.par.open |> 
+df.par.gap.ext <- df.par.gap |> 
   filter(microsite != "gap") |> 
   left_join(df.gap.shrub.par.control, 
             by = c("Individual" = "Individual_shrub"))
 
-df.par.open.ext <- df.par.open.ext |> 
+df.par.gap.ext <- df.par.gap.ext |> 
   mutate(
     extinction = ((par_gap - par) / par_gap) * 100
   )
@@ -153,17 +153,32 @@ df.par.pine.ext <- df.par.pine |>
 # 3. Create dataframe with only extinction ----
 df.ext <-
   rbind(
-    df.par.open.ext |> select(Individual, zone, microsite, hora_luminosidad, extinction),
+    df.par.gap.ext |> select(Individual, zone, microsite, hora_luminosidad, extinction),
     df.par.pine.ext |> select(Individual, zone, microsite, hora_luminosidad, extinction)
   )
 
 # 4. Include extintion in the original dataframe ----
+# Extinction is a single value per individual. df.par is long over par_posi, so
+# that value necessarily repeats for every par_posi row of the individual.
+# The join is keyed by (Individual, par_posi) to keep one row per measurement
+# and avoid the many-to-many crossing caused by individuals with >1 par_posi.
+df.ext.ind <- df.ext |> 
+  group_by(Individual) |> 
+  summarise(
+    extinction = mean(extinction, na.rm = TRUE), 
+    .groups = "drop"
+  ) |> 
+  mutate(extinction = if_else(is.nan(extinction), NA_real_, extinction))
+
+df.ext.pos <- df.par |> 
+  distinct(Individual, par_posi) |> 
+  left_join(df.ext.ind, by = "Individual")
+
 df.par.ext <- df.par |> 
-  left_join(df.ext |> select(Individual, extinction, hora_luminosidad), 
-            by = "Individual")
+  left_join(df.ext.pos, by = c("Individual", "par_posi"))
 
 df.par.ext <- df.par.ext |> 
-  mutate(extinction = if_else(microsite == "gap", 0, extinction)) 
+  mutate(extinction = if_else(microsite == "open", 0, extinction)) 
 
 # 5. Check errors ----
 
@@ -182,8 +197,8 @@ df.par.ext <- df.par.ext |>
 #    "df.gap.open", 
 #    "df.gap.shrub.par.control", 
 #    "df.par", 
-#    "df.par.open", 
-#    "df.par.open.ext", 
+#    "df.par.gap", 
+#    "df.par.gap.ext", 
 #    "df.par.pine", 
 #    "df.par.pine.ext", 
 #    "df.shrub.open", 
