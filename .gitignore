@@ -52,7 +52,7 @@ rsconnect/
 # folders and reports
 *files
 *.html
-.pdf
+*.pdf
 
 /.quarto/
 **/*.quarto_ipynb
@@ -60,6 +60,7 @@ rsconnect/
 # Photographies
 08-img/photo_*
 
-# Data
+# Data (raw and intermediate; keep a README that documents them)
 00-data/*
+!00-data/README.md
 

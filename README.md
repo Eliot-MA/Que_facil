@@ -3,30 +3,60 @@ Analyses conducted within the framework of the QueVadis Project on the facilitat
 
 ## Project structure
 
-The project is organized hierarchically, with a main script responsible for loading and orchestrating the execution of thematic modules. Each module groups analyses related to a specific component of the study and calls a set of independent scripts implementing individual analyses.
+The project is organized hierarchically: a main script orchestrates a set of
+thematic modules, and each module sources the individual analysis scripts.
 
 ```text
-01-load-data.R
+01-load_data.R
 ├── 01.1-abiotic.R
-│   ├── 01.1.a-microclimate.R
-│   ├── 01.1.b-elevation.R
-│   └── 01.1.c-PAR_extintion.R
+│   ├── 01.1a-microclimate.R
+│   │   ├── 01.1a.1-merge_dataloggers.R
+│   │   ├── 01.1a.2-correct_errors.R
+│   │   ├── 01.1a.3-add_microsite_environment.R
+│   │   └── 01.1a.4-compute_derived_variables.R
+│   ├── 01.1b-elevation.R
+│   └── 01.1c-PAR_extintion.R
 └── 01.2-biotic.R
-    ├── 01.2.a-surv-growth.R
-    ├── 01.2.b-biomass.R
-    ├── 01.2.c-SLA.R
-    ├── 01.2.d-size.R
-    └── 01.2.e-RII.R
+    ├── 01.2a-survival_growth.R
+    ├── 01.2b-biomass.R
+    ├── 01.2c-SLA.R
+    ├── 01.2d-shrub_size.R
+    └── 01.2e-RII.R
 
+02-eda.R        # exploratory analyses (orchestrator, WIP)
+├── 02.1-elevation.R
+├── 02.2-shrub_size.R
+└── 02.3-extinction.R
+
+03-models.R     # statistical models (orchestrator, WIP)
+├── 03.1-elevation.R
+├── 03.2-shrub_size.R
+├── 03.3-RII.R
+├── 03.4-surv_models.R
+├── 03.5-SLA.R
+└── 03.6-wood_density.R
 ```
+
+> `01.2f-wood_density.R` and `_functions.R` (shared plotting helpers) also live
+> in `01-scripts/`.
 
 ### Workflow
 
-- **`01-load-data.R`** loads the required datasets and initializes the analysis workflow.
-- **`01.1-biotic.R`** runs analyses based on biotic variables, including biomass, specific leaf area (SLA), plant size, survival and growth, and Relative Interaction Index (RII).
-- **`01.2-abiotic.R`** runs analyses based on abiotic variables, including microclimate, elevation, photosynthetically active radiation (PAR), and extinction-related analyses.
+- **`01-load_data.R`** loads the datasets and initializes the pipeline.
+- **`01.1-abiotic.R`** loads abiotic variables: microclimate, elevation, and PAR/extinction.
+- **`01.2-biotic.R`** loads biotic variables: survival/growth, biomass, SLA, size, and RII.
+- **`02-eda.R`** runs the exploratory analyses.
+- **`03-models.R`** fits the statistical models.
 
 This modular organization keeps each analysis self-contained while allowing the complete workflow to be reproduced from a single entry-point script.
+
+## Data
+
+Raw and intermediate datasets live in `00-data/`, which is **not versioned**
+(large files and a separate data license in `LICENSE-data`). See
+`00-data/README.md` for the list of expected input files, which scripts read or
+write each one, and the note on latin1-encoded CSVs.
+
 
 ## Dependencies
 

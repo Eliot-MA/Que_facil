@@ -37,10 +37,10 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [x] **2.7** Dependencias declaradas en `README.md` (sección *Dependencies*, con `fuzzyjoin` destacado). El `fileEncoding="latin1"` de `01.1a.3` se verificó correcto (CSV con bytes no-UTF8) y se mantiene, documentado en el README.
 
 ## FASE 3 — Reproducibilidad y entorno
-- [ ] **3.1** Crear `renv` + `renv.lock` (hoy no hay versiones fijadas).
-- [ ] **3.2** Corregir `.gitignore:55` (`.pdf` → `*.pdf`) para no trackear salidas.
-- [ ] **3.3** Actualizar `README.md` al árbol real de scripts.
-- [ ] **3.4** Documentar dónde viven los datos no versionados (`00-data/`).
+- [x] **3.1** Creado `renv` + `renv.lock` (`renv::init()` hidrata la librería del proyecto desde la del usuario; `renv.lock` fija 252 paquetes y R 4.5.0). Nota: `waffle` (retirado de CRAN) queda fijado por versión (1.0.2); `renv::restore()` en una máquina nueva requerirá el archivo CRAN.
+- [x] **3.2** Corregido `.gitignore` (`.pdf` → `*.pdf`) para no trackear salidas.
+- [x] **3.3** Actualizado `README.md` al árbol real de scripts.
+- [x] **3.4** Documentados los datos no versionados en `00-data/README.md` (más sección *Data* en la raíz).
 - [x] **3.5** (adelantado) Instalados los paquetes que faltaban en el entorno: `here`, `tidylog`, `kableExtra`, `gtsummary` y `waffle` (este último desde el archivo CRAN + `extrafont`, al estar retirado de CRAN).
 
 ## FASE 4 — Completar análisis pendientes
