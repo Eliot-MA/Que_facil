@@ -230,4 +230,4 @@ p_cmp <- ggplot(cmp, aes(x = RII_classic, y = RII_glmm, colour = quercus_sp)) +
 
 ggsave("08-img/RII_classic_vs_glmm.png", plot = p_cmp, width = 10, height = 8, dpi = 300)
 
-write.csv2(cmp, file = "00-data/RII_classic_vs_glmm.csv", row.names = FALSE)
+write.csv2(cmp, file = "00-data/processed/RII_classic_vs_glmm.csv", row.names = FALSE)

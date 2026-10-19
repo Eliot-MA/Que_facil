@@ -9,7 +9,7 @@ cat("This script predicts mass using allometric models based on shrub volume \n"
 options(na.action = "na.fail")
 # Load data
 ## Biomass measurements
-rD.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
+rD.biomass <- read.csv2(file = "00-data/raw/shrub_biomass.csv")
 
 #source("01-scripts/01.2-surv_par_vol.R")
 
@@ -37,7 +37,7 @@ rD.biomass <-
   ) 
 
 ## Shrubs size
-rD.vol <- read.csv2("00-data/vol_par_surv.csv")
+rD.vol <- read.csv2("00-data/raw/vol_par_surv.csv")
 
 df.biomass <- rD.vol |> 
   dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var

@@ -59,7 +59,7 @@ library(glmmTMB)
 
 options(na.action = "na.fail")
 # Load data
-df.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
+df.biomass <- read.csv2(file = "00-data/raw/shrub_biomass.csv")
 
 # source("01-scripts/01.2-surv_par_vol.R")
 

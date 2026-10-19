@@ -2,7 +2,7 @@ cat("Running treatment variables merging code \n")
 
 # Cargar datos que relacionan el aparato, el arbusto, el ambiente y la fecha
 aparato_arbustos_ambiente <- read.csv2(
-  "00-data/datos_humedad_temperatura_tamajon.csv",
+  "00-data/raw/datos_humedad_temperatura_tamajon.csv",
   fileEncoding = "latin1"
 )
 

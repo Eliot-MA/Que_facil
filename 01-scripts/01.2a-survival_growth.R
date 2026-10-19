@@ -19,8 +19,8 @@ cat("Loading and merging survival data from both census dates...\n")
 library(tidyverse)
 
 # Cargar supervivencia
-df.surv1 <- read.csv2("00-data/vol_par_surv.csv")
-df.surv2 <- read.csv2("00-data/sup_growth_may2026.csv")
+df.surv1 <- read.csv2("00-data/raw/vol_par_surv.csv")
+df.surv2 <- read.csv2("00-data/raw/sup_growth_may2026.csv")
 
 
 # Prepare survival for 2025
@@ -86,7 +86,7 @@ glimpse(df.surv)
 
 cat("\n Loading and reshaping growth data...\n")
 
-rD.growth <- read.csv2(file = "00-data/growth.csv")
+rD.growth <- read.csv2(file = "00-data/raw/growth.csv")
 
 ## Aspects to change in this dataset ----
 

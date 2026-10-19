@@ -231,7 +231,7 @@ boot.results.ind <- boot.results |>
   )
 
 
-# Exportar el bootstrap completo a 00-data/boot_RII.csv ----
+# Exportar el bootstrap completo a 00-data/processed/_archive/boot_RII.csv ----
 # 03.3-RII.R y Results04_RII_2.qmd consumen este CSV como entrada. Se regenera
 # aquí a partir del dataset completo (todas las especies, fechas y ambientes),
 # agregando la media de RII de los individuos focales por iteración y combinación.
@@ -267,7 +267,7 @@ cli_progress_done(id = pb_export)
 boot_RII <- boot_export |>
   select(surv_date, type_RII, Interacting_species, quercus_sp, RII, iteration)
 
-write.csv2(boot_RII, file = "00-data/boot_RII.csv")
+write.csv2(boot_RII, file = "00-data/processed/_archive/boot_RII.csv")
 
 
 library(dplyr)

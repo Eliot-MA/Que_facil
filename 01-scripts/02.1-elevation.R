@@ -18,7 +18,7 @@ summ.elevation <- df.shrubs.gps |>
     maximo = max(Elevation)
   )
 
-write.csv2(summ.elevation, file = "00-data/summ.elevation.csv")
+write.csv2(summ.elevation, file = "00-data/processed/summ.elevation.csv")
 
 summ.slope <- df.shrubs.gps |> 
   group_by(Zone, microsite_code) |> 

@@ -2,7 +2,7 @@ library(tidyverse)
 library(stringr)
 library(hms)
 
-df.surv.par.vol <- read.csv2("00-data/vol_par_surv.csv")
+df.surv.par.vol <- read.csv2("00-data/raw/vol_par_surv.csv")
 
 
 df.par <- df.surv.par.vol |> 
@@ -45,10 +45,10 @@ df.par <- df.par |>
   ungroup()
 
 # Merge hour measurment data
-rD.time.open <- read.csv2("00-data/par_shrubs_time_open.csv", 
+rD.time.open <- read.csv2("00-data/raw/par_shrubs_time_open.csv", 
                           fileEncoding = "latin1")
 
-rD.time.pine <- read.csv2("00-data/par_shrubs_time_pine.csv", 
+rD.time.pine <- read.csv2("00-data/raw/par_shrubs_time_pine.csv", 
                           fileEncoding = "latin1")
 
 df.time.open <- rD.time.open |> mutate(

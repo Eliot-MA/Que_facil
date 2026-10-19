@@ -53,7 +53,8 @@ This modular organization keeps each analysis self-contained while allowing the 
 
 ## Data
 
-Raw and intermediate datasets live in `00-data/`, which is **not versioned**
+Raw inputs live in `00-data/raw/` and pipeline outputs in
+`00-data/processed/`; the whole `00-data/` tree is **not versioned**
 (large files and a separate data license in `LICENSE-data`). See
 `00-data/README.md` for the list of expected input files, which scripts read or
 write each one, and the note on latin1-encoded CSVs.
@@ -71,7 +72,7 @@ less obvious ones are called out here so a fresh environment can be set up:
 - Plotting & reporting: `ggplot2`, `patchwork`, `ggeffects`, `kableExtra`, `gtsummary`
 
 Some raw CSV inputs are stored in **latin1** (e.g.
-`00-data/datos_humedad_temperatura_tamajon.csv`, whose bytes are not valid
+`00-data/raw/datos_humedad_temperatura_tamajon.csv`, whose bytes are not valid
 UTF-8). These are read with `fileEncoding = "latin1"`, which is intentional and
 should be preserved for correct accented characters.
 

@@ -113,10 +113,10 @@ library(DHARMa)
 
 ```{r}
 # Load digital terrain model 5m
-r <- terra::rast("00-data/PNOA_MDT05_ETRS89_HU30_0486_LID.tif")
+r <- terra::rast("00-data/raw/PNOA_MDT05_ETRS89_HU30_0486_LID.tif")
 
 # Load shrub positions
-df.shrubs.gps <- read.csv2(file = "00-data/shrubs_gps.csv")
+df.shrubs.gps <- read.csv2(file = "00-data/raw/shrubs_gps.csv")
 
 ## Change variable names and
 ## codification of zone
@@ -165,7 +165,7 @@ slop <- terra::extract(   slope, vpts)
 df.shrubs.gps$Elevation <- elev[,2]
 df.shrubs.gps$Slope     <- slop[,2]
 
-df.surv.par.vol <- read.csv2("00-data/vol_par_surv.csv")
+df.surv.par.vol <- read.csv2("00-data/raw/vol_par_surv.csv")
 
 df.surv.par.vol <- df.surv.par.vol |> 
   dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var

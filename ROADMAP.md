@@ -33,7 +33,7 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [x] **2.3** `03.4-surv_models.R:110-117` bloque duplicado (`modelo <- m2` … `m3 <- update(...)`) eliminado.
 - [x] **2.4** `p_boot <- 2*min(...)` está en **`03.3-RII.R:172`** (y su copia en `Results04_RII_2.qmd`), no en `01.2e`: operaba sobre un valor lógico. Ahora es un p-valor bootstrap bilateral `min(1, 2*min(P(v≤0), P(v≥0)))` sobre los replicados. Verificado: rango [0,1].
 - [x] **2.5** `01.2e-RII.R`: la convergencia sobre el subconjunto fijo se agrupa ahora solo por lo que varía (`iteration`; y `ind_A` en la versión por individuo) y se eliminaron los `facet_grid` sobre columnas constantes.
-- [x] **2.6** `01.2e-RII.R`: sustituido el `write.csv2` comentado por un **exportador** que corre `bootstrap_once_v3` sobre `df.surv` completo y agrega por `(surv_date,type_RII,Interacting_species,quercus_sp,iteration)` → escribe `00-data/boot_RII.csv`. Verificado (5 iter): 42 grupos/iter y mismo esquema que el CSV legado (210000 filas = 5000×42).
+- [x] **2.6** `01.2e-RII.R`: sustituido el `write.csv2` comentado por un **exportador** que corre `bootstrap_once_v3` sobre `df.surv` completo y agrega por `(surv_date,type_RII,Interacting_species,quercus_sp,iteration)` → escribe `00-data/processed/_archive/boot_RII.csv`. Verificado (5 iter): 42 grupos/iter y mismo esquema que el CSV legado (210000 filas = 5000×42).
 - [x] **2.7** Dependencias declaradas en `README.md` (sección *Dependencies*, con `fuzzyjoin` destacado). El `fileEncoding="latin1"` de `01.1a.3` se verificó correcto (CSV con bytes no-UTF8) y se mantiene, documentado en el README.
 
 ## FASE 3 — Reproducibilidad y entorno

@@ -1,6 +1,6 @@
 cat("Loading wood density data \n")
 
-rD.wood_density <- read.csv2("00-data/wood_density.csv")
+rD.wood_density <- read.csv2("00-data/raw/wood_density.csv")
 
 library(tidyverse)
 

@@ -1,5 +1,5 @@
 ## Shrubs size
-rD.vol <- read.csv2("00-data/vol_par_surv.csv")
+rD.vol <- read.csv2("00-data/raw/vol_par_surv.csv")
 
 df.vol <- rD.vol |> 
   dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var

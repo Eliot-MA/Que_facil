@@ -89,7 +89,7 @@ We utilized a field dataset (`shrub_biomass.csv`) comprising shrub volume (m³) 
 ```{r}
 options(na.action = "na.fail")
 # Load data
-df.biomass <- read.csv2(file = "00-data/shrub_biomass.csv")
+df.biomass <- read.csv2(file = "00-data/raw/shrub_biomass.csv")
 
 # source("01-scripts/01.2-surv_par_vol.R")
 
@@ -168,8 +168,8 @@ Survival and shrub volume data were loaded.
 ```{r}
 # Merge predicted biomass
 # Cargar supervivencia
-df.surv1 <- read.csv2("00-data/vol_par_surv.csv")
-df.surv2 <- read.csv2("00-data/sup_growth_may2026.csv")
+df.surv1 <- read.csv2("00-data/raw/vol_par_surv.csv")
+df.surv2 <- read.csv2("00-data/raw/sup_growth_may2026.csv")
 
 
 # Prepare survival for 2025
@@ -225,7 +225,7 @@ head(df.surv)
 ```
 
 ```{r}
-df.vol <- read.csv2("00-data/vol_par_surv.csv")
+df.vol <- read.csv2("00-data/raw/vol_par_surv.csv")
 
 df.vol <- df.vol |> 
   dplyr::select(micrositio, especie_facilitadora, ambiente,
@@ -363,10 +363,10 @@ df.surv.vol.mass <-
         by = "Individual")
 
 # Load digital terrain model 5m
-r <- terra::rast("00-data/PNOA_MDT05_ETRS89_HU30_0486_LID.tif")
+r <- terra::rast("00-data/raw/PNOA_MDT05_ETRS89_HU30_0486_LID.tif")
 
 # Load shrub positions
-df.shrubs.gps <- read.csv2(file = "00-data/shrubs_gps.csv")
+df.shrubs.gps <- read.csv2(file = "00-data/raw/shrubs_gps.csv")
 
 ## Change variable names and
 ## codification of zone

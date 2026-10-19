@@ -136,7 +136,7 @@ ggsave("08-img/RII_binomial_distribution.png", plot = p, width = 10, height = 8,
 # Bootstrap ----
 ## 
 
-boot.results <- read.csv2("00-data/boot_RII.csv")
+boot.results <- read.csv2("00-data/processed/_archive/boot_RII.csv")
 
 boot.results <- boot.results |> 
   rename(Environment = type_RII) |> 

@@ -2,7 +2,7 @@
 
 cat("Loading specific leaf area data... \n")
 
-rD.sla <- read.csv2("00-data/shrub_SLA.csv")
+rD.sla <- read.csv2("00-data/raw/shrub_SLA.csv")
 
 library(tidyverse)
 

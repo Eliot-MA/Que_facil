@@ -4,10 +4,10 @@ library(tidyverse)
 cat("Loading data from digital terrain model.\n")
 
 # Load digital terrain model 5m
-r <- terra::rast("00-data/MDT02-ETRS89-HU30-0486-1-COB2.tif")
+r <- terra::rast("00-data/raw/MDT02-ETRS89-HU30-0486-1-COB2.tif")
 
 # Load shrub positions
-df.shrubs.gps <- read.csv2(file = "00-data/shrubs_gps.csv")
+df.shrubs.gps <- read.csv2(file = "00-data/raw/shrubs_gps.csv")
 
 ## Change variable names and
 ## codification of zone

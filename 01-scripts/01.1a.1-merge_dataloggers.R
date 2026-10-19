@@ -11,7 +11,7 @@ library(purrr)
 cat("Collecting data from all Excel files in the base path\n")
 
 # --- Ajusta aquí la ruta base si hace falta
-base_dir <- "00-data/dataloggers/"
+base_dir <- "00-data/raw/dataloggers/"
 
 # 1) Listar solo .xlsx (recursivo)
 xlsx_files <- list.files(path = base_dir,
@@ -197,8 +197,8 @@ cat("Total rows:", nrow(combined), " Columns:", ncol(combined), "\n")
 # print(dplyr::glimpse(combined))
 print(head(combined, 6))
 
-readr::write_csv(combined, file.path(base_dir, "combined_dataloggers.csv"))
-# saveRDS(combined, file.path(base_dir, "combined_dataloggers.rds"))
+readr::write_csv(combined, "00-data/processed/combined_dataloggers.csv")
+# saveRDS(combined, "00-data/processed/combined_dataloggers.rds")
 
 # Limpiar objetos y funciones no necesarios
 rm("results", "success_list", "base_dir", "errors_idx", "xlsx_files", "clean_to_numeric", "read_lista_sheet")
