@@ -44,6 +44,8 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [x] **3.5** (adelantado) Instalados los paquetes que faltaban en el entorno: `here`, `tidylog`, `kableExtra`, `gtsummary` y `waffle` (este último desde el archivo CRAN + `extrafont`, al estar retirado de CRAN).
 
 ## FASE 4 — Completar análisis pendientes
+> Nota: esta fase agrupa análisis heterogéneos que quedaron a medias. **Cada punto debe revisarse y
+> validarse individualmente**, uno por uno, antes de darlo por hecho; no se abordan todos de golpe.
 - [ ] **4.1** Terminar SLA (`01.2c-SLA.R`, hoy "Working on it…") + reporte.
 - [ ] **4.2** Integrar el 3er censo (mayo 2026) en los resultados temporales.
 - [ ] **4.3** Convergencia y nº óptimo de iteraciones del bootstrap → materializar `Results05_RII_3.qmd`.
