@@ -68,3 +68,80 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [ ] **5.1** Rellenar los orquestadores vacíos `02-eda.R` y `03-models.R`.
 - [ ] **5.2** Síntesis en formato artículo a partir del guion.
 - [ ] **5.3** PR de `fix/pipeline` → `main`.
+
+## FASE 6 — Rediseño analítico (plan revisado)
+> Plan revisado tras la evaluación del repositorio. **Sustituye y refina los pendientes de la FASE 4**
+> (4.2 integración temporal, 4.5 biomasa, 4.6 pendiente, 4.7 microclima) y añade suelo, PCA y crecimiento.
+>
+> **Decisiones estructurales:**
+> - **Tres unidades de análisis** (artículo/dataset por unidad, no un único dataset con todo).
+> - **Dos modelos** de supervivencia y crecimiento: (a) claros vs. arbustos, (b) dentro de arbustos
+>   (la biomasa/SLA/suelo no existen en los claros; resuelve el problema de `filter(microsite != "gap")`).
+> - **PCA/MFA a nivel de arbusto etiquetado** (n = 60: 30 pinar + 30 abierto), no a nivel de plantón.
+> - **Selección de modelos por candidatos a priori + AICc**; las cadenas `drop1`/`stepAIC`/`dredge`
+>   actuales pasan a **análisis de sensibilidad**, no a método principal.
+> - Variables de suelo/microclima/PAR son **de una sola campaña** (foto fija), no un régimen temporal.
+>
+> **Datos ya disponibles pero no migrados:** humedad del suelo, textura y nutrientes (no es una
+> debilidad, es una tarea de migración pendiente: 6.0.1).
+
+### 6.0 — Migración de suelo y arreglos previos
+- [ ] **6.0.1** Crear `01-scripts/01.1d-edaphic.R` (loader de suelo: humedad, textura, nutrientes)
+  siguiendo la convención `raw/`→`processed/`; engancharlo a `01.1-abiotic.R`; actualizar `00-data/README.md`.
+- [ ] **6.0.2** Arreglar la fecha de `t1` de crecimiento (`01.2a-survival_growth.R:85`, `TODO`).
+- [ ] **6.0.3** Corregir la fila con `Fecha segunda medicion = jul-26` y las filas sin especie/ambiente en `growth.csv`;
+  revisar las 8 filas vacías de `vol_par_surv.csv`.
+- [ ] **6.0.4** Homogeneizar recodificaciones de factores entre scripts (`zone`/`Environment`,
+  `gap`/`open`/`open area`, `abierto`/`pinar`).
+- [ ] **6.0.5** Verificar la fecha real de plantación y corregir "286 días" en
+  `02-reports/guion_estancia_investigacion.qmd:363` (12/06/2025 → 27/05/2026 = 349 días).
+
+### 6.A — Datasets maestros
+- [ ] **6.A.1** `df.surv.analysis` — 1 fila = plantón × fecha (480 × 3 censos): factores, `survival` (2→1),
+  `V_t1`, PAR, elevación/pendiente.
+- [ ] **6.A.2** `df.growth.analysis` — 1 fila = plantón vivo a t2 (~225): `V_t1`, `V_t2`, factores, controles.
+- [ ] **6.A.3** `df.mechanistic` — 1 fila = arbusto etiquetado con datos completos (n=60): biomasa, SLA,
+  microclima (Tª/RH/VPD), PAR, humedad del suelo, textura, nutrientes.
+- [ ] **6.A.4** Un único script de construcción que los guarde en `processed/` (evitar los `left_join`
+  frágiles repetidos en cada `03.x`).
+
+### 6.B — Supervivencia en tres niveles (candidatos a priori + AICc)
+- [ ] **6.B.1** **Claros vs. arbustos** (n=480): `survival ~ surv_date * (Environment * microsite * quercus_sp) + V_t1 + Elevation + (1|id_quercus) + (1|Individual)`; el contraste `date × predictores`
+  responde a "¿cambian los patrones con el tiempo?".
+- [ ] **6.B.2** **Dentro de arbustos** (n=360): añadir `log(biomasa)` e interacciones `microsite × biomasa`,
+  `Environment × biomasa`.
+- [ ] **6.B.3** **Mecanístico** (subconjunto de 60 arbustos): scores del PCA/MFA o variables edáficas
+  sueltas como predictores (exploratorio, declarar n).
+- [ ] **6.B.4** Chequear separación en celdas de baja supervivencia (gap × *Genista* en claro ≈ 12%);
+  reducir interacciones a priori o, si hace falta, `brms` con priors débiles.
+- [ ] **6.B.5** Mantener un único criterio de selección principal; documentar el resto como sensibilidad.
+
+### 6.C — Crecimiento
+- [ ] **6.C.1** ANCOVA en supervivientes a t2: `V_t2 ~ V_t1 + Environment * microsite * quercus_sp + (1|Individual)`
+  (respuesta primaria `Vtallo`; análogo a 6.B.2 dentro de arbustos).
+- [ ] **6.C.2** Sensibilidad de supervivientes: comparar `V_t1` de supervivientes vs. muertos (el sesgo
+  de supervivientes es la mayor limitación metodológica del análisis de crecimiento).
+- [ ] **6.C.3** Declarar explícitamente que la longitud/diámetro solo se mide en vivos.
+
+### 6.D — PCA/MFA del microhábitat (n=60)
+- [ ] **6.D.1** Matriz de cobertura (variables × individuos) y **verificación del balance de**
+  **especies y ambiente** en los 60 (por diseño, todas las especies están igualmente representadas en pinar y abierto).
+- [ ] **6.D.2** MFA/PCA sobre los 60 con `Environment` como variable **suplementaria** (≤7 variables:
+  biomasa, SLA, VPD, extinción PAR, humedad del suelo, un eje de textura —composicional—, 1-2 nutrientes).
+  MFA con bloques para que el bloque de suelo no domine por número de variables.
+- [ ] **6.D.3** FAMD (Environment activo) y/o dos PCA de 30 como **complementario/sensibilidad**;
+  usar solo si los gradientes difieren entre ambientes.
+- [ ] **6.D.4** Densidad de madera **fuera** del PCA individual (individuos distintos por método destructivo);
+  se queda en `03.6`.
+- [ ] **6.D.5** Exportar loadings y scores a `processed/` para usarlos en 6.B.3.
+
+### 6.E — Predictivo y descriptivo
+- [ ] **6.E.1** `PAR/extinción ~ biomasa` en los 240 micrositios (único modelo predictivo realista;
+  base física Beer-Lambert).
+- [ ] **6.E.2** Microclima y suelo: análisis **descriptivo** por tratamiento (foto de una campaña), no predictivo.
+
+### 6.F — Funciones y orquestación
+- [ ] **6.F.1** `01-scripts/_functions.R`: `fit_survival_model()`, `fit_growth_model()` (DHARMa +
+  colinealidad + R² embebidos) y helper de selección si se mantiene `drop1`.
+- [ ] **6.F.2** Rellenar `03-models.R` como orquestador que declara los modelos candidatos (6.B, 6.C, 6.D).
+- [ ] **6.F.3** Nuevos scripts: `02.4-pca_mechanistic.R`, `03.7-growth_models.R`, `03.8-mechanistic_models.R`.
