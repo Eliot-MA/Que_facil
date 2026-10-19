@@ -14,6 +14,6 @@ source("01-scripts/01.2c-SLA.R")
 
 source("01-scripts/01.2d-shrub_size.R")
 
-# Load RII
-
-source("01-scripts/01.2e-RII.R")
+# RII on survival is no longer part of the data-loading pipeline.
+# It is an analysis and lives as a supplementary script:
+#   source("05-supplementary/RII_survival.R")

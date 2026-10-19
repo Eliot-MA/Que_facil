@@ -29,11 +29,12 @@ names listed below.
 | File | Written by | Consumed by |
 | --- | --- | --- |
 | `dataloggers/combined_dataloggers.csv` | `01.1a.1-merge_dataloggers.R` | `01.1a.3-add_microsite_environment.R` (via `combined`) |
-| `boot_RII.csv` | `01.2e-RII.R` (export step) | `03.3-RII.R`, `Results04_RII_2.qmd` |
 | `summ.elevation.csv` | `02.1-elevation.R` | — |
+| `RII_classic_vs_glmm.csv` | `05-supplementary/RII_survival.R` (supplementary) | — |
 
 ## Legacy files (no longer referenced by any script)
 
-`boot_RII_qi.csv`, `boot_RII_qf.csv`, `par_extintion.csv`, `df.microclima.csv`.
-These are kept for reference only and are not read or written anywhere in
-`01-scripts/`.
+`boot_RII.csv`, `boot_RII_qi.csv`, `boot_RII_qf.csv`, `par_extintion.csv`,
+`df.microclima.csv`. `boot_RII.csv` used to be exported by the old RII
+pipeline (`01.2e-RII.R`, now archived in `05-supplementary/_archive/`). These
+are kept for reference only and are not read or written by any active script.

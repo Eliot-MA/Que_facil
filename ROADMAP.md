@@ -46,10 +46,20 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 ## FASE 4 — Completar análisis pendientes
 > Nota: esta fase agrupa análisis heterogéneos que quedaron a medias. **Cada punto debe revisarse y
 > validarse individualmente**, uno por uno, antes de darlo por hecho; no se abordan todos de golpe.
+
+> **Decisión sobre el RII (supervivencia).** El RII sobre datos binarios de
+> supervivencia se retira del pipeline y pasa a un **análisis suplementario**
+> (`05-supplementary/`: `RII_survival.R` + `RII_survival.qmd`). En datos binarios
+> RII ≡ diferencia de probabilidades de supervivencia, justo lo que estima el
+> GLMM, por lo que el suplemento se limita a demostrar la concordancia entre
+> ambos métodos. Los scripts/reportes antiguos (`01.2e-RII.R`, `03.3-RII.R`,
+> `Results03/04/05_RII`) quedan archivados en `05-supplementary/_archive/`. El
+> RII sobre **crecimiento** (continuo) queda como posible análisis futuro
+> (`05-supplementary/RII_growth.R`).
 - [ ] **4.1** Terminar SLA (`01.2c-SLA.R`, hoy "Working on it…") + reporte.
 - [ ] **4.2** Integrar el 3er censo (mayo 2026) en los resultados temporales.
-- [ ] **4.3** Convergencia y nº óptimo de iteraciones del bootstrap → materializar `Results05_RII_3.qmd`.
-- [ ] **4.4** Modelos multinomiales mixtos para RII ∈ {−1,0,1} (`Results04:71`, "deferred").
+- [x] **4.3** Convergencia y nº óptimo de iteraciones del bootstrap → **superado por la decisión RII**: el RII de supervivencia sale del pipeline; el material de convergencia queda archivado en `05-supplementary/_archive/`.
+- [x] **4.4** Modelos multinomiales mixtos para RII ∈ {−1,0,1} → **descartado**: pierde sentido al retirar el RII de supervivencia.
 - [ ] **4.5** Validar modelos de biomasa Gamma vs otras familias (`Results02:126`).
 - [ ] **4.6** Integrar la **pendiente** (extraída del DTM, nunca usada) en los modelos.
 - [ ] **4.7** Integrar las variables **microclimáticas** (dataloggers procesados pero no usados).

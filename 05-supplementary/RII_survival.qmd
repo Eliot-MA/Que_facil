@@ -1,0 +1,134 @@
+---
+title: "Relative Interaction Index on survival data"
+subtitle: "Supplementary analysis: concordance with a GLMM on survival"
+author: "Mompeán, E."
+date: "today"
+format:
+  pdf:
+    documentclass: scrartcl
+    pdf-engine: xelatex
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    number-depth: 2
+    fig-cap-location: bottom
+    fig-align: center
+    fig-width: 6
+    fig-height: 4
+    highlight-style: github
+    geometry:
+      - margin=2.5cm
+    linestretch: 1.15
+    colorlinks: true
+    keep-tex: false
+    code-overflow: wrap
+    code-block-bg: true
+editor: visual
+execute:
+  warning: false
+  message: false
+bibliography: ../09-bib/bibliography.bib
+biblio-style: ../09-bib/ecology.csl
+lightbox: true
+---
+
+# Summary
+
+This supplementary report consolidates the earlier exploratory work on the
+Relative Interaction Index (RII) applied to **survival** data. It is no longer
+part of the main pipeline: adapting RII to binary data is methodologically
+awkward, and the conclusions it produces do not differ substantially from a
+GLMM fitted directly on survival. Here we show that concordance explicitly.
+
+# Introduction
+
+The **Relative Interaction Index (RII)** is a standardized metric that
+quantifies both the strength and direction of biotic interactions, symmetric
+around zero and bounded between −1 and +1, with positive values indicating
+facilitation and negative values indicating competition [@Michalet2014;
+@Michalet2017]. Its general formula is
+
+$$RII =
+\frac{X_{\text{with neighbours}} - X_{\text{without neighbours}}}
+     {X_{\text{with neighbours}} + X_{\text{without neighbours}}},$$
+
+where $X$ is a measure of plant performance. RII is normally computed on
+continuous (e.g. biomass) or positive discrete data. Its application to binary
+survival data (0/1) is less natural, though possible.
+
+# Methodology
+
+## Comparisons
+
+As in the experimental design, each row of the `comparisons` table is a focal
+group (A) compared against a reference group (B): the direct effects of the
+three nurse shrubs (shrub vs. open in the gap), the direct effect of the pine
+canopy (canopy vs. gap in the open microsite), and the indirect effects of the
+shrubs (shrub vs. open under pine canopy).
+
+## RII on binary data
+
+For a pair of observations $i$ and $j$, survival under the shrub ($S_{A_i}$) is
+compared with survival in the open ($S_{B_j}$):
+
+$$RII_{ij} = \frac{S_{A_i} - S_{B_j}}{S_{A_i} + S_{B_j}},$$
+
+with $RII_{ij} = 0$ when $S_{A_i} + S_{B_j} = 0$ (by convention). Because the
+observations are binary, $RII_{ij}$ can only take the values $+1$, $0$ or $-1$:
+the expression simplifies exactly to $RII_{ij} = S_{A_i} - S_{B_j}$. Averaging
+over the reference individuals of a focal plant, the per-individual RII reduces
+to a **difference in survival probabilities**:
+
+$$\overline{RII} = p_A - p_B,$$
+
+which is precisely the quantity that a binomial GLMM on survival estimates.
+
+## Reference approach: GLMM on survival
+
+A binomial GLMM is fitted separately per census date,
+
+$$survival \sim quercus\_sp + Environment \times microsite + (1 \mid Individual),$$
+
+and RII is recomputed from the predicted survival probabilities on the same
+scale as the binary collapse, $RII = p_A - p_B$. The comparison below checks
+whether the classic (empirical) RII and the GLMM-based RII lead to the same
+conclusions.
+
+# Results
+
+```{r}
+#| label: setup
+#| include: false
+source("05-supplementary/RII_survival.R")
+```
+
+The classic, empirical RII (per-individual RII averaged to the population
+level) is shown in @fig-classic.
+
+```{r}
+#| label: fig-classic
+#| fig-cap: "Mean (± SE) Relative Interaction Index (RII) of seedling survival. Positive values indicate facilitation, negative values competition. Panels show survey date and interaction type."
+p_classic
+```
+
+@fig-cmp puts the classic RII side by side with the RII obtained from the GLMM
+on survival. Points close to the dashed 1:1 line indicate that both methods
+agree in both magnitude and direction.
+
+```{r}
+#| label: fig-cmp
+#| fig-cap: "Classic (empirical) RII versus GLMM-based RII on survival. Points on the dashed line indicate agreement between methods."
+p_cmp
+```
+
+# Conclusion
+
+For survival data, the RII is mathematically equivalent to a difference in
+survival probabilities, which is what the GLMM on survival already estimates.
+The supplementary comparison above therefore supports the decision to drop
+RII-on-survival from the main pipeline: the GLMM provides the same ecological
+conclusions with a cleaner statistical treatment. RII may still be appropriate
+on **growth** data (continuous), which will be explored separately
+(`05-supplementary/RII_growth.R`).
+
+# References

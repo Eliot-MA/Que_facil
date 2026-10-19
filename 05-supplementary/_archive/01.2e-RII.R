@@ -1,4 +1,5 @@
-source("01-scripts/01.2a-survival_growth.R")
+# This scripts depends on objetcs created in: 
+# source("01-scripts/01.2a-survival_growth.R")
 
 # 1. Prepare data ----
 
@@ -234,6 +235,9 @@ boot.results.ind <- boot.results |>
 # 03.3-RII.R y Results04_RII_2.qmd consumen este CSV como entrada. Se regenera
 # aquí a partir del dataset completo (todas las especies, fechas y ambientes),
 # agregando la media de RII de los individuos focales por iteración y combinación.
+# La agregación se hace DENTRO de cada iteración (no después de acumular las 5000
+# tablas crudas) para no agotar la memoria: así solo se acumulan ~42 filas/iter
+# en lugar de la tabla a nivel de individuo de cada remuestreo.
 # (El bloque anterior bootstrapea solo un subconjunto para la figura comparativa;
 #  este otro produce la tabla que alimenta los análisis de 03.3.)
 
@@ -252,6 +256,8 @@ boot_export <- map_dfr(
   function(i) {
     cli_progress_update(id = pb_export)
     bootstrap_once_v3(df.surv) |>
+      group_by(surv_date, type_RII, Interacting_species, quercus_sp) |>
+      summarise(RII = mean(RII, na.rm = TRUE), .groups = "drop") |>
       mutate(iteration = i)
   }
 )
@@ -259,8 +265,6 @@ boot_export <- map_dfr(
 cli_progress_done(id = pb_export)
 
 boot_RII <- boot_export |>
-  group_by(surv_date, type_RII, Interacting_species, quercus_sp, iteration) |>
-  summarise(RII = mean(RII, na.rm = TRUE), .groups = "drop") |>
   select(surv_date, type_RII, Interacting_species, quercus_sp, RII, iteration)
 
 write.csv2(boot_RII, file = "00-data/boot_RII.csv")

@@ -20,8 +20,7 @@ thematic modules, and each module sources the individual analysis scripts.
     ├── 01.2a-survival_growth.R
     ├── 01.2b-biomass.R
     ├── 01.2c-SLA.R
-    ├── 01.2d-shrub_size.R
-    └── 01.2e-RII.R
+    └── 01.2d-shrub_size.R
 
 02-eda.R        # exploratory analyses (orchestrator, WIP)
 ├── 02.1-elevation.R
@@ -31,7 +30,6 @@ thematic modules, and each module sources the individual analysis scripts.
 03-models.R     # statistical models (orchestrator, WIP)
 ├── 03.1-elevation.R
 ├── 03.2-shrub_size.R
-├── 03.3-RII.R
 ├── 03.4-surv_models.R
 ├── 03.5-SLA.R
 └── 03.6-wood_density.R
@@ -39,12 +37,15 @@ thematic modules, and each module sources the individual analysis scripts.
 
 > `01.2f-wood_density.R` and `_functions.R` (shared plotting helpers) also live
 > in `01-scripts/`.
+>
+> Supplementary analyses that are **not** part of the pipeline live in
+> `05-supplementary/` (see its own README).
 
 ### Workflow
 
 - **`01-load_data.R`** loads the datasets and initializes the pipeline.
 - **`01.1-abiotic.R`** loads abiotic variables: microclimate, elevation, and PAR/extinction.
-- **`01.2-biotic.R`** loads biotic variables: survival/growth, biomass, SLA, size, and RII.
+- **`01.2-biotic.R`** loads biotic variables: survival/growth, biomass, SLA, and size.
 - **`02-eda.R`** runs the exploratory analyses.
 - **`03-models.R`** fits the statistical models.
 

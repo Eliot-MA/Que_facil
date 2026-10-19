@@ -276,7 +276,7 @@ Se implementó un procedimiento bootstrap con 5,000 iteraciones:
 - Los patrones se establecen principalmente después del primer verano (septiembre 2025)
 - No se encontraron diferencias significativas en RII entre especies de *Quercus*
 
-**Reportes:** `02-reports/internal/Results03_RII.qmd`, `02-reports/internal/Results04_RII_2.qmd`, `02-reports/internal/Results05_RII_3.qmd`
+**Reporte:** `05-supplementary/RII_survival.qmd`
 
 # Consecución de objetivos
 
@@ -419,14 +419,12 @@ Los resultados apoyan la hipótesis del gradiente de estrés (SGH):
 | `01-scripts/01.1b-elevation.R` | Carga de datos GPS y elevación |
 | `01-scripts/01.2a-survival_growth.R` | Carga de supervivencia y crecimiento |
 | `01-scripts/01.2d-shrub_size.R` | Carga de dimensiones y volumen de arbustos |
-| `01-scripts/01.2e-RII.R` | Cálculo del RII |
 | `01-scripts/01.2b-biomass.R` | Predicción de biomasa |
 | `01-scripts/03.4-surv_models.R` | Modelos de supervivencia |
+| `05-supplementary/RII_survival.R` | Cálculo del RII (análisis suplementario) |
 | `02-reports/internal/Results01_Elevation.qmd` | Reporte: efecto de la elevación |
 | `02-reports/internal/Results02_Shrub_size.qmd` | Reporte: tamaño de arbustos |
-| `02-reports/internal/Results03_RII.qmd` | Reporte: RII (primeros enfoques) |
-| `02-reports/internal/Results04_RII_2.qmd` | Reporte: RII (bootstrapping) |
-| `02-reports/internal/Results05_RII_3.qmd` | Reporte: RII (correcciones) |
+| `05-supplementary/RII_survival.qmd` | Reporte: RII (suplementario) |
 
 ## Paquetes R utilizados
 
