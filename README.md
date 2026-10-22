@@ -25,7 +25,8 @@ thematic modules, and each module sources the individual analysis scripts.
 02-eda.R        # exploratory analyses (orchestrator, WIP)
 ├── 02.1-elevation.R
 ├── 02.2-shrub_size.R
-└── 02.3-extinction.R
+├── 02.3-extinction.R
+└── 02.4-quercus_growth.R
 
 03-models.R     # statistical models (orchestrator, WIP)
 ├── 03.1-elevation.R

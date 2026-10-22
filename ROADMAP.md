@@ -56,7 +56,7 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 > `Results03/04/05_RII`) quedan archivados en `05-supplementary/_archive/`. El
 > RII sobre **crecimiento** (continuo) queda como posible análisis futuro
 > (`05-supplementary/RII_growth.R`).
-- [ ] **4.1** Terminar SLA (`01.2c-SLA.R`, hoy "Working on it…") + reporte.
+- [x] **4.1** Terminar SLA (`01.2c-SLA.R`, hoy "Working on it…") + reporte.
 - [ ] **4.2** Integrar el 3er censo (mayo 2026) en los resultados temporales.
 - [x] **4.3** Convergencia y nº óptimo de iteraciones del bootstrap → **superado por la decisión RII**: el RII de supervivencia sale del pipeline; el material de convergencia queda archivado en `05-supplementary/_archive/`.
 - [x] **4.4** Modelos multinomiales mixtos para RII ∈ {−1,0,1} → **descartado**: pierde sentido al retirar el RII de supervivencia.
@@ -95,6 +95,11 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
   `gap`/`open`/`open area`, `abierto`/`pinar`).
 - [ ] **6.0.5** Verificar la fecha real de plantación y corregir "286 días" en
   `02-reports/guion_estancia_investigacion.qmd:363` (12/06/2025 → 27/05/2026 = 349 días).
+- [ ] **6.0.6** Corregir los estados de muerte de censos pasados cuando haya **rebrote**: una planta
+  anotada como muerta que rebrota estaba viva; reconstruir su serie temporal de supervivencia antes de 6.A.1/6.B.
+- [ ] **6.0.7** Revisar si se corrigieron todos los **identificadores erróneos** detectados en la salida
+  de campo del **27/07/2026**; los que queden sin corregir pueden emparejar individuos distintos entre
+  censos y producir crecimientos negativos (ver 6.C.4).
 
 ### 6.A — Datasets maestros
 - [ ] **6.A.1** `df.surv.analysis` — 1 fila = plantón × fecha (480 × 3 censos): factores, `survival` (2→1),
@@ -122,6 +127,14 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [ ] **6.C.2** Sensibilidad de supervivientes: comparar `V_t1` de supervivientes vs. muertos (el sesgo
   de supervivientes es la mayor limitación metodológica del análisis de crecimiento).
 - [ ] **6.C.3** Declarar explícitamente que la longitud/diámetro solo se mide en vivos.
+- [ ] **6.C.4** Decidir qué hacer con los individuos con **crecimiento negativo** (volumen, altura y diámetro):
+  mantener el valor observado, excluirlos o asumirlos como crecimiento cero; documentar el criterio y
+  aplicarlo de forma consistente en `df.growth.analysis` y en 6.C.1.
+- [ ] **6.C.5** Incorporar los **rebrotes** anotados en `observations` de `rD.growth`/`df.growth`: el tallo
+  nuevo es mucho más corto que la planta original, por lo que `longitud_t2 - longitud_t1` no mide su
+  crecimiento; definir una métrica específica (crecimiento del rebrote, excluir el intervalo o tratarlo
+  aparte). Un rebrote también implica que la planta estaba viva aunque se anotara como muerta: aplicar
+  la corrección de 6.0.6 antes de 6.A.2/6.C.1.
 
 ### 6.D — PCA/MFA del microhábitat (n=60)
 - [ ] **6.D.1** Matriz de cobertura (variables × individuos) y **verificación del balance de**

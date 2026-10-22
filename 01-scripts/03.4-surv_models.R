@@ -17,10 +17,7 @@ df.surv <- df.surv |>
   )
 
 df.growth.volume <- df.growth.volume |> 
-  filter(Date == "t1") |> 
-  rename(
-    Individual = Arbusto, 
-    quercus_position = Posición)
+  filter(growth_stage == "t1")
 
 df.growth.volume <- df.growth.volume |>
   mutate(
@@ -29,12 +26,9 @@ df.growth.volume <- df.growth.volume |>
                              "\\1\\2")
   )
 
-df.growth.volume2 <- df.growth.volume |>
-  rename(quercus_sp = Especie)
-
 df.merge <- df.surv |>
   left_join(
-    df.growth.volume2 |> select(Individual, quercus_sp, quercus_position, id_quercus, Volume_cm3),
+    df.growth.volume |> select(Individual, quercus_sp, quercus_position, id_quercus, volume),
     by = c("Individual", "quercus_sp")
   )
 
@@ -66,7 +60,7 @@ df.t2.scaled <-
   df |> 
   filter(surv_date == "27/05/2026") |> 
   select(-surv_date) |> 
-  rename(quercus_volume = Volume_cm3) |> 
+  rename(quercus_volume = volume) |> 
   mutate(
     quercus_volume_c = scale(quercus_volume), 
     shrub_volume_c = scale(shrub_volume), 

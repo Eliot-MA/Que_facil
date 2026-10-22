@@ -74,11 +74,13 @@ df.surv2 <- df.surv2 |>
 
 df.surv <- rbind(df.surv1, df.surv2)
 
+# Eliminate J53_bis, causes problems
+df.surv <- df.surv |> filter(Individual != "J53_bis")
+
 cat("Survival data merged: n =", nrow(df.surv), "rows,",
     n_distinct(df.surv$Individual), "unique individuals\n\n")
 
 glimpse(df.surv)
-
 
 ##
 # GROWTH
@@ -103,6 +105,12 @@ library(stringr)
 rD.growth2 <- rD.growth %>%
   mutate(row_id = row_number()) %>%
   rename(
+    Individual      = Arbusto,
+    quercus_position = Posición,
+    quercus_sp      = Especie,
+    Environment     = Ambiente,
+    quercus_tag     = Individuo,
+    observations    = Observaciones,
     H_1_t1 = `h1..cm.`, D_1_t1 = `D1..mm.`,
     H_2_t1 = `h2..cm.`, D_2_t1 = `D2..mm.`,
     H_3_t1 = `h3..cm.`, D_3_t1 = `D3..mm.`,
@@ -135,22 +143,21 @@ rD.growth2 <- rD.growth2 %>%
 # 3. Pivotar altura y diámetro juntos (mismo id de rama)
 
 long_hd <- rD.growth2 %>%
-  select(row_id, Arbusto, Posición, Especie, Environment = Ambiente, Individuo,
-         Observaciones, matches("^[HD]_\\d_t\\d$")) %>%
+  select(row_id, Individual, quercus_position, quercus_sp, Environment,
+         quercus_tag, observations, matches("^[HD]_\\d_t\\d$")) %>%
   pivot_longer(
     cols = matches("^[HD]_\\d_t\\d$"),
-    names_to = c(".value", "id_rama", "Date"),
+    names_to = c(".value", "id_rama", "stage"),
     names_pattern = "([HD])_(\\d)_t(\\d)"
   ) %>%
-  rename(Height_cm = H, Diameter_mm = D) %>%
+  rename(height = H, diam = D) %>%
   mutate(
-    Date       = paste0("t", Date),
-    id_height  = id_rama,
-    id_diameter = id_rama,
-    Environment = recode(str_trim(Environment), "Abierto" = "gap", "Pinar" = "pine canopy"),
-    Environment = na_if(Environment, "")
+    growth_stage = paste0("t", stage),
+    id_twig      = id_rama,
+    Environment  = recode(str_trim(Environment), "Abierto" = "gap", "Pinar" = "pine canopy"),
+    Environment  = na_if(Environment, "")
   ) %>%
-  select(-id_rama)
+  select(-id_rama, -stage)
 
 
 # 4. Pivotar el volumen (un solo valor por individuo y tiempo,
@@ -160,29 +167,27 @@ long_v <- rD.growth2 %>%
   select(row_id, V_t1, V_t2) %>%
   pivot_longer(
     cols = starts_with("V_"),
-    names_to = "Date",
+    names_to = "growth_stage",
     names_prefix = "V_",
-    values_to = "Volume_cm3"
+    values_to = "volume"
   )
 
 
 # 5. Unir alturas/diámetros con volumen y dar formato final
 
 rD.growth.long <- long_hd %>%
-  left_join(long_v, by = c("row_id", "Date")) %>%
-  mutate(across(c(Arbusto, Posición, Especie, Environment, Individuo,
-                  id_height, id_diameter, Date), as.factor)) %>%
-  select(Arbusto, Posición, Especie, Environment, Individuo,
-         Height_cm, id_height,
-         Diameter_mm, id_diameter,
-         Volume_cm3, Date, Observaciones)
+  left_join(long_v, by = c("row_id", "growth_stage")) %>%
+  mutate(across(c(Individual, quercus_position, quercus_sp, Environment,
+                  quercus_tag, id_twig, growth_stage), as.factor)) %>%
+  select(Individual, quercus_position, quercus_sp, Environment, quercus_tag,
+         height, id_twig, diam, volume, growth_stage, observations)
 
 
 # 6. Eliminar filas "vacías": ramas que nunca existieron, donde
-#    Height_cm, Diameter_mm y Volume_cm3 son todas NA a la vez
+#    height y diam son NA a la vez
 
 rD.growth.long <- rD.growth.long %>%
-  filter(!(is.na(Height_cm) & is.na(Diameter_mm) & is.na(Volume_cm3)))
+  filter(!(is.na(height) & is.na(diam)))
 
 df.growth <- rD.growth.long
 
@@ -192,33 +197,35 @@ df.growth <- df.growth |>
   mutate(
     id_quercus = paste0(
       case_when(
-        Especie == "Quercus ilex" ~ "E", 
-        Especie == "Quercus faginea" ~ "Q"), 
-      Individuo)
+        quercus_sp == "Quercus ilex" ~ "E", 
+        quercus_sp == "Quercus faginea" ~ "Q"), 
+      quercus_tag)
   )
 
 # 8. Calculate growth
 
 df.growth.volume <- df.growth |> 
-  select(Arbusto, Posición, Especie, Environment, id_quercus, Volume_cm3, Date) |> 
+  select(Individual, quercus_position, quercus_sp, Environment,
+         id_quercus, volume, growth_stage) |> 
   unique() |> 
-  filter(Especie != "") |> 
+  filter(quercus_sp != "") |> 
   drop_na()
 
 df.growth.volume.diff <- df.growth.volume |> 
-  select(id_quercus, Arbusto, Posición, Especie, Environment, Date, Volume_cm3) |> 
-  pivot_wider(names_from = Date, values_from = Volume_cm3) |> 
+  select(id_quercus, Individual, quercus_position, quercus_sp, Environment,
+         growth_stage, volume) |> 
+  pivot_wider(names_from = growth_stage, values_from = volume) |> 
   mutate(
     growth_volume = t2 - t1, 
-    micrositio = factor(
+    microsite = factor(
       case_when(
-        substring(Arbusto, 1, 1) == "A" ~ "Genista scorpius", 
-        substring(Arbusto, 1, 1) == "C" ~ "Claro", 
-        substring(Arbusto, 1, 1) == "J" ~ "Cistus ladanifer", 
-        substring(Arbusto, 1, 1) == "R" ~ "Rosa canina", 
+        substring(as.character(Individual), 1, 1) == "A" ~ "Genista scorpius", 
+        substring(as.character(Individual), 1, 1) == "C" ~ "open", 
+        substring(as.character(Individual), 1, 1) == "J" ~ "Cistus ladanifer", 
+        substring(as.character(Individual), 1, 1) == "R" ~ "Rosa canina", 
         TRUE ~ NA
       ),
-      levels = c("Claro", "Rosa canina", "Cistus ladanifer", "Genista scorpius")
+      levels = c("open", "Rosa canina", "Cistus ladanifer", "Genista scorpius")
     )
   ) |> 
   filter(!is.na(growth_volume))
@@ -238,7 +245,7 @@ cat("  - df.growth.volume.diff:", nrow(df.growth.volume.diff), "rows | volume gr
 
 
 
-# ggplot(df.growth.volume.diff, aes(x = Especie, y = growth_volume)) +
+# ggplot(df.growth.volume.diff, aes(x = quercus_sp, y = growth_volume)) +
 #   geom_violin() +
 #   geom_jitter(width = .1, alpha = .1) +
 #   geom_boxplot(width = .1, alpha = .5)
