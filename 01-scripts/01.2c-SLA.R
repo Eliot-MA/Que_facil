@@ -13,7 +13,10 @@ df.sla <- rD.sla |>
          Environment = Ambiente, 
          leaf_dry_weight = peso_seco, 
          leaf_area = area_total..cm2., 
-         SLA = SLA..cm2.g.)
+         SLA = SLA..cm2.g.) |> 
+  mutate(
+    Environment = recode(Environment, "Abierto" = "gap", "Pinar" = "pine canopy")
+  )
 
 cat("rD.sla contains the original dataframe \n")
 glimpse(rD.sla)

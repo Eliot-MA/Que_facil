@@ -1,4 +1,4 @@
-source("01-scripts/01.1b-elevation.R")
+# source("01-scripts/01.1b-elevation.R")
 
 library(tidyverse)
 library(terra)
@@ -8,7 +8,7 @@ library(plotly)
 
 # Exploratory analysis
 summ.elevation <- df.shrubs.gps |> 
-  group_by(Zone, microsite_code) |> 
+  group_by(Environment, microsite_code) |> 
   summarise(
     minimo = min(Elevation), 
     q25 = quantile(Elevation, 0.25), 
@@ -21,7 +21,7 @@ summ.elevation <- df.shrubs.gps |>
 write.csv2(summ.elevation, file = "00-data/processed/summ.elevation.csv")
 
 summ.slope <- df.shrubs.gps |> 
-  group_by(Zone, microsite_code) |> 
+  group_by(Environment, microsite_code) |> 
   summarise(
     minimo = min(Slope), 
     q25 = quantile(Slope, 0.25), 
@@ -36,7 +36,7 @@ p <- ggplot(df.shrubs.gps, aes(x = Elevation, y = microsite_code)) +
   geom_boxplot() +
   geom_violin(alpha = 0.2) +
   geom_jitter() +
-  facet_wrap(~Zone, ncol = 1)
+  facet_wrap(~Environment, ncol = 1)
 
 ggsave(
   filename = "08-img/boxplot_elevation.png",
@@ -51,7 +51,7 @@ p <- ggplot(df.shrubs.gps, aes(x = Slope, y = microsite_code)) +
   geom_boxplot() +
   geom_violin(alpha = 0.2) +
   geom_jitter() +
-  facet_wrap(~Zone, ncol = 1)
+  facet_wrap(~Environment, ncol = 1)
 
 ggsave(
   filename = "08-img/boxplot_slope.png",

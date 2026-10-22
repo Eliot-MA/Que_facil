@@ -91,7 +91,7 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [ ] **6.0.2** Arreglar la fecha de `t1` de crecimiento (`01.2a-survival_growth.R:85`, `TODO`).
 - [ ] **6.0.3** Corregir la fila con `Fecha segunda medicion = jul-26` y las filas sin especie/ambiente en `growth.csv`;
   revisar las 8 filas vacías de `vol_par_surv.csv`.
-- [ ] **6.0.4** Homogeneizar recodificaciones de factores entre scripts (`zone`/`Environment`,
+- [x] **6.0.4** Homogeneizar recodificaciones de factores entre scripts (`zone`/`Environment`,
   `gap`/`open`/`open area`, `abierto`/`pinar`).
 - [ ] **6.0.5** Verificar la fecha real de plantación y corregir "286 días" en
   `02-reports/guion_estancia_investigacion.qmd:363` (12/06/2025 → 27/05/2026 = 349 días).

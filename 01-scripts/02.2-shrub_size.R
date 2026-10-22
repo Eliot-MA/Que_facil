@@ -30,7 +30,7 @@ df.shrubs.gps <- df.shrubs.gps |>
 # Merge
 df <- merge(
   x = df.shrubs.gps   |> select(Individual, X, Y, Elevation, Elevation_c), 
-  y = df.surv.par.vol |> select(Individual, zone, microsite, quercus_sp, height, diam_1, diam_2, survival, surv_date), 
+  y = df.surv.par.vol |> select(Individual, Environment, microsite, quercus_sp, height, diam_1, diam_2, survival, surv_date), 
   by = "Individual"
 )
 
@@ -50,7 +50,7 @@ df |>
 
 # Data with only shrubs
 df.only.shrubs <- df |> 
-  select(Individual, X, Y, Elevation, zone, microsite, height, diam_1, diam_2, volume) |> 
+  select(Individual, X, Y, Elevation, Environment, microsite, height, diam_1, diam_2, volume) |> 
   filter_out(microsite == "gap") |> 
   unique()
 
@@ -74,7 +74,7 @@ crear_raincloud <- function(data, y_var, x_var = NULL) {
       theme(axis.title.x = element_blank(), 
             axis.text.x = element_blank())
   } else {
-    # --- Caso 2: Análisis Bivariado (Zone o Microsite) ---
+    # --- Caso 2: Análisis Bivariado (Environment o Microsite) ---
     p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]])) + 
       stat_halfeye(adjust = .5, width = .6, .width = 0, justification = -.2, point_colour = NA) + 
       geom_boxplot(width = .15, outlier.shape = NA) +
@@ -91,20 +91,20 @@ variables <- c("height", "diam_1", "diam_2", "volume")
 # Fila 1: Univariados
 lista_univariados <- lapply(variables, function(v) crear_raincloud(df.only.shrubs, v))
 
-# Fila 2: Bivariados por Zone
-lista_zone <- lapply(variables, function(v) crear_raincloud(df.only.shrubs, v, "zone"))
+# Fila 2: Bivariados por Environment
+lista_environment <- lapply(variables, function(v) crear_raincloud(df.only.shrubs, v, "Environment"))
 
 # Fila 3: Bivariados por Microsite
 lista_microsite <- lapply(variables, function(v) crear_raincloud(df.only.shrubs, v, "microsite"))
 
 # Combinamos todas las listas de gráficos en una sola
-todos_los_graficos <- c(lista_univariados, lista_zone, lista_microsite)
+todos_los_graficos <- c(lista_univariados, lista_environment, lista_microsite)
 
 # Creamos la composición final
 grafico_final <- wrap_plots(todos_los_graficos, ncol = 4) + 
   plot_annotation(
     title = "Shrub dimension exploratory analysis (df.only.shrubs)",
-    subtitle = "Row 1: Univariant | Row 2: per zone | Row 3: per microsite",
+    subtitle = "Row 1: Univariant | Row 2: per Environment | Row 3: per microsite",
     theme = theme(plot.title = element_text(size = 16, face = "bold"))
   )
 
@@ -119,7 +119,7 @@ ggsave(
   units = "mm"
 )
 
-# Zone*microsite
+# Environment*microsite
 crear_raincloud_facetado <- function(data, x_var, y_var, facet_var, es_primero = FALSE) {
   
   p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]])) + 
@@ -165,7 +165,7 @@ lista_graficos <- lapply(seq_along(variables), function(i) {
     data = df.only.shrubs,
     x_var = "microsite",
     y_var = variables[i],
-    facet_var = "zone",
+    facet_var = "Environment",
     es_primero = (i == 1) # TRUE solo para el primero ('height')
   )
 })
@@ -173,7 +173,7 @@ lista_graficos <- lapply(seq_along(variables), function(i) {
 # Unimos los 4 gráficos en 1 sola fila
 grafico_final <- wrap_plots(lista_graficos, nrow = 1) + 
   plot_annotation(
-    title = "Shrub dimensions per microsite and zone",
+    title = "Shrub dimensions per microsite and Environment",
     theme = theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
   )
 
@@ -193,12 +193,12 @@ ggsave(
 ggplot(df.only.shrubs, aes(x = Elevation, y = volume)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_grid(zone~microsite) +
+  facet_grid(Environment~microsite) +
   theme_bw()
 
-summary(lm(volume ~ Elevation*microsite*zone, data = df.only.shrubs))
+summary(lm(volume ~ Elevation*microsite*Environment, data = df.only.shrubs))
 
-anova(lm(volume ~ Elevation*microsite*zone, data = df.only.shrubs))
+anova(lm(volume ~ Elevation*microsite*Environment, data = df.only.shrubs))
 
 df.pca <- df.only.shrubs |> select(Elevation, height, diam_1, diam_2)
 pca <- prcomp(df.pca, 
@@ -216,7 +216,7 @@ fviz_pca_biplot(pca)
 ## pred.mass
 
 df.surv.vol <- df.surv.par.vol |> 
-  select(Individual, zone, microsite, 
+  select(Individual, Environment, microsite, 
          survival, quercus_sp, 
          height, diam_1, diam_2, volume, pred.mass) |> 
   filter(microsite != "gap") |> 
@@ -238,12 +238,12 @@ p2 <- ggplot(df.surv.vol, aes(y = survival, x = pred.mass)) +
 
 p3 <- ggplot(df.surv.vol, aes(x = factor(survival), y = pred.mass)) +
   geom_boxplot() + geom_violin(alpha = .2) + geom_jitter(alpha = .2, width = .2) +
-  scale_y_log10() + facet_grid(zone ~ microsite) + theme_bw() + labs(title = "Por zona y micrositio")
+  scale_y_log10() + facet_grid(Environment ~ microsite) + theme_bw() + labs(title = "Por zona y micrositio")
 
 p4 <- ggplot(df.surv.vol, aes(y = survival, x = pred.mass)) +
   geom_point() +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE, color = "black") +
-  scale_x_continuous(trans = "log10") + facet_grid(zone ~ microsite) + theme_bw() + labs(title = "Logística por zona y micrositio")
+  scale_x_continuous(trans = "log10") + facet_grid(Environment ~ microsite) + theme_bw() + labs(title = "Logística por zona y micrositio")
 
 # Organización: 2 columnas, fila superior = globales, fila inferior = facetados
 figura_mass <- (p1 | p2) / (p3 | p4) +
@@ -268,12 +268,12 @@ p2 <- ggplot(df.surv.vol, aes(y = survival, x = volume)) +
 
 p3 <- ggplot(df.surv.vol, aes(x = factor(survival), y = volume)) +
   geom_boxplot() + geom_violin(alpha = .2) + geom_jitter(alpha = .2, width = .2) +
-  scale_y_log10() + facet_grid(zone ~ microsite) + theme_bw() + labs(title = "Por zona y micrositio")
+  scale_y_log10() + facet_grid(Environment ~ microsite) + theme_bw() + labs(title = "Por zona y micrositio")
 
 p4 <- ggplot(df.surv.vol, aes(y = survival, x = volume)) +
   geom_point() +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE, color = "black") +
-  scale_x_continuous(trans = "log10") + facet_grid(zone ~ microsite) + theme_bw() + labs(title = "Logística por zona y micrositio")
+  scale_x_continuous(trans = "log10") + facet_grid(Environment ~ microsite) + theme_bw() + labs(title = "Logística por zona y micrositio")
 
 # Organización: 2 columnas, fila superior = globales, fila inferior = facetados
 figura_mass <- (p1 | p2) / (p3 | p4) +

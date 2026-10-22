@@ -20,8 +20,7 @@ df.growth.volume <- df.growth.volume |>
   filter(Date == "t1") |> 
   rename(
     Individual = Arbusto, 
-    quercus_position = Posición,
-    Environment = Ambiente)
+    quercus_position = Posición)
 
 df.growth.volume <- df.growth.volume |>
   mutate(

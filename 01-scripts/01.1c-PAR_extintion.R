@@ -12,7 +12,7 @@ df.par <- df.surv.par.vol |>
   ) |> 
   dplyr::rename(
     Individual   = micrositio,
-    environment  = ambiente,
+    Environment  = ambiente,
     microsite    = especie_facilitadora, 
     par_1        = luminosidad_1, 
     par_2        = luminosidad_2, 
@@ -21,7 +21,8 @@ df.par <- df.surv.par.vol |>
     par_posi     = posicion_luminosidad
   ) |> 
   mutate(microsite = recode(microsite, "claro" = "open", "Cistus sp." = "Cistus ladanifer"),
-         zone      = recode(environment, "abierto" = "gap", "pinar" = "pine canopy")
+         Environment = recode(Environment, "abierto" = "gap", "pinar" = "pine canopy"),
+         Environment = na_if(Environment, "")
   ) |> 
   unique()
 
@@ -39,7 +40,7 @@ df.par <- df.par |>
   group_by(Individual, par_posi) |> 
   summarise(
     n = n(), 
-    zone = first(zone), 
+    Environment = first(Environment), 
     microsite = first(microsite),
     par = mean(par)) |> 
   ungroup()
@@ -72,8 +73,8 @@ df.par <- merge(x = df.par,
                 by.x = "Individual", 
                 by.y = "micrositio")
 
-df.par.gap <- df.par |> filter(zone == "gap")
-df.par.pine <- df.par |> filter(zone == "pine canopy")
+df.par.gap <- df.par |> filter(Environment == "gap")
+df.par.pine <- df.par |> filter(Environment == "pine canopy")
 
 
 ## 3. Compute absolute time difference ----
@@ -153,8 +154,8 @@ df.par.pine.ext <- df.par.pine |>
 # 3. Create dataframe with only extinction ----
 df.ext <-
   rbind(
-    df.par.gap.ext |> select(Individual, zone, microsite, hora_luminosidad, extinction),
-    df.par.pine.ext |> select(Individual, zone, microsite, hora_luminosidad, extinction)
+    df.par.gap.ext |> select(Individual, Environment, microsite, hora_luminosidad, extinction),
+    df.par.pine.ext |> select(Individual, Environment, microsite, hora_luminosidad, extinction)
   )
 
 # 4. Include extintion in the original dataframe ----

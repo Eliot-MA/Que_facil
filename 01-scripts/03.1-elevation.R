@@ -76,7 +76,7 @@ table(df.shrubs.gps$microsite_code, df.shrubs.gps$X.class)
 
 df <- merge(
   x = df.shrubs.gps   |> select(Individual, X, Y, Elevation, ElevationClass1, ElevationClass2, Elevation_c), 
-  y = df.surv.par.vol |> select(Individual, zone, microsite, quercus_sp, height, diam_1, diam_2, survival, surv_date), 
+  y = df.surv.par.vol |> select(Individual, Environment, microsite, quercus_sp, height, diam_1, diam_2, survival, surv_date), 
   by = "Individual"
 )
 
@@ -91,12 +91,12 @@ df <- df |>
 library(waffle)
 waffle.chart <- 
 ggplot(data = df |> 
-  group_by(zone, microsite, ElevationClass1) |> 
+  group_by(Environment, microsite, ElevationClass1) |> 
   summarise(
     n = n()
   ), aes(fill = microsite, values = n)) +
   geom_waffle(color = "white", size = 0.8, n_rows = 6) +
-  facet_grid(ElevationClass1~zone) +
+  facet_grid(ElevationClass1~Environment) +
   theme_void() +
   scale_fill_manual(values = c("#69b3a2", "#404080", "#FFA07A", "#FFD700", "#FF6347", "#4682B4"))
 
@@ -125,7 +125,7 @@ for (i in 1:length(species)) {
     geom_boxplot() +
     geom_violin(alpha = 0.2) +
     geom_jitter() +
-    facet_grid(zone~microsite) +
+    facet_grid(Environment~microsite) +
     labs(title = species[i])
   print(p)
   ggsave(
@@ -152,19 +152,19 @@ library(performance)
 # ¿Best model to account for elevation effect?
 
 m1 <- glmmTMB(survival ~ Elevation_c +
-                zone * microsite * quercus_sp +
+                Environment * microsite * quercus_sp +
                 (1|Individual), 
               data = df, 
               family = binomial(link = "logit"))
 
 m2 <- glmmTMB(survival ~ ElevationClass1 +
-                zone * microsite * quercus_sp +
+                Environment * microsite * quercus_sp +
                 (1|Individual), 
               data = df, 
               family = binomial(link = "logit"))
 
 m3 <- glmmTMB(survival ~ ElevationClass2 + 
-                zone * microsite * quercus_sp +
+                Environment * microsite * quercus_sp +
                 (1|Individual), 
               data = df, 
               family = binomial(link = "logit"))
@@ -178,7 +178,7 @@ library(mgcv)
 
 gam <- gam(
   survival ~ s(Elevation_c) +
-    zone * microsite * quercus_sp +
+    Environment * microsite * quercus_sp +
     s(Individual, bs = "re"),
   data = df,
   family = binomial(link = "logit"),
@@ -187,7 +187,7 @@ gam <- gam(
 
 glm <- gam(
   survival ~ Elevation_c +
-    zone * microsite * quercus_sp +
+    Environment * microsite * quercus_sp +
     s(Individual, bs = "re"),
   data = df,
   family = binomial(link = "logit"),
@@ -196,7 +196,7 @@ glm <- gam(
 
 glm2 <- gam(
   survival ~ poly(Elevation_c, degree = 2) +
-    zone * microsite * quercus_sp +
+    Environment * microsite * quercus_sp +
     s(Individual, bs = "re"),
   data = df,
   family = binomial(link = "logit"),
@@ -216,7 +216,7 @@ library(glmmTMB)
 
 # Does elevation have an effect?
 
-m_full <- glmmTMB(survival ~ quercus_sp + Elevation_c*microsite*zone +
+m_full <- glmmTMB(survival ~ quercus_sp + Elevation_c*microsite*Environment +
                     (1|Individual), data = df, family = binomial(link = "logit"))
 
 parameters(m_full)
@@ -280,7 +280,7 @@ p2 <-
 plot_model(
   glmm1,
   type = "pred",
-  terms = c("microsite", "zone")
+  terms = c("microsite", "Environment")
 ) + coord_flip()
 
 ggsave(
@@ -310,7 +310,7 @@ p4 <-
 plot_model(
   glmm2, 
   type = "pred", 
-  terms = c("Elevation_c[all]", "zone"), 
+  terms = c("Elevation_c[all]", "Environment"), 
   show.data = TRUE
 )
 

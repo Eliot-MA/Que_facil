@@ -5,16 +5,17 @@ df.vol <- rD.vol |>
   dplyr::select(micrositio, ambiente, especie_facilitadora, especie_facilitada, # Categorical var
                 altura, diametro_1, diametro_2) |> 
   dplyr::rename(
-    Individual = micrositio,
-    zone       = ambiente,
-    microsite  = especie_facilitadora, 
+    Individual  = micrositio,
+    Environment = ambiente,
+    microsite   = especie_facilitadora, 
     quercus_sp = especie_facilitada, 
     height     = altura, 
     diam_1     = diametro_1, 
     diam_2     = diametro_2
   ) |> 
   mutate(microsite = recode(microsite, "claro" = "gap", "Cistus sp." = "Cistus ladanifer"),
-         zone      = recode(zone, "abierto" = "open area", "pinar" = "pine canopy")
+         Environment = recode(Environment, "abierto" = "gap", "pinar" = "pine canopy"),
+         Environment = na_if(Environment, "")
   ) |> unique()
 
 ### Calculate volume

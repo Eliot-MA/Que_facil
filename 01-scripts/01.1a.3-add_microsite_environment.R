@@ -76,10 +76,16 @@ joined <- fuzzy_left_join(
 
 # limpiar columnas y filas no necesarias: 
 final <- joined %>%
-  select(individuo, micrositio, ambiente, 
+  select(individuo, micrositio, Environment = ambiente,
          tiempo, temperatura, humedad, 
          aparato, carpeta) %>% # columnas de interés
-  filter(!if_any(c(ambiente, micrositio, individuo), is.na))   # las filas con NA en estas columnas son mediciones que no se realizaron en ningún micrositio
+  filter(!if_any(c(Environment, micrositio, individuo), is.na)) %>%   # las filas con NA en estas columnas son mediciones que no se realizaron en ningún micrositio
+  mutate(
+    Environment = recode(Environment,
+                         "abierto" = "gap",
+                         "abierta" = "gap",
+                         "pinar"   = "pine canopy")
+  )
 
 #############################
 # 3) Comprobaciones finales #
@@ -92,13 +98,13 @@ txt <- function(x, n = 10) {
 
 # 1) tamaños básicos
 total_combined <- nrow(combined)
-total_joined   <- nrow(joined)   # antes de filtrar NA en ambiente
-total_final    <- nrow(final)    # después de filtrar NA en ambiente
+total_joined   <- nrow(joined)   # antes de filtrar NA en Environment
+total_final    <- nrow(final)    # después de filtrar NA en Environment
 
 cat("=== Summary: length ===\n")
 cat("Rows in combined (original): ", total_combined, "\n")
 cat("Rows in joined (result fuzzy_left_join, before filtering NA): ", total_joined, "\n")
-cat("Rows in final (after selecting columns and filtering NA in ambiente): ", total_final, "\n\n")
+cat("Rows in final (after selecting columns and filtering NA in Environment): ", total_final, "\n\n")
 
 # 2) Filas de combined que se asignaron a MÁS DE UNA fila de meta (posible multiasignación/duplicado)
 multi_match_counts <- joined %>%

@@ -22,7 +22,7 @@ df.wood_density <- rD.wood_density |>
     temperature = Temperatura..ºC.
   ) |> 
   mutate(
-    Environment = if_else(str_detect(ID, "p"), "pine forest", "open"), 
+    Environment = if_else(str_detect(ID, "p"), "pine canopy", "gap"), 
     Volume = fresh.weight.1 - fresh.weight.2, 
     wood.density = dry.weight / Volume
   )

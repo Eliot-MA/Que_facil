@@ -22,7 +22,7 @@ df.shrubs.gps <- df.shrubs.gps |>
 # Merge
 df <- merge(
   x = df.shrubs.gps   |> select(Individual, X, Y, Elevation, Elevation_c), 
-  y = df.surv.par.vol |> select(Individual, zone, microsite, quercus_sp, height, diam_1, diam_2, volume, pred.mass, survival, surv_date), 
+  y = df.surv.par.vol |> select(Individual, Environment, microsite, quercus_sp, height, diam_1, diam_2, volume, pred.mass, survival, surv_date), 
   by = "Individual"
 )
 
@@ -84,7 +84,7 @@ ggplot(df,
 # modelos ----
 library(glmmTMB)
 
-m_full <- glmmTMB(survival ~ zone*microsite*quercus_sp*Elevation_c*log.pred.mass_c +
+m_full <- glmmTMB(survival ~ Environment*microsite*quercus_sp*Elevation_c*log.pred.mass_c +
     (1 | Individual),
   data = df,
   family = binomial()
@@ -95,22 +95,22 @@ library(car)
 
 drop1(m_full, test = "Chisq")
 # Iteración manual
-m2 <- update(m_full, . ~ . - zone:microsite:quercus_sp:Elevation_c:log.pred.mass_c)
+m2 <- update(m_full, . ~ . - Environment:microsite:quercus_sp:Elevation_c:log.pred.mass_c)
 drop1(m2, test = "Chisq")
 
-m3 <- update(m2, . ~ . - zone:microsite:Elevation_c:log.pred.mass_c)
+m3 <- update(m2, . ~ . - Environment:microsite:Elevation_c:log.pred.mass_c)
 drop1(m3, test = "Chisq")
 
-m4 <- update(m3, . ~ . - zone:quercus_sp:Elevation_c:log.pred.mass_c)
+m4 <- update(m3, . ~ . - Environment:quercus_sp:Elevation_c:log.pred.mass_c)
 drop1(m4, test = "Chisq")
 
-m5 <- update(m4, . ~ . - zone:microsite:quercus_sp:log.pred.mass_c)
+m5 <- update(m4, . ~ . - Environment:microsite:quercus_sp:log.pred.mass_c)
 drop1(m5, test = "Chisq")
 
-m6 <- update(m5, . ~ . - zone:microsite:log.pred.mass_c)
+m6 <- update(m5, . ~ . - Environment:microsite:log.pred.mass_c)
 drop1(m6, test = "Chisq")
 
-m7 <- update(m6, . ~ . - zone:Elevation_c:log.pred.mass_c)
+m7 <- update(m6, . ~ . - Environment:Elevation_c:log.pred.mass_c)
 drop1(m7, test = "Chisq")
 
 m8 <- update(m7, . ~ . - microsite:quercus_sp:Elevation_c:log.pred.mass_c)
@@ -128,37 +128,37 @@ drop1(m11, test = "Chisq")
 m12 <- update(m11, . ~ . - Elevation_c:log.pred.mass_c)
 drop1(m12, test = "Chisq")
 
-m13 <- update(m12, . ~ . - zone:quercus_sp:log.pred.mass_c)
+m13 <- update(m12, . ~ . - Environment:quercus_sp:log.pred.mass_c)
 drop1(m13, test = "Chisq")
 
 m14 <- update(m13, . ~ . - quercus_sp:log.pred.mass_c)
 drop1(m14, test = "Chisq")
 
 # Hay una interaccion de 4v sin interacciones signficiativas de 3 vias por debajo, eliminarla y comparar explicitamente
-m15 <- update(m14, . ~ . - zone:microsite:quercus_sp:Elevation_c)
+m15 <- update(m14, . ~ . - Environment:microsite:quercus_sp:Elevation_c)
 AIC(m14, m15)
 drop1(m15, test = "Chisq")
 
 m16 <- update(m15, . ~ . - microsite:quercus_sp:Elevation_c)
 drop1(m16, test = "Chisq")
 
-m17 <- update(m16, . ~ . - zone:microsite:quercus_sp)
+m17 <- update(m16, . ~ . - Environment:microsite:quercus_sp)
 drop1(m17, test = "Chisq")
 
-m18 <- update(m17, . ~ . - zone:microsite:Elevation_c)
+m18 <- update(m17, . ~ . - Environment:microsite:Elevation_c)
 drop1(m18, test = "Chisq")
 
 # Eliminar primero el que más baja el AIC
 m19 <- update(m18, . ~ . - microsite:quercus_sp)
 drop1(m19, test = "Chisq")
 
-m20 <- update(m19, . ~ . - zone:quercus_sp:Elevation_c)
+m20 <- update(m19, . ~ . - Environment:quercus_sp:Elevation_c)
 drop1(m20, test = "Chisq")
 
 m21 <- update(m20, . ~ . - quercus_sp:Elevation_c)
 drop1(m21, test = "Chisq")
 
-m22 <- update(m21, . ~ . - zone:quercus_sp)
+m22 <- update(m21, . ~ . - Environment:quercus_sp)
 drop1(m22, test = "Chisq")
 
 # Confirmar que es el mejor de toda la secuencia
@@ -194,7 +194,7 @@ check_collinearity(modelo)
 library(ggeffects)
 
 # Efecto de zona × microsite
-plot(ggpredict(m22, terms = c("zone", "microsite")))
+plot(ggpredict(m22, terms = c("Environment", "microsite")))
 
 # Efecto de microsite por elevacion
 plot(ggpredict(m22, terms = c("Elevation_c[all]", "microsite")))
@@ -203,13 +203,13 @@ plot(ggpredict(m22, terms = c("Elevation_c[all]", "microsite")))
 plot(ggpredict(m22, terms = c("log.pred.mass_c[all]", "microsite")))
 
 # Efecto de masa por zona
-plot(ggpredict(m22, terms = c("log.pred.mass_c[all]", "zone")))
+plot(ggpredict(m22, terms = c("log.pred.mass_c[all]", "Environment")))
 
 # Efecto de elevacion por zona
-plot(ggpredict(m22, terms = c("Elevation_c[all]", "zone")))
+plot(ggpredict(m22, terms = c("Elevation_c[all]", "Environment")))
 
 # Efecto aislado de zona
-plot(ggpredict(m22, terms = "zone"))
+plot(ggpredict(m22, terms = "Environment"))
 
 # Efecto aislado de quercus_sp
 plot(ggpredict(m22, terms = "quercus_sp"))

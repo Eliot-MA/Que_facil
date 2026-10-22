@@ -41,7 +41,8 @@ df.surv1 <- df.surv1 |>
                             "Cistus sp." = "Cistus ladanifer"),
          Environment      = recode(Environment, 
                                    "abierto" = "gap", 
-                                   "pinar" = "pine canopy")
+                                   "pinar" = "pine canopy"),
+         Environment      = na_if(Environment, "")
   ) |> unique()
 
 # Prepare survival for 2026
@@ -67,7 +68,8 @@ df.surv2 <- df.surv2 |>
                        "Cistus sp." = "Cistus ladanifer"),
     Environment      = recode(Environment, 
                               "abierto" = "gap", 
-                              "pinar" = "pine canopy")
+                              "pinar" = "pine canopy"),
+    Environment      = na_if(Environment, "")
   )
 
 df.surv <- rbind(df.surv1, df.surv2)
@@ -133,7 +135,7 @@ rD.growth2 <- rD.growth2 %>%
 # 3. Pivotar altura y diámetro juntos (mismo id de rama)
 
 long_hd <- rD.growth2 %>%
-  select(row_id, Arbusto, Posición, Especie, Ambiente, Individuo,
+  select(row_id, Arbusto, Posición, Especie, Environment = Ambiente, Individuo,
          Observaciones, matches("^[HD]_\\d_t\\d$")) %>%
   pivot_longer(
     cols = matches("^[HD]_\\d_t\\d$"),
@@ -144,7 +146,9 @@ long_hd <- rD.growth2 %>%
   mutate(
     Date       = paste0("t", Date),
     id_height  = id_rama,
-    id_diameter = id_rama
+    id_diameter = id_rama,
+    Environment = recode(str_trim(Environment), "Abierto" = "gap", "Pinar" = "pine canopy"),
+    Environment = na_if(Environment, "")
   ) %>%
   select(-id_rama)
 
@@ -166,9 +170,9 @@ long_v <- rD.growth2 %>%
 
 rD.growth.long <- long_hd %>%
   left_join(long_v, by = c("row_id", "Date")) %>%
-  mutate(across(c(Arbusto, Posición, Especie, Ambiente, Individuo,
+  mutate(across(c(Arbusto, Posición, Especie, Environment, Individuo,
                   id_height, id_diameter, Date), as.factor)) %>%
-  select(Arbusto, Posición, Especie, Ambiente, Individuo,
+  select(Arbusto, Posición, Especie, Environment, Individuo,
          Height_cm, id_height,
          Diameter_mm, id_diameter,
          Volume_cm3, Date, Observaciones)
@@ -196,13 +200,13 @@ df.growth <- df.growth |>
 # 8. Calculate growth
 
 df.growth.volume <- df.growth |> 
-  select(Arbusto, Posición, Especie, Ambiente, id_quercus, Volume_cm3, Date) |> 
+  select(Arbusto, Posición, Especie, Environment, id_quercus, Volume_cm3, Date) |> 
   unique() |> 
   filter(Especie != "") |> 
   drop_na()
 
 df.growth.volume.diff <- df.growth.volume |> 
-  select(id_quercus, Arbusto, Posición, Especie, Ambiente, Date, Volume_cm3) |> 
+  select(id_quercus, Arbusto, Posición, Especie, Environment, Date, Volume_cm3) |> 
   pivot_wider(names_from = Date, values_from = Volume_cm3) |> 
   mutate(
     growth_volume = t2 - t1, 
@@ -240,7 +244,7 @@ cat("  - df.growth.volume.diff:", nrow(df.growth.volume.diff), "rows | volume gr
 #   geom_boxplot(width = .1, alpha = .5)
 # 
 # 
-# ggplot(df.growth.volume.diff, aes(x = Ambiente, y = growth_volume)) +
+# ggplot(df.growth.volume.diff, aes(x = Environment, y = growth_volume)) +
 #   geom_violin() +
 #   geom_jitter(width = .1, alpha = .1) +
 #   geom_boxplot(width = .1, alpha = .5)

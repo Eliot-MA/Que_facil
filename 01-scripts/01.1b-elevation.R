@@ -10,19 +10,19 @@ r <- terra::rast("00-data/raw/MDT02-ETRS89-HU30-0486-1-COB2.tif")
 df.shrubs.gps <- read.csv2(file = "00-data/raw/shrubs_gps.csv")
 
 ## Change variable names and
-## codification of zone
+## codification of Environment
 df.shrubs.gps <- df.shrubs.gps |> 
   select(-X.1, -RP) |> 
   rename(
     Individual     = Tratamiento, 
-    Zone           = Ambiente, 
+    Environment    = Ambiente, 
     microsite_code = SP
   ) |> 
   mutate(
-    Zone = recode(
-      Zone, 
-      "abierto" = "open", 
-      "pinar "   = "pine canopy"
+    Environment = recode(
+      stringr::str_trim(Environment), 
+      "abierto" = "gap", 
+      "pinar"   = "pine canopy"
     )
   )
 

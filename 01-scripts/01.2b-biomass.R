@@ -19,7 +19,7 @@ rD.biomass <-
          mass = Peso.seco.arbusto..g., 
          log.volume = Log.Volumen, 
          log.mass = Log.masa, 
-         zone = ambiente, 
+         Environment = ambiente, 
          microsite = Especie) |> 
   mutate(
     microsite = recode(microsite, 
@@ -27,12 +27,14 @@ rD.biomass <-
                        "Cl" = "Cistus ladanifer", 
                        "Rc" = "Rosa canina"
     ),
-    zone = recode(zone, 
-                  "Abierto" = "open area", 
-                  "pinar"   = "pine canopy")
+    Environment = recode(Environment, 
+                         "Abierto" = "gap", 
+                         "abierto" = "gap",
+                         "pinar"   = "pine canopy"),
+    Environment = na_if(Environment, "")
   ) |> 
   mutate(
-    zone = factor(zone), 
+    Environment = factor(Environment), 
     microsite = factor(microsite)
   ) 
 
@@ -44,7 +46,7 @@ df.biomass <- rD.vol |>
                 altura, diametro_1, diametro_2) |> 
   dplyr::rename(
     Individual = micrositio,
-    zone       = ambiente,
+    Environment = ambiente,
     microsite  = especie_facilitadora, 
     quercus_sp = especie_facilitada, 
     height     = altura, 
@@ -52,7 +54,8 @@ df.biomass <- rD.vol |>
     diam_2     = diametro_2
   ) |> 
   mutate(microsite = recode(microsite, "claro" = "gap", "Cistus sp." = "Cistus ladanifer"),
-         zone      = recode(zone, "abierto" = "open area", "pinar" = "pine canopy")
+         Environment = recode(Environment, "abierto" = "gap", "pinar" = "pine canopy"),
+         Environment = na_if(Environment, "")
   ) |> unique()
 
 ### Calculate volume
@@ -66,7 +69,7 @@ df.biomass <- df.biomass |>
 
 
 # Models
-m_full <- glmmTMB(log.mass ~ log.volume * microsite * zone,
+m_full <- glmmTMB(log.mass ~ log.volume * microsite * Environment,
                   data = rD.biomass)
 
 
@@ -77,7 +80,7 @@ modelo <- get.models(dd, subset = 1)[[1]]
 # easystats::model_dashboard(modelo, output_dir = "07-html/", output_file = "dashborad_model_biomass.html", browse_html = FALSE, quiet = TRUE)
 
 results_biomass <- rD.biomass |>
-  group_by(microsite, zone) |>
+  group_by(microsite, Environment) |>
   nest() |>                                              # crea list-column 'data'
   mutate(
     model  = map(data, ~ glm(mass ~ volume, data = .x, family = Gamma(link = "log"))),
@@ -93,18 +96,18 @@ df.biomass <- df.biomass |>
 
 df.model <- 
   df.biomass |> 
-  select(Individual, volume, microsite, zone) |> 
+  select(Individual, volume, microsite, Environment) |> 
   filter(microsite != "gap") |> 
   droplevels() |> 
   drop_na() |> 
   unique()
 
 predictions <- df.model |>
-  group_by(microsite, zone) |>
+  group_by(microsite, Environment) |>
   nest() |>
   left_join(
-    results_biomass |> select(microsite, zone, model),
-    by = c("microsite", "zone")
+    results_biomass |> select(microsite, Environment, model),
+    by = c("microsite", "Environment")
   ) |>
   mutate(
     pred.mass = map2(model, data, ~ predict(.x, newdata = .y, type = "response"))
@@ -113,11 +116,11 @@ predictions <- df.model |>
 
 # Prediction validation
 predictions.validation <- rD.biomass |>
-  group_by(microsite, zone) |>
+  group_by(microsite, Environment) |>
   nest() |>
   left_join(
-    results_biomass |> select(microsite, zone, model),
-    by = c("microsite", "zone")
+    results_biomass |> select(microsite, Environment, model),
+    by = c("microsite", "Environment")
   ) |>
   mutate(
     pred.mass = map2(model, data, ~ predict(.x, newdata = .y, type = "response"))
@@ -167,10 +170,10 @@ predictive.r2 <- 1 - sum((predictions.validation$mass - predictions.validation$p
 df.biomass<- df.biomass |> 
   left_join(predictions |> select(Individual, pred.mass), 
             by = "Individual") |> 
-  select(-zone.y, -microsite.y) |> 
+  select(-Environment.y, -microsite.y) |> 
   rename(
-    "zone" =     "zone.x",
-    "microsite" = "microsite.x"
+    "Environment" = "Environment.x",
+    "microsite"   = "microsite.x"
   )
 
 cat(
