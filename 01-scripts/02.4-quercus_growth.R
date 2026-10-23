@@ -85,11 +85,11 @@ summ.quercus.growth <- bind_rows(
 ) |>
   relocate(variable)
 
-write.csv2(
-  summ.quercus.growth,
-  file = "00-data/processed/summ.quercus_growth.csv",
-  row.names = FALSE
-)
+# write.csv2(
+#   summ.quercus.growth,
+#   file = "00-data/processed/summ.quercus_growth.csv",
+#   row.names = FALSE
+# )
 
 plot_growth <- function(data, x, y, ylab, title) {
   ggplot(data, aes(x = .data[[x]], y = .data[[y]], fill = .data[[x]])) +
@@ -133,21 +133,21 @@ fig_volume <- (p_volume_species | p_volume_environment) /
     subtitle = "Absolute change (t2 - t1) and log ratio by species, canopy and microsite"
   )
 
-ggsave(
-  filename = "08-img/quercus_growth_volume_distributions.png",
-  plot = fig_volume,
-  width = 13,
-  height = 9,
-  dpi = 300
-)
+# ggsave(
+#   filename = "08-img/quercus_growth_volume_distributions.png",
+#   plot = fig_volume,
+#   width = 13,
+#   height = 9,
+#   dpi = 300
+# )
 
-ggsave(
-  filename = "08-img/quercus_growth_volume_distributions.pdf",
-  plot = fig_volume,
-  width = 297,
-  height = 210,
-  units = "mm"
-)
+# ggsave(
+#   filename = "08-img/quercus_growth_volume_distributions.pdf",
+#   plot = fig_volume,
+#   width = 297,
+#   height = 210,
+#   units = "mm"
+# )
 
 p_pairs <- ggplot(
   df.growth.volume.eda,
@@ -176,13 +176,13 @@ p_pairs <- ggplot(
   ) +
   theme_light()
 
-ggsave(
-  filename = "08-img/quercus_growth_volume_pairs.png",
-  plot = p_pairs,
-  width = 10,
-  height = 5,
-  dpi = 300
-)
+# ggsave(
+#   filename = "08-img/quercus_growth_volume_pairs.png",
+#   plot = p_pairs,
+#   width = 10,
+#   height = 5,
+#   dpi = 300
+# )
 
 p_initial_size <- ggplot(
   df.growth.volume.eda,
@@ -201,13 +201,13 @@ p_initial_size <- ggplot(
   ) +
   theme_light()
 
-ggsave(
-  filename = "08-img/quercus_growth_initial_size.png",
-  plot = p_initial_size,
-  width = 10,
-  height = 5,
-  dpi = 300
-)
+# ggsave(
+#   filename = "08-img/quercus_growth_initial_size.png",
+#   plot = p_initial_size,
+#   width = 10,
+#   height = 5,
+#   dpi = 300
+# )
 
 p_height_species <- plot_growth(
   df.growth.twig.eda, "quercus_sp", "height_growth",
@@ -240,13 +240,13 @@ fig_twig <- (p_height_species | p_diam_species) /
     subtitle = "Height and diameter increments by species and canopy"
   )
 
-ggsave(
-  filename = "08-img/quercus_growth_twig_increments.png",
-  plot = fig_twig,
-  width = 13,
-  height = 9,
-  dpi = 300
-)
+# ggsave(
+#   filename = "08-img/quercus_growth_twig_increments.png",
+#   plot = fig_twig,
+#   width = 13,
+#   height = 9,
+#   dpi = 300
+# )
 
 p_negative <- df.growth.volume.eda |>
   group_by(quercus_sp, Environment) |>
@@ -266,13 +266,13 @@ p_negative <- df.growth.volume.eda |>
   ) +
   theme_light()
 
-ggsave(
-  filename = "08-img/quercus_growth_negative.png",
-  plot = p_negative,
-  width = 8,
-  height = 5,
-  dpi = 300
-)
+# ggsave(
+#   filename = "08-img/quercus_growth_negative.png",
+#   plot = p_negative,
+#   width = 8,
+#   height = 5,
+#   dpi = 300
+# )
 
 cat("Quercus growth EDA completed.\n")
 cat("Volume growth rows:", nrow(df.growth.volume.eda), "\n")
