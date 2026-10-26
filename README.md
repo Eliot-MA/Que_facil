@@ -15,7 +15,8 @@ thematic modules, and each module sources the individual analysis scripts.
 │   │   ├── 01.1a.3-add_microsite_environment.R
 │   │   └── 01.1a.4-compute_derived_variables.R
 │   ├── 01.1b-elevation.R
-│   └── 01.1c-PAR_extintion.R
+│   ├── 01.1c-PAR_extintion.R
+│   └── 01.1d-soil.R
 └── 01.2-biotic.R
     ├── 01.2a-survival_growth.R
     ├── 01.2b-biomass.R
@@ -26,7 +27,9 @@ thematic modules, and each module sources the individual analysis scripts.
 ├── 02.1-elevation.R
 ├── 02.2-shrub_size.R
 ├── 02.3-extinction.R
-└── 02.4-quercus_growth.R
+├── 02.4-quercus_growth.R
+├── 02.5-sla.R
+└── 02.6-soil.R
 
 03-models.R     # statistical models (orchestrator, WIP)
 ├── 03.1-elevation.R
@@ -45,7 +48,7 @@ thematic modules, and each module sources the individual analysis scripts.
 ### Workflow
 
 - **`01-load_data.R`** loads the datasets and initializes the pipeline.
-- **`01.1-abiotic.R`** loads abiotic variables: microclimate, elevation, and PAR/extinction.
+- **`01.1-abiotic.R`** loads abiotic variables: microclimate, elevation, PAR/extinction, and soil (pH, texture, and nutrients).
 - **`01.2-biotic.R`** loads biotic variables: survival/growth, biomass, SLA, and size.
 - **`02-eda.R`** runs the exploratory analyses.
 - **`03-models.R`** fits the statistical models.

@@ -9,3 +9,7 @@ source("01-scripts/01.1b-elevation.R")
 # 3. Load PAR and extintion ----
 
 source("01-scripts/01.1c-PAR_extintion.R")
+
+# 4. Load soil ----
+
+source("01-scripts/01.1d-soil.R")

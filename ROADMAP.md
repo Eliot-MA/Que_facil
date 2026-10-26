@@ -86,8 +86,8 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 > debilidad, es una tarea de migración pendiente: 6.0.1).
 
 ### 6.0 — Migración de suelo y arreglos previos
-- [ ] **6.0.1** Crear `01-scripts/01.1d-edaphic.R` (loader de suelo: humedad, textura, nutrientes)
-  siguiendo la convención `raw/`→`processed/`; engancharlo a `01.1-abiotic.R`; actualizar `00-data/README.md`.
+- [~] **6.0.1** Loader de suelo `01-scripts/01.1d-soil.R` (pH, textura y nutrientes) enganchado a
+  `01.1-abiotic.R` y documentado en `00-data/README.md`; pendiente la humedad (`soil_mo_calcination.txt`).
 - [ ] **6.0.2** Arreglar la fecha de `t1` de crecimiento (`01.2a-survival_growth.R:85`, `TODO`).
 - [ ] **6.0.3** Corregir la fila con `Fecha segunda medicion = jul-26` y las filas sin especie/ambiente en `growth.csv`;
   revisar las 8 filas vacías de `vol_par_surv.csv`.
@@ -157,4 +157,4 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 - [ ] **6.F.1** `01-scripts/_functions.R`: `fit_survival_model()`, `fit_growth_model()` (DHARMa +
   colinealidad + R² embebidos) y helper de selección si se mantiene `drop1`.
 - [ ] **6.F.2** Rellenar `03-models.R` como orquestador que declara los modelos candidatos (6.B, 6.C, 6.D).
-- [ ] **6.F.3** Nuevos scripts: `02.4-pca_mechanistic.R`, `03.7-growth_models.R`, `03.8-mechanistic_models.R`.
+- [ ] **6.F.3** Nuevos scripts: `02.7-pca_mechanistic.R`, `03.7-growth_models.R`, `03.8-mechanistic_models.R`.

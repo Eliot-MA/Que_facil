@@ -31,6 +31,9 @@ file names listed below.
 | `raw/par_shrubs_time_open.csv` | `01.1c-PAR_extintion.R` | PAR time series under open gap (**latin1**). |
 | `raw/par_shrubs_time_pine.csv` | `01.1c-PAR_extintion.R` | PAR time series under pine canopy (**latin1**). |
 | `raw/datos_humedad_temperatura_tamajon.csv` | `01.1a.3-add_microsite_environment.R` | Datalogger metadata (**latin1**, bytes are not valid UTF-8). |
+| `raw/soil_ph.csv` | `01.1d-soil.R` | Soil pH for the open-area samples (`CODIGO MUESTRA`, `pH`). |
+| `raw/soil_texture.csv` | `01.1d-soil.R` | Soil texture (clay, silt, sand) for the open-area samples. |
+| `raw/soil_nutrients.csv` | `01.1d-soil.R` | Soil organic matter, N, P and K for the labelled microsites. |
 | `raw/dataloggers/*.xlsx` | `01.1a.1-merge_dataloggers.R` | Raw datalogger exports, one subfolder per campaign (one sheet named `Lista` each). |
 | `raw/MDT02-ETRS89-HU30-0486-1-COB2.tif` | `01.1b-elevation.R` | Digital terrain model (5 m). |
 | `raw/PNOA_MDT05_ETRS89_HU30_0486_LID.tif` | `Results01_Elevation.qmd`, `Results02_Shrub_size.qmd` | Digital terrain model (5 m, LIDAR). |
@@ -38,7 +41,9 @@ file names listed below.
 ### Present in `raw/` but not referenced by any script
 
 `datos_biomasa_tamajon.xlsx`, `Plantulas_alturas_arbustos.xlsx` — provided
-datasets kept here for reference; no active script reads them.
+datasets kept here for reference; no active script reads them. The same applies
+to `soil_mo_calcination.txt` (soil organic matter by calcination), which is not
+loaded yet.
 
 ## `processed/` — outputs written by the pipeline
 
