@@ -60,8 +60,24 @@ loaded yet.
 pipeline (`01.2e-RII.R`, now archived in `05-supplementary/_archive/`, which
 still writes/reads it under this path). These are kept for reference only.
 
-## Rule of thumb
+## Variable name standardization 
 
-- If a script **reads** it and no script **writes** it → `raw/`.
-- If a script **writes** it → `processed/`.
-- Never write into `raw/`.
+When variables are renamed in scripts, the following mappings are used across the pipeline. Add new entries here when renaming appears in a script. 
+
+| Raw file | Original name | Standardized name | Notes |
+| --- | --- | --- | --- |
+| `vol_par_surv.csv` | `micrositio` | `Individual` | Main ID across datasets. |
+| `vol_par_surv.csv` | `ambiente` | `Environment` | Recoded to `gap` / `pine canopy`. |
+| `vol_par_surv.csv` | `especie_facilitadora` | `microsite` | Nurse shrub species, or `open`. |
+| `vol_par_surv.csv` | `especie_facilitada` | `quercus_sp` | Quercus species. |
+| `vol_par_surv.csv` | `altura`, `diametro_1`, `diametro_2` | `height`, `diam_1`, `diam_2` | Used to calculate ellipsoid volume. |
+| `vol_par_surv.csv` | `supervivencia`, `fecha_supervivencia` | `survival`, `surv_date` | Census response and date. |
+| `sup_growth_may2026.csv` | `Arbusto`, `Ambiente`, `Especie.arbusto`, `Quercinea`, `Supervivencia`, `Fecha` | `Individual`, `Environment`, `microsite`, `quercus_sp`, `survival`, `surv_date` | Merged with `vol_par_surv.csv`. |
+| `shrub_biomass.csv` | `Volumen.arbusto..m3.`, `Peso.seco.arbusto..g.` | `volume`, `mass` | Allometric data. |
+| `shrub_biomass.csv` | `Log.Volumen`, `Log.masa` | `log.volume`, `log.mass` | Log-transformed. |
+| `growth.csv` | `Arbusto`, `Posición`, `Especie`, `Ambiente`, `Individuo`, `Observaciones` | `Individual`, `quercus_position`, `quercus_sp`, `Environment`, `quercus_tag`, `observations` |  |
+| `growth.csv` | `h1..cm.`/`D1..mm.` ... `H4.2`/`D4.2` | `H_1_t1`/`D_1_t1` ... `H_4_t2`/`D_4_t2` | Per twig (`_1.._4`) and time (`_t1`, `_t2`). |
+| `growth.csv` | `Vtallo..cm3.`, `Vtallo.2.Cm.` | `V_t1`, `V_t2` | Stem volume per individual/time. |
+| `soil_ph.csv` / `soil_texture.csv` / `soil_nutrients.csv` | `CODIGO.MUESTRA` / `Codigo.Muestra` | `Individual` | Soil sample ID linked to individuals. |
+| `soil_texture.csv` | `X..limo`, `X.arcilla`, `X.arena` | `prop_silt`, `prop_clay`, `prop_sand` | Soil texture proportions. |
+| `soil_nutrients.csv` | `Fosforo..ppm.`, `Potasio..cmol.kg.`, `X.MO.total`, `X.N` | `Phosphorus`, `Potassium`, `Total_MO`, `N` | With units noted via attributes in script. |
