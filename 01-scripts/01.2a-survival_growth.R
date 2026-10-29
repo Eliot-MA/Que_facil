@@ -1,4 +1,4 @@
-cat("This script loads and prepares survival data from two census dates (2025 and 2026),\n")
+cat("This script loads and prepares survival data from three census dates (2025 and 2026),\n")
 cat("cleans and reshapes growth measurements, and computes volume growth for Quercus seedlings.\n\n")
 
 library(dplyr)
@@ -59,9 +59,8 @@ df.surv2 <- df.surv2 |>
     quercus_sp = Quercinea, 
     survival   = Supervivencia, 
     surv_date  = Fecha
-    # Erase "0" in some individual names (A01, A02...)
   ) |> 
-  mutate(
+  mutate( # Erase "0" in some individual names (A01, A02...)
     Individual = sub("([ACJR])0+([1-9][0-9]*)$", "\\1\\2", Individual), 
     microsite = recode(microsite, 
                        "claro" = "open", 
@@ -78,7 +77,8 @@ df.surv <- rbind(df.surv1, df.surv2)
 df.surv <- df.surv |> filter(Individual != "J53_bis")
 
 cat("Survival data merged: n =", nrow(df.surv), "rows,",
-    n_distinct(df.surv$Individual), "unique individuals\n\n")
+    n_distinct(df.surv$Individual), "unique individuals\n", 
+  "Census dates: ",unique(df.surv$surv_date), "\n\n")
 
 glimpse(df.surv)
 
@@ -191,7 +191,7 @@ rD.growth.long <- rD.growth.long %>%
 
 df.growth <- rD.growth.long
 
-# 7. Creat id per quercus individual
+# 7. Create id per quercus individual
 
 df.growth <- df.growth |> 
   mutate(
