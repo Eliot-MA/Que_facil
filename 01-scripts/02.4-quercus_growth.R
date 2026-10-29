@@ -176,6 +176,8 @@ p_pairs <- ggplot(
   ) +
   theme_light()
 
+
+
 # ggsave(
 #   filename = "08-img/quercus_growth_volume_pairs.png",
 #   plot = p_pairs,

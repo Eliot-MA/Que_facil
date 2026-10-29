@@ -65,3 +65,5 @@ rsconnect/
 00-data/**
 !00-data/README.md
 
+# temporal files
+tmp/

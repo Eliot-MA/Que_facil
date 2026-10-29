@@ -57,7 +57,7 @@ Objetivo: que el proyecto corra de principio a fin sin errores de `source()`.
 > RII sobre **crecimiento** (continuo) queda como posible análisis futuro
 > (`05-supplementary/RII_growth.R`).
 - [x] **4.1** Terminar SLA (`01.2c-SLA.R`, hoy "Working on it…") + reporte.
-- [ ] **4.2** Integrar el 3er censo (mayo 2026) en los resultados temporales.
+- [~] **4.2** Integrar el 3er censo (mayo 2026) en los resultados temporales.
 - [x] **4.3** Convergencia y nº óptimo de iteraciones del bootstrap → **superado por la decisión RII**: el RII de supervivencia sale del pipeline; el material de convergencia queda archivado en `05-supplementary/_archive/`.
 - [x] **4.4** Modelos multinomiales mixtos para RII ∈ {−1,0,1} → **descartado**: pierde sentido al retirar el RII de supervivencia.
 - [ ] **4.5** Validar modelos de biomasa Gamma vs otras familias (`Results02:126`).
