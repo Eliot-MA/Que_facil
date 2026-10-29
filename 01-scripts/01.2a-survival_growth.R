@@ -87,6 +87,8 @@ glimpse(df.surv)
 ##
 
 ## ACTUALIZAR PARA INCLUIR FECHA DE MEDICIÓN !!!!!!!!!!!!!!!!!!!!!
+# no sé porqué está este mensaje de arriba, lo dejo por si acaso alguna vez
+# cobra sentido para mí
 
 cat("\n Loading and reshaping growth data...\n")
 
@@ -191,15 +193,28 @@ rD.growth.long <- rD.growth.long %>%
 
 df.growth <- rD.growth.long
 
-# 7. Create id per quercus individual
+# Load tag correction
+source("01-scripts/01.2a.1-correct_seedling_tag_ids.R")
+# Load reliable mapping
+tags_map <- read.csv2("00-data/processed/quercus_id_checked.csv") %>%
+  filter(tag_doubtfull == FALSE) %>%
+  filter(!is.na(quercus_tag_corrected), quercus_tag_corrected != "") %>%
+  distinct(Individual, quercus_sp, quercus_tag_corrected)
 
-df.growth <- df.growth |> 
+# Correct seedling tags
+df.growth <- df.growth %>%
+  inner_join(tags_map, by = c("Individual", "quercus_sp")) %>%
+  mutate(quercus_tag = quercus_tag_corrected) %>%
+  select(-quercus_tag_corrected)
+
+# Rehacer id_quercus con etiqueta corregida
+df.growth <- df.growth %>%
   mutate(
     id_quercus = paste0(
-      case_when(
-        quercus_sp == "Quercus ilex" ~ "E", 
-        quercus_sp == "Quercus faginea" ~ "Q"), 
-      quercus_tag)
+      case_when(quercus_sp == "Quercus ilex" ~ "E",
+                quercus_sp == "Quercus faginea" ~ "Q"),
+      quercus_tag
+    )
   )
 
 # 8. Calculate growth

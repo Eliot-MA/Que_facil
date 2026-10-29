@@ -1,3 +1,6 @@
+cat("==Running script for Quercus ID correction==\n")
+cat("ID tags were verified in the field to resolve some discrepancies\n")
+
 # Setup -------------------------------------------------------------------
 library(tidyverse)
 
@@ -127,69 +130,32 @@ df.tag.checked <- df.tag.checked %>%
     )
   )
 
-# 10) Quick inspection -----------------------------------------------------
+# 10) Summary for filtering ambiguous/reliable tags -------------------------
 
-table(df.tag.checked$tag_doubtufll)
-
-# 11) Summary for filtering ambiguous/reliable tags -------------------------
-cat("\n================== TAG CORRECTIONS SUMMARY ==================\n\n")
-
-# Ambiguous / unresolvable tags (duplicated within same species)
-ambiguous_tags <- df.tag.checked %>%
-  filter(tag_doubtufll == TRUE) %>%
-  filter(!is.na(quercus_tag_corrected), quercus_tag_corrected != "") %>%
-  distinct(Individual, quercus_sp, quercus_tag_corrected, observations) %>%
+ambiguous_tags <- df.tag.checked |>
+  filter(tag_doubtufll == TRUE,
+         !is.na(quercus_tag_corrected), quercus_tag_corrected != "") |>
+  distinct(Individual, quercus_sp, quercus_tag_corrected, observations) |>
   arrange(quercus_sp, quercus_tag_corrected, Individual)
 
-cat("AMBIGUOUS/UNRESOLVABLE TAGS (must be EXCLUDED from posterior analyses):\n")
-cat("  Count (rows):", nrow(ambiguous_tags), "\n")
-cat("  Unique tags (Q. ilex):", ambiguous_tags %>% filter(quercus_sp == "Quercus ilex") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n")
-cat("  Unique tags (Q. faginea):", ambiguous_tags %>% filter(quercus_sp == "Quercus faginea") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n\n")
-
-if (nrow(ambiguous_tags) > 0) {
-  print(as.data.frame(ambiguous_tags))
-} else {
-  cat("  None detected.\n")
-}
-
-cat("\n-------------------------------------------------------------\n\n")
-
-# Reliable tags (to keep)
-reliable_tags <- df.tag.checked %>%
-  filter(tag_doubtufll == FALSE) %>%
-  filter(!is.na(quercus_tag_corrected), quercus_tag_corrected != "") %>%
+reliable_tags <- df.tag.checked |>
+  filter(tag_doubtufll == FALSE,
+         !is.na(quercus_tag_corrected), quercus_tag_corrected != "") |>
   distinct(Individual, quercus_sp, quercus_tag_corrected)
 
-cat("RELIABLE TAGS (keep for posterior analyses):\n")
-cat("  Count (rows):", nrow(reliable_tags), "\n")
-cat("  Unique tags (Q. ilex):", reliable_tags %>% filter(quercus_sp == "Quercus ilex") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n")
-cat("  Unique tags (Q. faginea):", reliable_tags %>% filter(quercus_sp == "Quercus faginea") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n\n")
-
-cat("\n-------------------------------------------------------------\n\n")
-
-# Unverifiable tags (no corrected tag but reason in observations)
-unverifiable_tags <- df.tag.checked %>%
-  filter(is.na(quercus_tag_corrected) | quercus_tag_corrected == "") %>%
-  filter(!is.na(observations), observations != "") %>%
-  distinct(Individual, quercus_sp, Environment, quercus_position, observations) %>%
+unverifiable_tags <- df.tag.checked |>
+  filter(is.na(quercus_tag_corrected) | quercus_tag_corrected == "",
+         !is.na(observations), observations != "") |>
+  distinct(Individual, quercus_sp, Environment, quercus_position, observations) |>
   arrange(quercus_sp, Individual)
 
-cat("UNVERIFIABLE TAGS (quercus_tag_corrected == NA / empty, reason in observations - EXCLUDE):\n")
-cat("  Count (rows):", nrow(unverifiable_tags), "\n")
-cat("  unverifiable_lost_tag:", sum(unverifiable_tags$observations == "unverifiable_lost_tag", na.rm = TRUE), "\n")
-cat("  unverifiable_lost_plant:", sum(unverifiable_tags$observations == "unverifiable_lost_plant", na.rm = TRUE), "\n")
-cat("  ambiguous_* reasons:", unverifiable_tags %>% filter(grepl("^ambiguous", observations)) %>% nrow(), "\n\n")
-
-if (nrow(unverifiable_tags) > 0) {
-  print(as.data.frame(unverifiable_tags))
-} else {
-  cat("  None detected.\n")
-}
-
-cat("\n-------------------------------------------------------------\n\n")
-cat("USAGE:\n")
-cat("  Exclude: df.tag.checked %>% filter(!(tag_doubtufll == TRUE | (is.na(quercus_tag_corrected) | quercus_tag_corrected == \"\")))\n")
-cat("  Or more explicitly: df.tag.checked %>% filter(tag_doubtufll == FALSE & !is.na(quercus_tag_corrected) & quercus_tag_corrected != \"\")\n")
-cat("  Review 'ambiguous_tags' and 'unverifiable_tags' objects above before proceeding to growth/survival analyses.\n\n")
-
-cat("================== END SUMMARY ==========================\n")
+# Compact summary
+cat("Summary: \n")
+cat(sprintf(
+  "[TAGS] Reliable: %d | Ambiguous: %d | Unverifiable: %d\n",
+  nrow(reliable_tags),
+  nrow(ambiguous_tags),
+  nrow(unverifiable_tags)
+))
+cat("Ambiguous and Unverifiable ids will be excluded from growth analyses \n")
+cat("Script for Quercus ID correction executed \n")
