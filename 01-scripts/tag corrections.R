@@ -128,5 +128,45 @@ df.tag.checked <- df.tag.checked %>%
   )
 
 # 10) Quick inspection -----------------------------------------------------
+
 table(df.tag.checked$tag_doubtufll)
-df.tag.checked %>% filter(tag_doubtufll)
+
+# 11) Summary for filtering ambiguous/reliable tags -------------------------
+cat("\n================== TAG CORRECTIONS SUMMARY ==================\n\n")
+
+# Ambiguous / unresolvable tags (duplicated within same species)
+ambiguous_tags <- df.tag.checked %>%
+  filter(tag_doubtufll == TRUE) %>%
+  filter(!is.na(quercus_tag_corrected), quercus_tag_corrected != "") %>%
+  distinct(Individual, quercus_sp, quercus_tag_corrected, observations) %>%
+  arrange(quercus_sp, quercus_tag_corrected, Individual)
+
+cat("AMBIGUOUS/UNRESOLVABLE TAGS (must be EXCLUDED from posterior analyses):\n")
+cat("  Count (rows):", nrow(ambiguous_tags), "\n")
+cat("  Unique tags (Q. ilex):", ambiguous_tags %>% filter(quercus_sp == "Quercus ilex") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n")
+cat("  Unique tags (Q. faginea):", ambiguous_tags %>% filter(quercus_sp == "Quercus faginea") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n\n")
+
+if (nrow(ambiguous_tags) > 0) {
+  print(as.data.frame(ambiguous_tags))
+} else {
+  cat("  None detected.\n")
+}
+
+cat("\n-------------------------------------------------------------\n\n")
+
+# Reliable tags (to keep)
+reliable_tags <- df.tag.checked %>%
+  filter(tag_doubtufll == FALSE) %>%
+  filter(!is.na(quercus_tag_corrected), quercus_tag_corrected != "") %>%
+  distinct(Individual, quercus_sp, quercus_tag_corrected)
+
+cat("RELIABLE TAGS (keep for posterior analyses):\n")
+cat("  Count (rows):", nrow(reliable_tags), "\n")
+cat("  Unique tags (Q. ilex):", reliable_tags %>% filter(quercus_sp == "Quercus ilex") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n")
+cat("  Unique tags (Q. faginea):", reliable_tags %>% filter(quercus_sp == "Quercus faginea") %>% distinct(quercus_tag_corrected) %>% nrow(), "\n\n")
+
+cat("USAGE:\n")
+cat("  Use df.tag.checked %>% filter(tag_doubtufll == FALSE) to exclude ambiguous tags.\n")
+cat("  Review 'ambiguous_tags' object above before proceeding to growth/survival analyses.\n\n")
+
+cat("================== END SUMMARY ==========================\n")
