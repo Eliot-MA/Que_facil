@@ -77,6 +77,22 @@ attr(df.soil.nutrients$Potassium, "units") <- "cmol/kg"
 attr(df.soil.nutrients$Total_MO, "units") <- "%"
 attr(df.soil.nutrients$N, "units") <- "%"
 
+# Unir todo el suelo por Individual
+library(dplyr)
+df_soil <- df.soil.ph %>%
+  dplyr::select(Individual, Environment_ph = Environment, pH) %>%
+  dplyr::full_join(df.soil.texture %>% dplyr::select(Individual, Environment_tex = Environment, prop_silt, prop_clay, prop_sand, Texture), by = "Individual") %>%
+  dplyr::full_join(df.soil.nutrients %>% dplyr::select(Individual, Environment_nut = Environment, microsite, Phosphorus, Potassium, Total_MO, N), by = "Individual") %>%
+  dplyr::mutate(
+    Environment = dplyr::coalesce(Environment_ph, Environment_tex, Environment_nut)
+  ) %>%
+  dplyr::select(-dplyr::any_of(c("Environment_ph", "Environment_tex", "Environment_nut")))
+
+# Guardar
+library(readr)
+readr::write_csv2(df_soil, "00-data/processed/soil.csv")
+cat("Saved: 00-data/processed/soil.csv\n")
+
 cat("Soil data loaded:\n")
 cat("  - df.soil.ph:", nrow(df.soil.ph), "rows\n")
 cat("  - df.soil.texture:", nrow(df.soil.texture), "rows\n")

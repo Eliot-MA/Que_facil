@@ -1,4 +1,5 @@
-source("01-scripts/01.2c-SLA.R")
+library(readr)
+df.sla <- readr::read_csv2("00-data/processed/sla.csv")
 
 full.lm.sla <- lm(SLA ~ shrub * Environment, data = df.sla)
 

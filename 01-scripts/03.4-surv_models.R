@@ -1,11 +1,13 @@
 
 # Load surv and quercus volume
-source("01-scripts/01.2a-survival_growth.R")
-
+library(readr)
 library(tidyverse)
-
-mantener <- c("df.surv", "df.growth", "df.growth.volume")
-rm(list = ls()[!(ls() %in% mantener)])
+df.surv <- readr::read_csv2("00-data/processed/survival.csv")
+df.growth.volume <- readr::read_csv2("00-data/processed/quercus_growth_volume_diff.csv") |>
+  pivot_longer(cols = c(t1, t2), names_to = "growth_stage", values_to = "volume") |>
+  filter(growth_stage == "t1") |>
+  select(Individual, quercus_sp, quercus_position, id_quercus, volume, growth_stage) |>
+  distinct()
 
 
 df.surv <- df.surv |> 
@@ -38,7 +40,7 @@ df.merge <- df.merge |>
                             false = survival)))
 
 # Load shrub biomass
-source("01-scripts/01.2b-biomass.R")
+df.biomass <- readr::read_csv2("00-data/processed/shrub_biomass_predicted.csv")
 
 df.shrub.biomass <- df.biomass |> 
   select(Individual, volume, log.volume, pred.mass) |> 

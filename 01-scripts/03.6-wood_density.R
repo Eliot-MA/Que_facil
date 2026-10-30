@@ -1,4 +1,5 @@
-source("01-scripts/01.2f-wood_density.R")
+library(readr)
+df.wood_density <- readr::read_csv2("00-data/processed/wood_density.csv")
 
 # Saturated model
 full.model <- lm(wood.density ~ Species*Environment, data = df.wood_density)

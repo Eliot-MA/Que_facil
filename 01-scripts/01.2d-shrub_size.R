@@ -25,6 +25,10 @@ df.vol <- df.vol |>
     volume = 4/3 * pi * height/2 * diam_1/2 * diam_2/2
   )
 
+library(readr)
+readr::write_csv2(df.vol, "00-data/processed/shrub_volume.csv")
+cat("Saved: 00-data/processed/shrub_volume.csv\n")
+
 cat("Shrub size loaded in df.vol \n")
 
 glimpse(df.vol)

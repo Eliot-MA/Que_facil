@@ -1,6 +1,7 @@
 library(tidyverse)
+library(readr)
 
-source("01-scripts/01.1d-soil.R")
+df_soil <- readr::read_csv2("00-data/processed/soil.csv")
 
 ############
 # pH -------

@@ -18,6 +18,10 @@ df.sla <- rD.sla |>
     Environment = recode(Environment, "Abierto" = "gap", "Pinar" = "pine canopy")
   )
 
+library(readr)
+readr::write_csv2(df.sla, "00-data/processed/sla.csv")
+cat("Saved: 00-data/processed/sla.csv\n")
+
 cat("rD.sla contains the original dataframe \n")
 glimpse(rD.sla)
 

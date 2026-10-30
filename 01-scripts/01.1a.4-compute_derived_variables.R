@@ -28,5 +28,9 @@ nombres2 <- names(final)
 variables_nuevas <- nombres2[!nombres2 %in% nombres1]
 cat("Derived variables computed:", paste(variables_nuevas, collapse = ", "))
 
+# Guardar microclima corregido y final
+library(readr)
+readr::write_csv2(final, "00-data/processed/microclimate.csv")
+cat("Saved: 00-data/processed/microclimate.csv\n")
+
 # Eliminar objetos no necesarios
-rm("e", "es", "HR", "nombres1", "nombres2", "T", "Td", "variables_nuevas")

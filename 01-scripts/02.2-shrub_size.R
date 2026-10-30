@@ -7,10 +7,11 @@ library(tidyverse)
 #############
 
 # Load data
-source("01-scripts/01.1b-elevation.R")        # gps and elevation info
-source("01-scripts/01.2a-survival_growth.R")  # survival
-source("01-scripts/01.2d-shrub_size.R")       # shrub size and volume
-source("01-scripts/01.2b-biomass.R")          # predicted biomass
+library(readr)
+df.shrubs.gps <- readr::read_csv2("00-data/processed/shrubs_gps_elevation.csv")
+df.surv <- readr::read_csv2("00-data/processed/survival.csv")
+df.vol <- readr::read_csv2("00-data/processed/shrub_volume.csv")
+df.biomass <- readr::read_csv2("00-data/processed/shrub_biomass_predicted.csv")
 
 # Compatibility dataset assembled from the dedicated databases
 df.surv.par.vol <- df.vol |>
@@ -18,8 +19,6 @@ df.surv.par.vol <- df.vol |>
                    by = c("Individual", "quercus_sp")) |>
   dplyr::left_join(df.biomass |> dplyr::select(Individual, quercus_sp, pred.mass, log.volume),
                    by = c("Individual", "quercus_sp"))
-
-rm(list = setdiff(ls(), c("df.surv.par.vol", "df.shrubs.gps")))
 
 df.shrubs.gps <- df.shrubs.gps |> 
   mutate(

@@ -191,22 +191,10 @@ df.par.ext <- df.par.ext |>
 
 
 
-# rm("df", 
-#    "df.dif.hora.open", 
-#    "df.dif.hora.open.min", 
-#    "df.dif.hora.open.min.par", 
-#    "df.gap.open", 
-#    "df.gap.shrub.par.control", 
-#    "df.par", 
-#    "df.par.gap", 
-#    "df.par.gap.ext", 
-#    "df.par.pine", 
-#    "df.par.pine.ext", 
-#    "df.shrub.open", 
-#    "df.time", 
-#    "df.time.open", 
-#    "rD.time.open", 
-#    "rD.time.pine")
+# Guardar
+library(readr)
+readr::write_csv2(df.par.ext, "00-data/processed/par_extinction.csv")
+cat("Saved: 00-data/processed/par_extinction.csv\n")
 
 cat("PAR loaded and extintion calculated.\n")
 

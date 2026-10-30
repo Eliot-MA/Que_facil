@@ -74,7 +74,9 @@ slop <- terra::extract(   slope, vpts)
 df.shrubs.gps$Elevation <- elev[,2]
 df.shrubs.gps$Slope     <- slop[,2]
 
-# Eliminate not necessary objects
-# rm(list = setdiff(ls(), "df.shrubs.gps"))
+# Guardar
+library(readr)
+readr::write_csv2(df.shrubs.gps, "00-data/processed/shrubs_gps_elevation.csv")
+cat("Saved: 00-data/processed/shrubs_gps_elevation.csv\n")
 
 cat("Done. 'df.shrubs.gps' now includes Elevation and Slope columns.\n")

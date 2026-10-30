@@ -249,6 +249,13 @@ glimpse(df.growth)
 glimpse(df.growth.volume)
 glimpse(df.growth.volume.diff)
 
+# Guardar selectivamente
+library(readr)
+readr::write_csv2(df.surv, "00-data/processed/survival.csv")
+readr::write_csv2(df.growth.volume.diff, "00-data/processed/quercus_growth_volume_diff.csv")
+cat("Saved: 00-data/processed/survival.csv\n")
+cat("Saved: 00-data/processed/quercus_growth_volume_diff.csv\n")
+
 cat("\nScript completed successfully.\n\n")
 cat("Main datasets created:\n")
 cat("  - df.surv:", nrow(df.surv), "rows | survival from census 2025 and 2026\n")

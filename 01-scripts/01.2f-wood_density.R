@@ -27,6 +27,10 @@ df.wood_density <- rD.wood_density |>
     wood.density = dry.weight / Volume
   )
 
+library(readr)
+readr::write_csv2(df.wood_density, "00-data/processed/wood_density.csv")
+cat("Saved: 00-data/processed/wood_density.csv\n")
+
 cat("Wood density loaded in df.wood_density \n")
 glimpse(df.wood_density)
 

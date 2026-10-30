@@ -125,4 +125,3 @@ if(n_rows_with_multimatch > 0) {
 }
 
 # Eliminar objetos no necesarios
-rm("aparato_arbustos_ambiente", "combined", "combined2", "joined", "meta", "multi_match_counts", "n_rows_with_multimatch", "total_combined", "total_final", "total_joined", "total_multimatch_instances", "tz_combined", "txt")

@@ -1,6 +1,7 @@
 library(tidyverse)
+library(readr)
 
-source("01-scripts/01.2c-SLA.R")
+df.sla <- readr::read_csv2("00-data/processed/sla.csv")
 
 # Exploratory analysis ----
 glimpse(df.sla)

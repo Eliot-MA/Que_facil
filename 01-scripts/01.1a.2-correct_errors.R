@@ -41,4 +41,3 @@ combined <- combined %>%
 n_changed <- sum(combined$tiempo != combined$tiempo_orig, na.rm = TRUE)
 cat("1 hour was added to the time of", n_changed, "entries \n")
 
-rm("n_changed", "parsed")

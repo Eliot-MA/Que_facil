@@ -1,7 +1,8 @@
 library(tidyverse)
+library(readr)
 
-source("01-scripts/01.1c-PAR_extintion.R")
-source("01-scripts/01.2a-survival_growth.R")
+df.par.ext <- readr::read_csv2("00-data/processed/par_extinction.csv")
+df.surv <- readr::read_csv2("00-data/processed/survival.csv")
 
 ggplot(df.par.ext, aes(x = extinction, fill = Environment)) + 
   geom_histogram()  

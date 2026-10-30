@@ -1,7 +1,8 @@
 library(tidyverse)
 library(patchwork)
+library(readr)
 
-source("01-scripts/01.2a-survival_growth.R")
+df.growth.volume.diff <- readr::read_csv2("00-data/processed/quercus_growth_volume_diff.csv")
 
 df.growth.volume.eda <- df.growth.volume.diff |>
   filter(

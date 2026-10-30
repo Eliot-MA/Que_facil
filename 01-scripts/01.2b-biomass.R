@@ -176,6 +176,10 @@ df.biomass<- df.biomass |>
     "microsite"   = "microsite.x"
   )
 
+library(readr)
+readr::write_csv2(df.biomass, "00-data/processed/shrub_biomass_predicted.csv")
+cat("Saved: 00-data/processed/shrub_biomass_predicted.csv\n")
+
 cat(
   "Biomass estimation script has run successfully. \n",
   "Predictive capacity and homoscedasticity plots are displayed. \n",
